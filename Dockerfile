@@ -1,19 +1,27 @@
-# --- build ---
+# --- Build stage -------------------------------------------------------------
 FROM node:20-alpine AS builder
 WORKDIR /app
+
+# Installer deps
 COPY package.json package-lock.json* ./
 RUN npm install --no-audit --no-fund
+
+# Copier le code et builder en "standalone"
 COPY . .
 RUN npm run build
 
-# --- run ---
+# --- Run stage ---------------------------------------------------------------
 FROM node:20-alpine
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
-# Copie le bundle standalone + assets
+
+# Copie le bundle standalone + assets publics
+# (Next place server.js inside .next/standalone/)
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
+
 EXPOSE 3000
-CMD ["node", "server.js"]   # <-- c’est le .next/standalone/server.js copié à la racine
+# Démarre le serveur Next standalone
+CMD ["node", "server.js"]
