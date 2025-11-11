@@ -2,46 +2,93 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Accent plus foncé */
+/* Palette & tokens */
 :root {
-  --accent: 24 71 150; /* rgb(24,71,150) */
+  /* Deep brand blue close to your ref */
+  --accent: 39 82 229;            /* #2752E5 */
+  --accent-strong: 30 64 186;      /* #1E40BA */
+  --accent-weak: 112 152 255;      /* #7098FF */
+
+  --bg-0: 6 10 18;                 /* #0A1012-ish */
+  --bg-1: 10 14 24;
+  --card: 17 22 32;
+
+  --text-0: 255 255 255;
+  --text-1: 200 204 214;
 }
 
-html.dark body {
-  @apply min-h-screen bg-[#0b0e13] text-white antialiased;
+/* Base dark theme */
+html, body {
+  height: 100%;
+}
+body {
+  @apply text-white;
+  background-color: rgb(var(--bg-0));
+  /* Lueur lisse: superposition de radial-gradients (aucun blur) */
   background-image:
-    radial-gradient(60rem 30rem at 50% -10%, rgba(24,71,150,0.20), transparent 60%),
-    radial-gradient(40rem 20rem at 80% 10%, rgba(24,71,150,0.10), transparent 55%),
-    radial-gradient(40rem 20rem at 20% 0%, rgba(255,255,255,0.04), transparent 50%);
-  background-repeat: no-repeat;
+    radial-gradient(1200px 600px at 15% -10%, rgba(var(--accent), .10), transparent 60%),
+    radial-gradient(900px 420px at 85% 0%, rgba(var(--accent-weak), .10), transparent 60%),
+    radial-gradient(1600px 800px at 50% 110%, rgba(255 255 255 / .04), transparent 55%);
+  background-attachment: fixed, fixed, fixed;
 }
 
+/* Fine noise pour casser le banding et lisser le glow */
+body::after{
+  content:"";
+  position:fixed; inset:0;
+  pointer-events:none;
+  opacity:.06;
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'><filter id='n'><feTurbulence baseFrequency='0.95' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/><feComponentTransfer><feFuncA type='table' tableValues='0 0 0 0 .15 .3 .15 0 0 0'/></feComponentTransfer></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* Typo */
+@layer base {
+  h1 { @apply text-2xl md:text-3xl font-semibold tracking-tight; }
+  p  { @apply text-sm text-white/70; }
+  label { @apply text-sm text-white/80; }
+}
+
+/* Components */
 @layer components {
   .card {
-    @apply rounded-2xl p-6 sm:p-7 border border-white/10 backdrop-blur-xl;
-    /* 3% de blanc translucide (équivalent à bg-white/3 mais compatible PostCSS) */
-    background-color: rgb(255 255 255 / 0.03);
-    box-shadow: 0 10px 30px -10px rgba(0,0,0,.35);
+    @apply rounded-2xl p-6 sm:p-7 bg-[#11161F] border border-white/10 shadow-[0_10px_30px_-10px_rgba(0,0,0,.6)];
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center rounded-xl px-5 py-3 font-medium transition-[transform,opacity,box-shadow] duration-150;
+  }
+  .btn-primary {
+    background: linear-gradient(
+      180deg,
+      rgb(var(--accent)) 0%,
+      rgb(var(--accent-strong)) 100%
+    );
+    box-shadow:
+      0 8px 24px rgba(var(--accent), .35),
+      inset 0 -2px 0 rgba(0,0,0,.25),
+      0 0 0 2px rgba(39, 82, 229, .25);
+    color: white;
+  }
+  .btn-primary:hover { transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); box-shadow: 0 4px 14px rgba(var(--accent), .35), inset 0 0 0 rgba(0,0,0,.25); }
+
+  .btn-ghost {
+    @apply border border-white/10 text-white/90 bg-white/0 hover:bg-white/5;
   }
 
   .input {
-    @apply w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2
-           outline-none text-white placeholder-white/40
-           focus:ring-2 focus:ring-[rgb(var(--accent))]/40 focus:border-white/20;
+    @apply w-full rounded-lg bg-white/[0.04] border border-white/10 px-4 py-3 outline-none text-white placeholder-white/35;
+  }
+  .input:focus {
+    box-shadow: 0 0 0 3px rgba(var(--accent), .25);
+    border-color: rgb(var(--accent));
   }
 
-  .btn-primary {
-    @apply inline-flex items-center justify-center w-full rounded-xl
-           px-4 py-2.5 font-medium text-white transition shadow;
-    background-color: rgb(var(--accent) / 0.92);
-  }
-  .btn-primary:hover {
-    background-color: rgb(var(--accent));
-    box-shadow: 0 10px 25px -10px rgb(var(--accent) / .55);
-  }
-
-  .muted { @apply text-xs text-white/60; }
-  .link  { @apply underline underline-offset-2 hover:text-white; color: rgb(var(--accent)); }
+  .link { @apply text-sm text-white/70 hover:text-white underline underline-offset-4; }
 }
 
-:focus-visible { outline: 2px solid rgb(var(--accent)); outline-offset: 2px; }
+/* Page shell */
+.shell {
+  @apply min-h-screen grid place-items-center px-4 py-10;
+}
