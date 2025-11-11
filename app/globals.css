@@ -2,61 +2,60 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ===== Theme ===== */
+/* Accent plus foncé (bleu) */
 :root {
-  /* Deep blue accent */
-  --accent: 27 102 197; /* #1B66C5 (plus foncé et moins saturé) */
+  /* #184796 -> 24 71 150 */
+  --accent: 24 71 150;
 }
 
-html.dark { color-scheme: dark; }
-
-@layer utilities {
-  .bg-app {
-    /* Gradient sombre + halo bleu subtil */
-    background:
-      radial-gradient(1200px 500px at 50% -10%, rgba(27,102,197,0.18), transparent 60%),
-      radial-gradient(900px 400px at 80% 10%, rgba(27,102,197,0.12), transparent 55%),
-      linear-gradient(#0A0F1A, #06090F);
-  }
+/* Fond sombre doux avec gradient subtil */
+html.dark body {
+  @apply min-h-screen bg-[#0b0e13] text-white antialiased;
+  background-image:
+    radial-gradient(60rem 30rem at 50% -10%, rgba(24,71,150,0.20), transparent 60%),
+    radial-gradient(40rem 20rem at 80% 10%, rgba(24,71,150,0.10), transparent 55%),
+    radial-gradient(40rem 20rem at 20% 0%, rgba(255,255,255,0.04), transparent 50%);
+  background-repeat: no-repeat;
 }
 
-/* ===== Atoms ===== */
- @layer components {
-   .card {
--    @apply rounded-2xl p-6 sm:p-7
--           bg-white/3 backdrop-blur-xl
--           border border-white/10
--           shadow-[0_10px_30px_-10px_rgba(0,0,0,.3)];
-+    /* 3% d'opacité → utilise une valeur arbitraire ou 5% */
-+    @apply rounded-2xl p-6 sm:p-7
-+           backdrop-blur-xl
-+           border border-white/10
-+           shadow-[0_10px_30px_-10px_rgba(0,0,0,.3)];
-+    /* bg à 3%: */
-+    background-color: rgb(255 255 255 / 0.03);
-     }
- }
-  .lbl {
-    @apply block text-sm font-medium text-white/80 mb-1;
+/* --------- Composants utilitaires --------- */
+@layer components {
+  .card {
+    @apply rounded-2xl p-6 sm:p-7 border border-white/10 backdrop-blur-xl;
+    /* 3% de blanc translucide comme demandé, compatible PostCSS */
+    background-color: rgb(255 255 255 / 0.03);
+    box-shadow: 0 10px 30px -10px rgba(0,0,0,.35);
   }
 
-  .inp {
-    @apply w-full rounded-xl bg-white/5 text-white placeholder-white/30
-           border border-white/10
-           focus:outline-none focus:ring-2 focus:ring-[rgb(var(--accent))]/50
-           focus:border-[rgb(var(--accent))]/40
-           px-3.5 py-2.5 transition;
+  .input {
+    @apply w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2
+           outline-none text-white placeholder-white/40
+           focus:ring-2 focus:ring-[rgb(var(--accent))]/40 focus:border-white/20;
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-xl px-4 py-2.5
-           font-medium text-white
-           bg-[rgb(var(--accent))] hover:bg-[rgb(var(--accent))]/90
-           shadow-[0_6px_18px_-4px_rgba(27,102,197,.55)]
-           ring-1 ring-white/10 transition;
+    @apply inline-flex items-center justify-center w-full rounded-xl
+           px-4 py-2.5 font-medium text-white
+           transition shadow;
+    background-color: rgb(var(--accent) / 0.92);
+  }
+  .btn-primary:hover {
+    background-color: rgb(var(--accent));
+    box-shadow: 0 10px 25px -10px rgb(var(--accent) / .55);
+  }
+
+  .muted {
+    @apply text-xs text-white/60;
   }
 
   .link {
-    @apply text-[rgb(var(--accent))] hover:underline;
+    @apply underline underline-offset-2 hover:text-white;
+    color: rgb(var(--accent));
   }
+}
+
+/* Accessibilité du focus global */
+:focus-visible {
+  outline: 2px solid rgb(var(--accent));
+  outline-offset: 2px;
 }
