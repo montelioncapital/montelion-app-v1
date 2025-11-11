@@ -2,33 +2,56 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Thème */
-:root { --accent: 33 150 243; } /* bleu */
+/* ===== Theme ===== */
+:root {
+  /* Deep blue accent */
+  --accent: 27 102 197; /* #1B66C5 (plus foncé et moins saturé) */
+}
 
-/* Dark forced */
 html.dark { color-scheme: dark; }
 
-/* Anti-aliasing */
-body { @apply antialiased; }
-
-/* Fond radial/subtil */
-.bg-app {
-  background:
-    radial-gradient(1200px 600px at 50% -20%, rgba(33,150,243,.12), transparent 60%),
-    radial-gradient(800px 400px at 120% 20%, rgba(33,150,243,.08), transparent 55%),
-    #0b0f14;
+@layer utilities {
+  .bg-app {
+    /* Gradient sombre + halo bleu subtil */
+    background:
+      radial-gradient(1200px 500px at 50% -10%, rgba(27,102,197,0.18), transparent 60%),
+      radial-gradient(900px 400px at 80% 10%, rgba(27,102,197,0.12), transparent 55%),
+      linear-gradient(#0A0F1A, #06090F);
+  }
 }
 
-/* Bouton primaire réutilisable */
-.btn-primary {
-  @apply inline-flex items-center justify-center rounded-xl px-4 py-2 font-medium
-         bg-[rgb(var(--accent))]/90 hover:bg-[rgb(var(--accent))]
-         text-white shadow-[0_10px_30px_-10px_rgba(33,150,243,.5)]
-         focus:outline-none focus:ring-2 focus:ring-[rgb(var(--accent))]/40
-         transition;
-}
+/* ===== Atoms ===== */
+@layer components {
+  .card {
+    @apply rounded-2xl p-6 sm:p-7
+           bg-white/3 backdrop-blur-xl
+           border border-white/10
+           shadow-[0_10px_40px_-12px_rgba(0,0,0,0.6)]
+           hover:shadow-[0_16px_60px_-12px_rgba(0,0,0,0.65)]
+           transition;
+  }
 
-/* Carte “verre” */
-.card-glass {
-  @apply rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl;
+  .lbl {
+    @apply block text-sm font-medium text-white/80 mb-1;
+  }
+
+  .inp {
+    @apply w-full rounded-xl bg-white/5 text-white placeholder-white/30
+           border border-white/10
+           focus:outline-none focus:ring-2 focus:ring-[rgb(var(--accent))]/50
+           focus:border-[rgb(var(--accent))]/40
+           px-3.5 py-2.5 transition;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-xl px-4 py-2.5
+           font-medium text-white
+           bg-[rgb(var(--accent))] hover:bg-[rgb(var(--accent))]/90
+           shadow-[0_6px_18px_-4px_rgba(27,102,197,.55)]
+           ring-1 ring-white/10 transition;
+  }
+
+  .link {
+    @apply text-[rgb(var(--accent))] hover:underline;
+  }
 }
