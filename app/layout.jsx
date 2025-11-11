@@ -1,13 +1,11 @@
-import "./globals.css";
-
 export const metadata = {
   title: "Montelion Capital",
-  description: "Trading & analytics platform",
+  description: "Secure access to your workspace.",
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en">
       <body>{children}</body>
     </html>
   );
