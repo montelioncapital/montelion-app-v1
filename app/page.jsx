@@ -1,37 +1,45 @@
-// Landing page with two CTAs
+// Landing (Welcome) page
 
 export const metadata = {
   title: "Welcome • Montelion Capital",
 };
 
-export default function Landing() {
+import Link from "next/link";
+
+export default function Page() {
   return (
-    <main className="shell">
-      <section className="card max-w-3xl w-full">
-        {/* Logo row */}
-        <div className="flex items-center gap-3 mb-4">
-          <div className="size-8 rounded-md bg-white/5 grid place-items-center border border-white/10">
-            <span className="text-white/90 font-bold">M</span>
-          </div>
-          <span className="text-white/90 font-semibold tracking-wide">
-            MONTELION CAPITAL
-          </span>
+    <main className="min-h-screen grid place-items-center p-4">
+      <div className="card w-full max-w-3xl space-y-6">
+        {/* Brand */}
+        <div className="flex items-center gap-3">
+          <div className="brand-dot">M</div>
+          <div className="font-semibold tracking-wide text-white/90">MONTELION CAPITAL</div>
         </div>
 
-        <h1 className="mb-2">Welcome</h1>
-        <p className="mb-8">
-          Access your secure workspace. Use your email invite link, or sign in if your account is already active.
+        <h1 className="text-3xl sm:text-4xl font-semibold">Welcome</h1>
+
+        <p className="text-white/70 max-w-2xl">
+          Access your secure workspace. Use your email invite link, or sign in if
+          your account is already active.
         </p>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <a href="/login" className="btn btn-primary">Sign in</a>
-          <a href="#" className="btn btn-ghost">Learn more</a>
+        <div className="flex items-center gap-3">
+          <Link href="/login" className="btn btn-primary">
+            Sign in
+          </Link>
+          <Link href="/learn-more" className="btn btn-ghost">
+            Learn more
+          </Link>
         </div>
 
-        <p className="mt-8 text-xs text-white/55">
-          Need help? Contact <a className="underline hover:text-white" href="mailto:support@montelion-capital.com">Montelion Capital Support</a>.
+        <p className="text-sm text-white/60">
+          Need help? Contact{" "}
+          <a href="mailto:support@montelion-capital.com" className="link">
+            Montelion Capital Support
+          </a>
+          .
         </p>
-      </section>
+      </div>
     </main>
   );
 }
