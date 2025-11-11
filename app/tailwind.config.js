@@ -1,22 +1,32 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ["./app/**/*.{js,jsx,ts,tsx}", "./components/**/*.{js,jsx,ts,tsx}"],
   darkMode: "class",
+  content: ["./app/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
       colors: {
-        bg: "#0B0E13",
-        panel: "#11151C",
-        text: "#E6EAF2",
-        subtle: "#A0A8B8",
+        bg: "#0B0D12",
+        surface: "#12151C",
+        subtle: "#9AA3B2",
         primary: {
-          50:"#E8F1FF",100:"#D6E6FF",200:"#AFC9FF",300:"#7FA9FF",
-          400:"#4C88FF",500:"#1D6CFD",600:"#1456D6",700:"#0E43AA",800:"#0A317E",900:"#072456"
-        },
-        success: "#1DB954", warning: "#F5A524", danger: "#F04444"
+          300: "#6BA7FF",
+          400: "#4D8DFF",
+          500: "#2F74FF",
+          600: "#255BCA"
+        }
       },
-      borderRadius: { xl2: "1.25rem" }
-    },
+      borderRadius: {
+        xl2: "14px",
+        xl3: "22px"
+      },
+      boxShadow: {
+        "soft": "0 10px 30px rgba(0,0,0,.35)",
+        "glow": "0 0 0 3px rgba(47,116,255,.12), 0 10px 40px rgba(47,116,255,.18)"
+      },
+      backdropBlur: {
+        sm: "6px"
+      }
+    }
   },
-  plugins: [],
+  plugins: []
 };
