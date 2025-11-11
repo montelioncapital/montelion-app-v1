@@ -1,4 +1,4 @@
-# ---- Builder ----
+# --- Builder ---
 FROM node:20-alpine AS builder
 WORKDIR /app
 
@@ -6,19 +6,21 @@ COPY package.json package-lock.json* ./
 RUN npm install --no-audit --no-fund
 
 COPY . .
-# Standalone output pour une image plus légère
+# Ensure Next builds as standalone
 ENV NODE_ENV=production
 RUN npx next build
 
-# ---- Runner ----
+# --- Runtime ---
 FROM node:20-alpine
 WORKDIR /app
 
 ENV NODE_ENV=production
-# Copie le serveur standalone + assets
+# copy the minimal standalone server + static assets
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
-# (on ne copie PAS /app/public car il n’existe pas dans ton repo)
+# OPTIONAL: only if you actually have public assets.
+# If you *don’t* keep a public dir, keep this commented to avoid build errors.
+# COPY --from=builder /app/public ./public
 
 EXPOSE 3000
 CMD ["node", "server.js"]
