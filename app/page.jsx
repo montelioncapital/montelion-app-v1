@@ -2,7 +2,6 @@ export default function Page() {
   return (
     <main className="grid min-h-screen place-items-center px-4">
       <div className="max-w-md w-full space-y-6">
-        {/* Logo + titre */}
         <div className="text-center space-y-2">
           <div className="mx-auto h-12 w-12 rounded-2xl bg-[rgb(var(--accent))]/20 ring-1 ring-[rgb(var(--accent))]/30 grid place-items-center">
             <span className="text-[rgb(var(--accent))] font-bold">M</span>
@@ -11,7 +10,6 @@ export default function Page() {
           <p className="text-sm text-zinc-400">Connecte-toi pour continuer</p>
         </div>
 
-        {/* Carte formulaire */}
         <div className="card p-6 space-y-4">
           <div className="space-y-2">
             <label className="text-sm text-zinc-300" htmlFor="email">Email</label>
