@@ -1,6 +1,9 @@
+// app/app/layout.jsx
+import "../globals.css";   // ⬅️ ajoute cette ligne (chemin depuis app/app/*)
+
 export const metadata = {
   title: "Montelion Capital",
-  description: "Trading & analytics"
+  description: "Trading & analytics",
 };
 
 export default function RootLayout({ children }) {
