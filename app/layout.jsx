@@ -1,4 +1,4 @@
-// bon import (même dossier)
+// app/layout.jsx
 import "./globals.css";
 
 export const metadata = {
