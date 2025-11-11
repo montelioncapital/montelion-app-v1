@@ -21,16 +21,21 @@ html.dark { color-scheme: dark; }
 }
 
 /* ===== Atoms ===== */
-@layer components {
-  .card {
-    @apply rounded-2xl p-6 sm:p-7
-           bg-white/3 backdrop-blur-xl
-           border border-white/10
-           shadow-[0_10px_40px_-12px_rgba(0,0,0,0.6)]
-           hover:shadow-[0_16px_60px_-12px_rgba(0,0,0,0.65)]
-           transition;
-  }
-
+ @layer components {
+   .card {
+-    @apply rounded-2xl p-6 sm:p-7
+-           bg-white/3 backdrop-blur-xl
+-           border border-white/10
+-           shadow-[0_10px_30px_-10px_rgba(0,0,0,.3)];
++    /* 3% d'opacité → utilise une valeur arbitraire ou 5% */
++    @apply rounded-2xl p-6 sm:p-7
++           backdrop-blur-xl
++           border border-white/10
++           shadow-[0_10px_30px_-10px_rgba(0,0,0,.3)];
++    /* bg à 3%: */
++    background-color: rgb(255 255 255 / 0.03);
+     }
+ }
   .lbl {
     @apply block text-sm font-medium text-white/80 mb-1;
   }
