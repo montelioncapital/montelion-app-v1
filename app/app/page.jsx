@@ -1,27 +1,42 @@
 "use client";
 import { useState, useTransition } from "react";
 
+function Brand() {
+  return (
+    <div className="flex items-center gap-3 mb-6">
+      <div className="h-11 w-11 rounded-2xl grid place-items-center
+                      bg-primary-500/15 ring-1 ring-primary-500/30">
+        <span className="text-primary-400 text-xl font-semibold">M</span>
+      </div>
+      <div>
+        <h1 className="text-2xl font-semibold leading-tight">Montelion Capital</h1>
+        <p className="text-subtle text-sm">Connecte-toi pour continuer</p>
+      </div>
+    </div>
+  );
+}
+
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState("");
 
-  const onSubmit = (e) => {
+  const submit = (e) => {
     e.preventDefault();
     setError("");
     startTransition(async () => {
       try {
-        const res = await fetch("/api/login", {
+        const r = await fetch("/api/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
+          body: JSON.stringify({ email, password })
         });
-        if (!res.ok) {
-          const j = await res.json().catch(() => ({}));
-          throw new Error(j?.error || "Login failed");
+        if (!r.ok) {
+          const j = await r.json().catch(() => ({}));
+          throw new Error(j?.error || "Échec de connexion");
         }
-        window.location.href = "/dashboard";
+        location.href = "/dashboard";
       } catch (err) {
         setError(err.message);
       }
@@ -29,39 +44,46 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen grid place-items-center bg-gradient-to-b from-black to-bg">
-      <div className="w-[92%] max-w-md card p-8">
-        <div className="mb-6 text-center">
-          <div className="mx-auto mb-3 h-11 w-11 rounded-2xl grid place-items-center bg-primary-500/15 ring-1 ring-primary-500/30">
-            <span className="text-primary-400 text-2xl font-semibold">M</span>
-          </div>
-          <h1 className="text-2xl font-semibold">Montelion Capital</h1>
-          <p className="text-subtle text-sm mt-1">Connecte-toi pour continuer</p>
-        </div>
+    <main className="min-h-screen relative grid place-items-center overflow-hidden">
+      {/* Background glow */}
+      <div className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 h-[520px] w-[520px]
+                        rounded-full blur-3xl opacity-25
+                        bg-gradient-to-br from-primary-500/60 via-primary-400/30 to-transparent" />
+      </div>
 
-        <form onSubmit={onSubmit} className="space-y-4">
+      <div className="w-[92%] max-w-md card p-8">
+        <Brand />
+
+        <form onSubmit={submit} className="space-y-4">
           <div>
             <label className="block text-sm text-subtle mb-1">Email</label>
-            <input
-              required
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-xl2 bg-white/5 border border-white/10 px-3 py-2 outline-none focus:ring-2 focus:ring-primary-500"
-              placeholder="you@example.com"
-            />
+            <div className="relative">
+              <input
+                className="input pr-10"
+                type="email"
+                required
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-subtle/70">✉️</span>
+            </div>
           </div>
 
           <div>
             <label className="block text-sm text-subtle mb-1">Mot de passe</label>
-            <input
-              required
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-xl2 bg-white/5 border border-white/10 px-3 py-2 outline-none focus:ring-2 focus:ring-primary-500"
-              placeholder="••••••••"
-            />
+            <div className="relative">
+              <input
+                className="input pr-10"
+                type="password"
+                required
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-subtle/70">🔒</span>
+            </div>
           </div>
 
           {error && (
@@ -70,18 +92,14 @@ export default function LoginPage() {
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={pending}
-            className="btn-primary w-full justify-center"
-          >
+          <button type="submit" className="btn-primary w-full justify-center" disabled={pending}>
             {pending ? "Connexion…" : "Se connecter"}
           </button>
         </form>
 
-        <p className="text-xs text-subtle mt-6 text-center">
-          Mode sombre uniquement • Accent bleu
-        </p>
+        <div className="mt-6 text-center">
+          <p className="text-xs text-subtle">Mode sombre • Accent bleu • v1</p>
+        </div>
       </div>
     </main>
   );
