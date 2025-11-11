@@ -1,4 +1,4 @@
-// app/layout.jsx
+// bon import (même dossier)
 import "./globals.css";
 
 export const metadata = {
@@ -9,9 +9,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="fr" className="dark">
-      <body className="min-h-screen bg-[#0b0f14] text-zinc-100 antialiased">
-        {children}
-      </body>
+      <body className="min-h-screen antialiased">{children}</body>
     </html>
   );
 }
