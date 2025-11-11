@@ -1,5 +1,5 @@
 // app/app/layout.jsx
-import "../globals.css";   // ⬅️ ajoute cette ligne (chemin depuis app/app/*)
+import "../../globals.css";   // ⬅️ ajoute cette ligne (chemin depuis app/app/*)
 
 export const metadata = {
   title: "Montelion Capital",
