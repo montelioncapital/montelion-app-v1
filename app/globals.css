@@ -2,30 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Theme */
 :root {
   --accent: 33 150 243; /* bleu */
 }
 
-html.dark {
-  color-scheme: dark;
-}
+html.dark { color-scheme: dark; }
 
-/* Joli rendu texte */
-body {
-  @apply antialiased;
-}
+body { @apply antialiased; }
 
-/* Petits helpers réutilisables */
 .btn-primary {
-  @apply inline-flex items-center justify-center rounded-xl px-4 py-2
-         font-medium bg-[rgb(var(--accent))]/90 hover:bg-[rgb(var(--accent))]
-         text-white shadow-[0_10px_30px_-10px_rgba(33,150,243,.6)]
-         transition;
-}
-.card {
-  @apply rounded-2xl bg-zinc-900/60 backdrop-blur-md border border-white/10 shadow-xl;
-}
-.input {
-  @apply w-full rounded-xl bg-zinc-900/70 border border-white/10 px-4 py-2 text-zinc-100 placeholder-zinc-400 outline-none focus:ring-2 focus:ring-[rgb(var(--accent))]/50;
+  @apply inline-flex items-center justify-center rounded-xl px-4 py-2 font-medium
+         bg-[rgb(var(--accent))]/90 hover:bg-[rgb(var(--accent))]
+         text-white shadow-[0_10px_30px_-10px_rgba(33,150,243,.6)] transition;
 }
