@@ -1,78 +1,102 @@
-// app/auth/set-password/page.jsx
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
 
-const supabase = createClient(
+export const dynamic = "force-dynamic";
+export const revalidate = false;
+
+const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
 export default function SetPasswordPage() {
+  const [loading, setLoading] = useState(true);
+  const [hasSession, setHasSession] = useState(false);
   const [password, setPassword] = useState("");
-  const [ok, setOk] = useState(false);
+  const [ok, setOk] = useState("");
   const [err, setErr] = useState("");
 
   useEffect(() => {
+    let unsub;
     (async () => {
+      // 1) Check session immédiat
       const { data } = await supabase.auth.getSession();
-      if (!data.session) {
-        // pas de session → lien non valide ou expiré
-        window.location.replace("/login");
+      if (data.session) {
+        setHasSession(true);
+        setLoading(false);
+        return;
       }
+      // 2) Écoute un éventuel setSession (depuis /auth/confirm)
+      const sub = supabase.auth.onAuthStateChange((_e, sess) => {
+        if (sess) {
+          setHasSession(true);
+          setLoading(false);
+        }
+      });
+      unsub = () => sub.data.subscription.unsubscribe();
+
+      // 3) Fallback timeout
+      setTimeout(() => setLoading(false), 1500);
     })();
+
+    return () => {
+      try { unsub && unsub(); } catch {}
+    };
   }, []);
 
-  async function onSubmit(e) {
+  const submit = async (e) => {
     e.preventDefault();
     setErr("");
-    if (password.length < 8) {
-      setErr("Use at least 8 characters.");
-      return;
-    }
+    setOk("");
     const { error } = await supabase.auth.updateUser({ password });
-    if (error) {
-      setErr(error.message);
-      return;
-    }
-    setOk(true);
-    setTimeout(() => window.location.replace("/login"), 900);
+    if (error) return setErr(error.message);
+    setOk("Password updated. You can now sign in.");
+  };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center text-slate-400">
+        Preparing your account…
+      </div>
+    );
+  }
+
+  if (!hasSession) {
+    return (
+      <div className="mc-card">
+        <div className="mc-section text-left">
+          <h1 className="mc-title mb-2">Session not found</h1>
+          <p className="text-slate-400">
+            Your invite/session isn’t active yet. Please re-open your invite link or sign in.
+          </p>
+          <div className="mt-6">
+            <a href="/login" className="mc-btn mc-btn-primary">Sign in</a>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="mc-card">
       <div className="mc-section text-left">
-        <h1 className="mc-title mb-6">Set your password</h1>
-
-        <form onSubmit={onSubmit} className="space-y-4">
-          <label className="block text-sm text-slate-300">
-            New password
-            <input
-              type="password"
-              className="mc-input mt-2"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              autoFocus
-            />
-          </label>
-
-          <button type="submit" className="mc-btn mc-btn-primary w-full mt-3">
-            Save password
-          </button>
+        <h1 className="mc-title mb-4">Set your password</h1>
+        <form onSubmit={submit} className="flex flex-col gap-4 max-w-sm">
+          <input
+            type="password"
+            className="mc-input"
+            placeholder="New password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            minLength={6}
+          />
+          <button type="submit" className="mc-btn mc-btn-primary">Save password</button>
         </form>
-
-        {err && <p className="mt-4 text-sm text-red-400">{err}</p>}
-        {ok && (
-          <p className="mt-4 text-sm text-emerald-400">
-            Password updated. Redirecting…
-          </p>
-        )}
-
-        <p className="mt-8 text-left text-sm text-slate-500">
-          Need help? Contact <a href="#">Montelion Capital Support</a>.
-        </p>
+        {ok && <p className="mt-4 text-green-400">{ok}</p>}
+        {err && <p className="mt-4 text-red-400">{err}</p>}
       </div>
     </div>
   );
