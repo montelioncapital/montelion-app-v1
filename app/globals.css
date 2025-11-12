@@ -2,55 +2,47 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Root variables */
-:root {
-  --bg: #0B1118;
-  --bg-2: #0F1520;
-  --ring: rgba(47, 83, 255, 0.45);
+/* Design tokens */
+:root{
+  --bg: #0a1020;           /* Deep slate/blue base */
+  --bg-elev: #141a29;      /* Elevated surfaces */
+  --card: rgba(17,23,37,0.82);
+  --border: 0 0% 100% / 0.06;
+  --text-muted: 215 20% 72%;
+  --primary: 58 90% 60%;   /* actual color set by gradient below */
 }
 
-/* Smooth, crisp glow using layered gradients — no blurry filters */
-body {
-  @apply bg-[color:var(--bg)] text-white antialiased;
-  background-image:
-    radial-gradient(1200px 600px at 20% -10%, rgba(47,83,255,0.20), transparent 60%),
-    radial-gradient(900px 450px at 80% 10%, rgba(47,83,255,0.12), transparent 60%),
-    radial-gradient(700px 500px at 50% 110%, rgba(47,83,255,0.10), transparent 60%),
-    linear-gradient(180deg, var(--bg), var(--bg-2));
-  background-attachment: fixed;
+/* App background */
+.bg-app{
+  background:
+    radial-gradient(1200px 600px at 50% -200px, rgba(58,90,255,.20), transparent 60%),
+    linear-gradient(180deg, #0b1326 0%, #0a1020 60%, #0a1020 100%);
 }
 
-/* Common components */
-@layer components {
-  .card {
-    @apply rounded-2xl p-6 sm:p-7 bg-white/5 backdrop-blur
-           border border-white/10 shadow-card;
-  }
-
-  .btn {
-    @apply inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium
-           transition-[transform,box-shadow,background-color] duration-150 ease-out
-           focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)];
-  }
-  .btn-primary {
-    @apply bg-accent hover:bg-accent-600 active:scale-[0.99] text-white shadow-[0_8px_20px_rgba(47,83,255,0.35)];
-  }
-  .btn-ghost {
-    @apply bg-white/5 hover:bg-white/10 text-white border border-white/10;
-  }
-
-  .input {
-    @apply w-full rounded-xl bg-white/5 border border-white/10 text-white
-           px-3 py-2 outline-none focus:border-accent/50 focus:ring-2 focus:ring-[color:var(--ring)]
-           placeholder:text-white/40;
-  }
-
-  .link {
-    @apply text-accent hover:text-accent-400 underline-offset-2 hover:underline;
-  }
-
-  .brand-dot {
-    @apply mx-auto h-12 w-12 grid place-items-center rounded-2xl
-           bg-[rgba(47,83,255,0.18)] text-white font-bold;
-  }
+/* Card */
+.card{
+  @apply rounded-2xl border border-white/10 bg-[color:var(--card)] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.45)] backdrop-blur-xl;
 }
+
+/* Inputs + button */
+.input{
+  @apply w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-[15px] outline-none placeholder:text-white/40
+         focus:border-white/20 focus:ring-2 focus:ring-[rgba(58,90,255,0.25)];
+}
+.btn-primary{
+  /* solid with soft inner glow, darker blue base + vivid accent */
+  @apply w-full rounded-xl px-4 py-3 text-[15px] font-medium text-white transition;
+  background: linear-gradient(180deg,#3a5aff 0%,#2f46e6 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.12),
+    0 8px 24px -8px rgba(58,90,255,.55);
+}
+.btn-primary:hover{ filter: brightness(1.06); }
+.btn-primary:active{ transform: translateY(1px); }
+
+/* Small UI bits */
+.badge{
+  @apply grid h-10 w-10 place-items-center rounded-xl bg-white/10 text-sm font-semibold;
+}
+.kicker{ @apply text-sm text-white/50; }
+.link{ @apply text-white/70 hover:text-white; }
