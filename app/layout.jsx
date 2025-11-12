@@ -1,3 +1,4 @@
+// app/layout.jsx
 import "./globals.css";
 
 export const metadata = {
@@ -7,24 +8,33 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body className="min-h-screen grid place-items-center bg-fixed text-white">
-        {/* fixed background gradient (validé) */}
-        <div className="fixed inset-0 -z-10 bg-[radial-gradient(1200px_600px_at_50%_-10%,rgba(59,91,254,.35),transparent_60%),radial-gradient(900px_400px_at_20%_20%,rgba(102,126,234,.15),transparent_60%),radial-gradient(900px_400px_at_80%_25%,rgba(59,91,254,.18),transparent_60%),linear-gradient(rgb(10,15,25),rgb(10,15,25))]" />
+    <html lang="en" className="h-full">
+      <body className="min-h-screen text-white/90 antialiased">
+        {/* Background: plus sombre + dégradés propres */}
+        <div
+          className="
+            fixed inset-0 -z-10 bg-[#070b13]
+            [background:
+              radial-gradient(1200px_700px_at_50%_-220px,rgba(48,74,170,0.32),transparent),
+              radial-gradient(900px_560px_at_85%_120%,rgba(18,28,52,0.55),transparent),
+              radial-gradient(800px_520px_at_5%_90%,rgba(10,19,38,0.55),transparent)
+            ]
+          "
+        />
 
-        {/* global card wrapper */}
-      <main
-  className="
-    relative w-[720px] h-[560px]
-    max-w-[92vw] max-h-[90vh]
-    rounded-3xl
-    bg-[rgba(17,23,40,0.72)] supports-[backdrop-filter]:bg-[rgba(17,23,40,0.55)]
-    border border-white/10 backdrop-blur-sm
-    p-8 flex flex-col justify-center
-  "
->
-  {children}
-</main>
+        {/* Conteneur centré */}
+        <div className="min-h-screen grid place-items-center px-4 py-10">
+          {/* Card global (taille fixe, sans ombre) */}
+          <main
+            className="
+              card
+              w-[920px] max-w-[92vw] min-h-[540px]
+              p-10
+            "
+          >
+            {children}
+          </main>
+        </div>
       </body>
     </html>
   );
