@@ -18,6 +18,7 @@ export default function Page() {
         </div>
 
         <h1 className="mc-title mb-4">Welcome</h1>
+
         <p className="max-w-2xl text-slate-400">
           Access your secure workspace. Use your email invite link, or sign in if your account is already active.
         </p>
@@ -29,7 +30,8 @@ export default function Page() {
 
         <p className="mt-10 text-sm text-slate-500">
           Need help? Contact{" "}
-          <a href="#" className="hover:text-slate-300">
+          {/* Pas de soulignement, color hover géré dans globals.css */}
+          <a href="#" className="">
             Montelion Capital Support
           </a>.
         </p>
