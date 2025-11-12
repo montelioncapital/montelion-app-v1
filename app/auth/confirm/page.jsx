@@ -1,49 +1,44 @@
-"use client";
+'use client';
 
-import { useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { supabase } from "@/lib/supabaseBrowser";
+export const dynamic = 'force-dynamic';   // ✅ empêche toute pré-génération
+// export const revalidate = 0;           // (facultatif) tu peux laisser commenté
 
-export const dynamic = "force-dynamic";   // empêche la pré-génération
-export const revalidate = false;          // <- PAS d’objet, c’est boolean
+import { useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { supabase } from '@/lib/supabaseBrowser';
 
 export default function ConfirmPage() {
   const router = useRouter();
   const sp = useSearchParams();
 
   useEffect(() => {
-    const access_token = sp.get("access_token");
-    const refresh_token = sp.get("refresh_token") || null;
-    const type = sp.get("type");
-    const code = sp.get("code");
+    const access_token = sp.get('access_token');
+    const refresh_token = sp.get('refresh_token');
+    const type = sp.get('type');     // 'invite' | 'recovery' | ...
+    const code = sp.get('code');     // cas "exchange code" OAuth
+
+    const go = (path) => router.replace(path);
 
     if (access_token) {
       supabase.auth
         .setSession({ access_token, refresh_token })
         .finally(() => {
-          if (type === "invite" || type === "recovery") {
-            router.replace("/auth/set-password");
-          } else {
-            router.replace("/login");
-          }
+          if (type === 'invite' || type === 'recovery') go('/auth/set-password');
+          else go('/login');
         });
       return;
     }
 
-    if (type === "invite" || type === "recovery" || code) {
-      router.replace(`/auth/set-password?${sp.toString()}`);
+    if (code) {
+      supabase.auth
+        .exchangeCodeForSession(code)
+        .finally(() => go('/auth/set-password'));
       return;
     }
 
-    router.replace("/login");
-  }, [router, sp]);
+    // fallback
+    go('/login');
+  }, [sp, router]);
 
-  return (
-    <div className="mc-card">
-      <div className="mc-section text-left">
-        <h1 className="mc-title mb-4">Just a moment…</h1>
-        <p className="text-slate-400">We’re finalizing your invitation.</p>
-      </div>
-    </div>
-  );
+  return null;
 }
