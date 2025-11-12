@@ -4,7 +4,7 @@
 
 /* --- Variables principales --- */
 :root {
-  --brand: #4C63FF; /* bleu des boutons */
+  --brand: #2664EC; /* Nouveau bleu des boutons */
   --card-border: rgba(255, 255, 255, 0.08);
 }
 
@@ -45,7 +45,8 @@
 
   .mc-input:focus {
     @apply border-transparent;
-    box-shadow: 0 0 0 3px rgba(76, 99, 255, 0.25);
+    /* effet focus avec le nouveau bleu */
+    box-shadow: 0 0 0 3px rgba(38, 100, 236, 0.35);
     background: rgba(255, 255, 255, 0.06);
   }
 
@@ -61,6 +62,7 @@
   }
 
   .mc-btn-primary:hover {
+    /* léger éclaircissement du nouveau bleu */
     filter: brightness(1.1);
     transform: none !important;
     box-shadow: none !important;
@@ -78,16 +80,16 @@
   /* --- Lien support --- */
   a {
     transition: color 0.25s ease;
-    text-decoration: none !important; /* <-- suppression du soulignement global */
+    text-decoration: none !important; /* suppression du soulignement global */
   }
 
-  /* couleur normale */
+  /* couleur normale du lien support */
   a[href*="Montelion"] {
     color: rgba(173, 186, 255, 0.8);
     text-decoration: none !important;
   }
 
-  /* couleur au survol — bleu clair mais doux */
+  /* couleur au survol — plus clair mais doux */
   a[href*="Montelion"]:hover {
     color: rgba(173, 186, 255, 1);
     text-decoration: none !important;
