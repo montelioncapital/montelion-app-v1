@@ -4,14 +4,8 @@ export default function LoginPage() {
   return (
     <div className="mc-card">
       <div className="mc-section">
-        <div className="mb-8 flex items-center justify-between">
-          <div className="h-9 w-9 grid place-items-center rounded-xl bg-[--brand]/25 text-white font-medium">M</div>
-          <div className="mc-brand">MONTELION CAPITAL</div>
-        </div>
-
         <div className="mb-8 text-center">
-          <div className="mx-auto h-10 w-10 grid place-items-center rounded-xl bg-[--brand]/25 text-white/90 font-medium">M</div>
-          <h1 className="mt-6 text-3xl font-semibold tracking-[-0.02em]">Montelion Capital</h1>
+          <h1 className="text-3xl font-semibold tracking-[-0.02em]">Montelion Capital</h1>
           <p className="mt-2 text-slate-400">Sign in to continue</p>
         </div>
 
