@@ -9,7 +9,7 @@
   --brand-600: #1F54C8;       /* Hover */
   --brand-700: #1945A6;       /* Active */
   --card-border: rgba(255, 255, 255, 0.08);
-  --support-hover: #ADBAFF;   /* Bleu très doux au survol du lien support */
+  --support-hover: #9DB4FF;   /* Bleu doux au survol du lien support */
 }
 
 /* --- Fond global --- */
@@ -46,7 +46,7 @@
     @apply border-white/20;
   }
   .mc-input:focus {
-    @apply border-transparent;
+    border-color: var(--brand) !important;
     box-shadow: 0 0 0 3px rgba(38, 100, 236, 0.35);
     background: rgba(255, 255, 255, 0.06);
   }
@@ -59,31 +59,50 @@
     box-shadow: none !important;
   }
 
-  /* Bouton principal (plein) */
+  /* Bouton principal */
   .mc-btn-primary {
     color: #fff;
     background: var(--brand);
     border: 1px solid var(--brand-light);
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
   }
-  .mc-btn-primary:hover { background: var(--brand-600); border-color: var(--brand-light); }
-  .mc-btn-primary:active { background: var(--brand-700); border-color: var(--brand-light); }
+  .mc-btn-primary:hover {
+    background: var(--brand-600);
+    border-color: var(--brand-light);
+  }
+  .mc-btn-primary:active {
+    background: var(--brand-700);
+    border-color: var(--brand-light);
+  }
 
-  /* Bouton secondaire (contour) */
+  /* Bouton secondaire */
   .mc-btn-ghost {
     color: #E6EAF2;
     background: transparent;
     border: 1px solid rgba(255,255,255,0.15);
   }
-  .mc-btn-ghost:hover  { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.25); }
-  .mc-btn-ghost:active { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.3); }
+  .mc-btn-ghost:hover {
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(255,255,255,0.25);
+  }
+  .mc-btn-ghost:active {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.3);
+  }
 
-  /* --- Liens (général) --- */
-  a { transition: color 0.25s ease; text-decoration: none !important; }
+  /* --- Liens généraux --- */
+  a {
+    text-decoration: none !important;
+    transition: color 0.25s ease;
+  }
 
-  /* --- Lien "Montelion Capital Support"
-     - couleur par défaut = hérite du texte (pas de bleu avant hover)
-     - au survol = bleu doux (--support-hover) */
-  a[href*="Montelion"]        { color: inherit !important; text-decoration: none !important; }
-  a[href*="Montelion"]:hover  { color: var(--support-hover) !important; text-decoration: none !important; }
+  /* --- Lien support (corrigé) --- */
+  .mc-support-link {
+    color: inherit; /* couleur de texte par défaut */
+    transition: color 0.25s ease;
+  }
+
+  .mc-support-link:hover {
+    color: var(--support-hover); /* bleu clair au survol */
+  }
 }
