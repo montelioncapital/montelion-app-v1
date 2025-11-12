@@ -3,12 +3,10 @@ export const metadata = {
   description: "Secure workspace",
 };
 
-import "./globals.css";
-
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className="page-shell">{children}</body>
+      <body>{children}</body>
     </html>
   );
 }
