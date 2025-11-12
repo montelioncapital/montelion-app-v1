@@ -4,7 +4,6 @@ export default function LoginPage() {
   return (
     <div className="mc-card">
       <div className="mc-section">
-        {/* Titre aligné à gauche, sans sous-titre */}
         <div className="mb-8 text-left">
           <h1 className="mc-title">Sign in</h1>
         </div>
@@ -33,14 +32,14 @@ export default function LoginPage() {
             />
           </div>
 
-          <button type="submit" className="mc-btn mc-btn-primary w-full mt-3">
+        <button type="submit" className="mc-btn mc-btn-primary w-full mt-3">
             Sign in
           </button>
         </form>
 
-        {/* Aide alignée à gauche */}
         <p className="mt-8 text-left text-sm text-slate-500">
-          Need help? Contact <a href="#">Montelion Capital Support</a>.
+          Need help? Contact{" "}
+          <a href="#" className="mc-support-link">Montelion Capital Support</a>.
         </p>
       </div>
     </div>
