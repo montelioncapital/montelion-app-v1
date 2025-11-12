@@ -19,7 +19,7 @@
 @layer components {
   /* --- Rectangle commun --- */
   .mc-card {
-    @apply w-full max-w-[700px] rounded-2xl border;
+    @apply w-full max-w-[560px] rounded-2xl border; /* ← réduit ici */
     background: linear-gradient(
       180deg,
       rgba(255, 255, 255, 0.035),
@@ -89,13 +89,12 @@
     border-color: rgba(255,255,255,0.3);
   }
 
-  /* --- Liens (nettoyés) --- */
+  /* --- Liens (aucun effet) --- */
   a {
     text-decoration: none !important;
     transition: color 0.25s ease;
   }
 
-  /* Lien qui doit rester exactement comme le texte autour (aucun hover) */
   .mc-link-muted {
     color: inherit !important;
   }
