@@ -2,50 +2,75 @@
 @tailwind components;
 @tailwind utilities;
 
-:root{
-  --brand:#4C63FF;
-  --card:#0f141d;
-  --card-border:rgba(255,255,255,0.08);
+/* --- Variables principales --- */
+:root {
+  --brand: #4C63FF; /* bleu des boutons */
+  --card-border: rgba(255, 255, 255, 0.08);
 }
 
-.bg-page{ background-color:#090e18; }
+/* --- Fond global --- */
+.bg-page {
+  background-color: #090e18;
+}
 
-@layer components{
-  /* Rectangle commun — largeur réduite */
-  .mc-card{
+@layer components {
+  /* Rectangle commun — largeur fixe, sans ombre */
+  .mc-card {
     @apply w-full max-w-[700px] rounded-2xl border;
-    background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.02));
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.035),
+      rgba(255, 255, 255, 0.02)
+    );
     border-color: var(--card-border);
-    box-shadow: 0 12px 40px rgba(0,0,0,.45);
+    /* suppression totale de toute ombre */
+    box-shadow: none !important;
   }
 
-  .mc-section{ @apply p-8 sm:p-10 md:p-12; }
-  .mc-title{ @apply text-3xl md:text-4xl font-semibold tracking-[-0.02em]; }
+  .mc-section {
+    @apply p-8 sm:p-10 md:p-12;
+  }
 
-  /* Inputs */
-  .mc-input{
+  .mc-title {
+    @apply text-3xl md:text-4xl font-semibold tracking-[-0.02em];
+  }
+
+  /* --- Champs de texte --- */
+  .mc-input {
     @apply w-full rounded-md bg-white/5 border border-white/10 px-4 py-3 text-slate-200 placeholder:text-slate-400 outline-none transition;
   }
-  .mc-input:hover{ @apply border-white/20; }
-  .mc-input:focus{
-    @apply border-transparent;
-    box-shadow: 0 0 0 3px rgba(76,99,255,0.25);
-    background: rgba(255,255,255,0.06);
+
+  .mc-input:hover {
+    @apply border-white/20;
   }
 
-  /* Boutons */
-  .mc-btn{
+  .mc-input:focus {
+    @apply border-transparent;
+    box-shadow: 0 0 0 3px rgba(76, 99, 255, 0.25);
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  /* --- Boutons --- */
+  .mc-btn {
     @apply inline-flex items-center justify-center rounded-md px-5 py-3 text-sm font-medium transition;
   }
-  .mc-btn-primary{
-    color:#fff;
+
+  .mc-btn-primary {
+    color: #fff;
     background: var(--brand);
-    box-shadow: 0 8px 26px rgba(76,99,255,.38);
+    transition: all 0.25s ease;
   }
-  .mc-btn-primary:hover{
+
+  .mc-btn-primary:hover {
     transform: translateY(-1px);
-    box-shadow: 0 12px 34px rgba(76,99,255,.55);
+    filter: brightness(1.1);
   }
-  .mc-btn-ghost{ @apply bg-white/5 text-slate-200 border border-white/10; }
-  .mc-btn-ghost:hover{ @apply bg-white/10 border-white/20; }
+
+  .mc-btn-ghost {
+    @apply bg-white/5 text-slate-200 border border-white/10;
+  }
+
+  .mc-btn-ghost:hover {
+    @apply bg-white/10 border-white/20;
+  }
 }
