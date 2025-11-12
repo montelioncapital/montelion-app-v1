@@ -1,41 +1,14 @@
-'use client';
+import { Suspense } from "react";
+import ConfirmClient from "./ConfirmClient";
 
-export const dynamic = 'force-dynamic';   // empêche toute pré-génération
-export const revalidate = false;          // pas d'ISR/SSG pour cette page
+// 🔒 pas de SSG/ISR pour cette route
+export const dynamic = "force-dynamic";
+export const revalidate = false;
 
-import { useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { supabase } from '@/lib/supabaseBrowser';
-
-export default function ConfirmPage() {
-  const router = useRouter();
-  const sp = useSearchParams();
-
-  useEffect(() => {
-    const access_token  = sp.get('access_token');
-    const refresh_token = sp.get('refresh_token');
-    const type          = sp.get('type');  // 'invite' | 'recovery' | ...
-    const code          = sp.get('code');
-
-    const go = (p) => router.replace(p);
-
-    if (access_token) {
-      supabase.auth.setSession({ access_token, refresh_token })
-        .finally(() => {
-          if (type === 'invite' || type === 'recovery') go('/auth/set-password');
-          else go('/login');
-        });
-      return;
-    }
-
-    if (code) {
-      supabase.auth.exchangeCodeForSession(code)
-        .finally(() => go('/auth/set-password'));
-      return;
-    }
-
-    go('/login');
-  }, [sp, router]);
-
-  return null;
+export default function Page() {
+  return (
+    <Suspense fallback={null}>
+      <ConfirmClient />
+    </Suspense>
+  );
 }
