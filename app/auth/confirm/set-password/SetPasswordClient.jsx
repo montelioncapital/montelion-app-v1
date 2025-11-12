@@ -19,7 +19,7 @@ export default function SetPasswordPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  // règles
+  // Règles de validation
   const rules = useMemo(() => {
     const len = pwd.length >= 8;
     const spec = /[^A-Za-z0-9]/.test(pwd);
@@ -30,11 +30,6 @@ export default function SetPasswordPage() {
   }, [pwd, pwd2]);
 
   const allOk = rules.len && rules.spec && rules.num && rules.cap && rules.match;
-
-  // Quand on arrive depuis le lien d’invite, on s’assure que le token est bien pris en charge
-  useEffect(() => {
-    // rien à faire côté UI: Supabase a déjà validé l'URL d'invite en amont
-  }, []);
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -49,11 +44,9 @@ export default function SetPasswordPage() {
       return;
     }
 
-    // Option: rediriger vers /login
     window.location.replace("/login");
   };
 
-  // Petite puce (✓/✗) avec couleur adaptée
   const Check = ({ ok }) => (
     <span className={ok ? "text-emerald-400" : "text-slate-400"}>
       {ok ? "✓" : "×"}
@@ -78,17 +71,16 @@ export default function SetPasswordPage() {
                 value={pwd}
                 onChange={(e) => setPwd(e.target.value)}
                 placeholder="Enter a strong password"
-                className="mc-input pr-11"
+                className="mc-input pr-12"
                 autoComplete="new-password"
                 required
               />
               <button
                 type="button"
                 aria-label={show1 ? "Hide password" : "Show password"}
-                className="mc-input-icon-btn"
                 onClick={() => setShow1((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-100 transition-colors focus:outline-none"
               >
-                {/* œil */}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="18"
@@ -102,7 +94,13 @@ export default function SetPasswordPage() {
                     stroke="currentColor"
                     strokeWidth="1.5"
                   />
-                  <circle cx="12" cy="12" r="3.5" stroke="currentColor" strokeWidth="1.5" />
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="3.5"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  />
                 </svg>
               </button>
             </div>
@@ -117,15 +115,15 @@ export default function SetPasswordPage() {
                 value={pwd2}
                 onChange={(e) => setPwd2(e.target.value)}
                 placeholder="Retype your password"
-                className="mc-input pr-11"
+                className="mc-input pr-12"
                 autoComplete="new-password"
                 required
               />
               <button
                 type="button"
                 aria-label={show2 ? "Hide password" : "Show password"}
-                className="mc-input-icon-btn"
                 onClick={() => setShow2((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-100 transition-colors focus:outline-none"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -140,13 +138,19 @@ export default function SetPasswordPage() {
                     stroke="currentColor"
                     strokeWidth="1.5"
                   />
-                  <circle cx="12" cy="12" r="3.5" stroke="currentColor" strokeWidth="1.5" />
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="3.5"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  />
                 </svg>
               </button>
             </div>
           </div>
 
-          {/* Rules */}
+          {/* Password rules */}
           <div className="rounded-xl border border-white/5 bg-white/[0.02] p-4">
             <p className="text-slate-300 mb-3">Your password must contain:</p>
             <ul className="space-y-2 text-sm">
@@ -174,8 +178,10 @@ export default function SetPasswordPage() {
 
           <button
             type="submit"
-            className={`mc-btn mc-btn-primary w-full ${!allOk || submitting ? "opacity-50 cursor-not-allowed" : ""}`}
             disabled={!allOk || submitting}
+            className={`mc-btn mc-btn-primary w-full ${
+              !allOk || submitting ? "opacity-50 cursor-not-allowed" : ""
+            }`}
           >
             {submitting ? "Saving..." : "Save password"}
           </button>
