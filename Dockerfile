@@ -1,26 +1,25 @@
-# --- Builder ---
+# --- build stage ---
 FROM node:20-alpine AS builder
 WORKDIR /app
 
+# install deps with a clean, reproducible cache
 COPY package.json package-lock.json* ./
 RUN npm install --no-audit --no-fund
 
+# build
 COPY . .
-# Ensure Next builds as standalone
-ENV NODE_ENV=production
-RUN npx next build
+RUN npm run build
 
-# --- Runtime ---
+# --- runtime stage ---
 FROM node:20-alpine
 WORKDIR /app
 
-ENV NODE_ENV=production
-# copy the minimal standalone server + static assets
+# copy the standalone server and static assets
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
-# OPTIONAL: only if you actually have public assets.
-# If you *don’t* keep a public dir, keep this commented to avoid build errors.
-# COPY --from=builder /app/public ./public
 
+# (no /app/public copy — the folder may not exist)
 EXPOSE 3000
+ENV PORT=3000 NODE_ENV=production
+
 CMD ["node", "server.js"]
