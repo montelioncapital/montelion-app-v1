@@ -38,10 +38,9 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Aide alignée à gauche avec le même effet de survol que la home */}
+        {/* Aide alignée à gauche */}
         <p className="mt-8 text-left text-sm text-slate-500">
-          Need help? Contact{" "}
-          <a href="#" className="mc-support-link">Montelion Capital Support</a>.
+          Need help? Contact <a href="#">Montelion Capital Support</a>.
         </p>
       </div>
     </div>
