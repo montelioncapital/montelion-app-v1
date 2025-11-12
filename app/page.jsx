@@ -9,13 +9,13 @@ export const metadata = {
 export default function HomePage() {
   return (
     <main className="min-h-screen grid place-items-center bg-page">
-      <div className="mc-card mc-section text-center">
+      <div className="mc-card mc-section text-left">
         {/* Logo au-dessus du titre */}
-        <div className="flex justify-center mb-6">
+        <div className="mb-6">
           <Image
             src={logo}
             alt="Montelion Capital"
-            width={180}
+            width={160}
             height={60}
             className="opacity-90"
             priority
@@ -24,12 +24,12 @@ export default function HomePage() {
 
         {/* Texte principal */}
         <h1 className="mc-title mb-4">Welcome</h1>
-        <p className="text-slate-300 max-w-md mx-auto mb-8">
+        <p className="text-slate-300 max-w-md mb-8">
           Access your secure workspace. Use your email invite link, or sign in if your account is already active.
         </p>
 
         {/* Boutons */}
-        <div className="flex justify-center gap-4 mb-8">
+        <div className="flex gap-4 mb-8">
           <a href="/login" className="mc-btn mc-btn-primary">
             Sign in
           </a>
