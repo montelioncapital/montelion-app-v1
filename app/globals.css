@@ -14,7 +14,7 @@
 }
 
 @layer components {
-  /* Rectangle commun — largeur fixe, sans ombre */
+  /* --- Rectangle commun --- */
   .mc-card {
     @apply w-full max-w-[700px] rounded-2xl border;
     background: linear-gradient(
@@ -23,7 +23,7 @@
       rgba(255, 255, 255, 0.02)
     );
     border-color: var(--card-border);
-    box-shadow: none !important; /* aucune ombre */
+    box-shadow: none !important;
   }
 
   .mc-section {
@@ -54,7 +54,6 @@
     @apply inline-flex items-center justify-center rounded-md px-5 py-3 text-sm font-medium transition;
   }
 
-  /* Bouton principal — plat, sans déplacement au hover */
   .mc-btn-primary {
     color: #fff;
     background: var(--brand);
@@ -63,11 +62,10 @@
 
   .mc-btn-primary:hover {
     filter: brightness(1.1);
-    transform: none !important; /* pas de mouvement */
-    box-shadow: none !important; /* aucune ombre au survol */
+    transform: none !important;
+    box-shadow: none !important;
   }
 
-  /* Bouton secondaire (ghost) */
   .mc-btn-ghost {
     @apply bg-white/5 text-slate-200 border border-white/10;
     transition: background-color 0.2s ease, border-color 0.2s ease;
@@ -75,5 +73,21 @@
 
   .mc-btn-ghost:hover {
     @apply bg-white/10 border-white/20;
+  }
+
+  /* --- Lien support --- */
+  a {
+    transition: color 0.25s ease;
+  }
+
+  /* couleur normale */
+  a[href*="Montelion"] {
+    color: rgba(173, 186, 255, 0.8);
+  }
+
+  /* couleur au survol — bleu clair mais doux */
+  a[href*="Montelion"]:hover {
+    color: rgba(173, 186, 255, 1);
+    text-decoration: none;
   }
 }
