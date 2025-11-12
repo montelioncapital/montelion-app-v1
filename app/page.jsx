@@ -1,12 +1,7 @@
 export default function Page() {
   return (
     <div className="mc-card">
-      <div className="mc-section">
-        <div className="mb-10 flex items-center justify-between">
-          <div className="h-9 w-9 grid place-items-center rounded-xl bg-[--brand]/25 text-white font-medium">M</div>
-          <div className="mc-brand">MONTELION CAPITAL</div>
-        </div>
-
+      <div className="mc-section text-left">
         <h1 className="mc-title mb-4">Welcome</h1>
         <p className="max-w-2xl text-slate-400">
           Access your secure workspace. Use your email invite link, or sign in if your account is already active.
