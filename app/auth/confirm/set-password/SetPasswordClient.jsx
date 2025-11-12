@@ -172,9 +172,7 @@ export default function SetPasswordPage() {
             </ul>
           </div>
 
-          {error && (
-            <p className="text-sm text-rose-400 -mt-2">{error}</p>
-          )}
+          {error && <p className="text-sm text-rose-400 -mt-2">{error}</p>}
 
           <button
             type="submit"
@@ -185,10 +183,6 @@ export default function SetPasswordPage() {
           >
             {submitting ? "Saving..." : "Save password"}
           </button>
-
-          <p className="text-center text-xs text-slate-500">
-            Invitation received via Supabase (invite).
-          </p>
         </form>
       </div>
     </div>
