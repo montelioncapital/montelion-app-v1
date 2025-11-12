@@ -1,44 +1,128 @@
-import Image from "next/image";
-import icon from "../icone-montelion.svg";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-export default function Page() {
-  return (
-    <div className="mc-card">
-      <div className="mc-section text-left">
-        {/* Icône Montelion dans un carré arrondi */}
-        <div className="mb-6 flex items-center justify-center w-12 h-12 rounded-xl bg-[#1b1f2a]">
-          <Image
-            src={icon}
-            alt="Montelion Icon"
-            width={28}
-            height={28}
-            className="opacity-90"
-            priority
-          />
-        </div>
+/* --- Variables principales --- */
+:root {
+  --brand: #4C63FF; /* bleu des boutons */
+  --card-border: rgba(255, 255, 255, 0.08);
+}
 
-        {/* Titre + texte */}
-        <h1 className="mc-title mb-4">Welcome</h1>
-        <p className="max-w-2xl text-slate-400">
-          Access your secure workspace. Use your email invite link, or sign in if your account is already active.
-        </p>
+/* --- Fond global --- */
+.bg-page {
+  @apply min-h-screen flex items-center justify-center; /* <-- centre la carte */
+  background-color: #090e18;
+}
 
-        {/* Boutons */}
-        <div className="mt-8 flex gap-3">
-          <a href="/login" className="mc-btn mc-btn-primary">
-            Sign in
-          </a>
-          <button className="mc-btn mc-btn-ghost">Learn more</button>
-        </div>
+/* --- Carte centrée et alignement à gauche --- */
+@layer components {
+  .mc-card {
+    @apply w-full max-w-[700px] mx-4 sm:mx-auto rounded-2xl border flex items-center justify-start; /* aligné à gauche */
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.035),
+      rgba(255, 255, 255, 0.02)
+    );
+    border-color: var(--card-border);
+    box-shadow: none !important;
+    text-align: left; /* contenu aligné à gauche */
+  }
 
-        {/* Texte du support */}
-        <p className="mt-10 text-sm text-slate-500">
-          Need help? Contact{" "}
-          <a href="#" className="mc-support-link">
-            Montelion Capital Support
-          </a>.
-        </p>
-      </div>
-    </div>
-  );
+  .mc-section {
+    @apply p-5 sm:p-8 md:p-12 w-full;
+  }
+
+  .mc-title {
+    @apply text-2xl sm:text-3xl md:text-4xl font-semibold tracking-[-0.02em];
+  }
+
+  .mc-lead {
+    @apply text-slate-400 leading-relaxed;
+    font-size: 0.95rem;
+  }
+  @screen sm {
+    .mc-lead { font-size: 1.06rem; }
+  }
+  @screen md {
+    .mc-lead { font-size: 1.125rem; }
+  }
+
+  .mc-actions {
+    @apply mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3;
+  }
+
+  /* --- Boutons --- */
+  .mc-btn {
+    @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition;
+    @apply px-4 py-2.5 sm:px-5 sm:py-3;
+  }
+
+  .mc-btn-primary {
+    color: #fff;
+    background: var(--brand);
+    transition: background-color 0.2s ease, filter 0.2s ease;
+  }
+
+  .mc-btn-primary:hover {
+    filter: brightness(1.1);
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  .mc-btn-ghost {
+    @apply bg-white/5 text-slate-200 border border-white/10;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+  }
+
+  .mc-btn-ghost:hover {
+    @apply bg-white/10 border-white/20;
+  }
+
+  /* --- Champs de texte --- */
+  .mc-input {
+    @apply w-full rounded-md bg-white/5 border border-white/10 px-4 py-3 text-slate-200 placeholder:text-slate-400 outline-none transition;
+  }
+
+  .mc-input:hover {
+    @apply border-white/20;
+  }
+
+  .mc-input:focus {
+    @apply border-transparent;
+    box-shadow: 0 0 0 3px rgba(76, 99, 255, 0.25);
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  /* --- Icône carrée --- */
+  .mc-brand {
+    @apply inline-flex items-center justify-center rounded-xl bg-white/5 border border-white/10;
+    width: 40px;
+    height: 40px;
+  }
+
+  .mc-brand img, .mc-brand svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  @screen sm {
+    .mc-brand { width: 48px; height: 48px; }
+    .mc-brand img, .mc-brand svg { width: 26px; height: 26px; }
+  }
+
+  /* --- Lien support (jamais souligné, hover doux) --- */
+  a {
+    transition: color 0.25s ease;
+    text-decoration: none !important;
+  }
+
+  a[href*="Montelion"] {
+    color: rgba(173, 186, 255, 0.8);
+    text-decoration: none !important;
+  }
+
+  a[href*="Montelion"]:hover {
+    color: rgba(173, 186, 255, 1);
+    text-decoration: none !important;
+  }
 }
