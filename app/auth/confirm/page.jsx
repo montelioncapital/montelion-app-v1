@@ -1,7 +1,7 @@
 'use client';
 
-export const dynamic = 'force-dynamic';   // ✅ empêche toute pré-génération
-// export const revalidate = 0;           // (facultatif) tu peux laisser commenté
+export const dynamic = 'force-dynamic';   // empêche toute pré-génération
+export const revalidate = false;          // pas d'ISR/SSG pour cette page
 
 import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -12,16 +12,15 @@ export default function ConfirmPage() {
   const sp = useSearchParams();
 
   useEffect(() => {
-    const access_token = sp.get('access_token');
+    const access_token  = sp.get('access_token');
     const refresh_token = sp.get('refresh_token');
-    const type = sp.get('type');     // 'invite' | 'recovery' | ...
-    const code = sp.get('code');     // cas "exchange code" OAuth
+    const type          = sp.get('type');  // 'invite' | 'recovery' | ...
+    const code          = sp.get('code');
 
-    const go = (path) => router.replace(path);
+    const go = (p) => router.replace(p);
 
     if (access_token) {
-      supabase.auth
-        .setSession({ access_token, refresh_token })
+      supabase.auth.setSession({ access_token, refresh_token })
         .finally(() => {
           if (type === 'invite' || type === 'recovery') go('/auth/set-password');
           else go('/login');
@@ -30,13 +29,11 @@ export default function ConfirmPage() {
     }
 
     if (code) {
-      supabase.auth
-        .exchangeCodeForSession(code)
+      supabase.auth.exchangeCodeForSession(code)
         .finally(() => go('/auth/set-password'));
       return;
     }
 
-    // fallback
     go('/login');
   }, [sp, router]);
 
