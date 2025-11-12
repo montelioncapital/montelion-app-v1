@@ -4,11 +4,9 @@ import LoginForm from "./LoginForm";
 
 export default function Page() {
   return (
-    <div className="mc-shell">
-      <div className="mc-card">
-        <div className="mc-section">
-          <LoginForm />
-        </div>
+    <div className="mc-card">
+      <div className="mc-section">
+        <LoginForm />
       </div>
     </div>
   );
