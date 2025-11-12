@@ -9,6 +9,7 @@
   --brand-600: #1F54C8;       /* Hover */
   --brand-700: #1945A6;       /* Active */
   --card-border: rgba(255, 255, 255, 0.08);
+  --support-hover: #9DB4FF;   /* Bleu doux au survol du lien support */
 }
 
 /* --- Fond global --- */
@@ -29,15 +30,21 @@
     box-shadow: none !important;
   }
 
-  .mc-section { @apply p-8 sm:p-10 md:p-12; }
+  .mc-section {
+    @apply p-8 sm:p-10 md:p-12;
+  }
 
-  .mc-title { @apply text-3xl md:text-4xl font-semibold tracking-[-0.02em]; }
+  .mc-title {
+    @apply text-3xl md:text-4xl font-semibold tracking-[-0.02em];
+  }
 
   /* --- Champs de texte --- */
   .mc-input {
     @apply w-full rounded-md bg-white/5 border border-white/10 px-4 py-3 text-slate-200 placeholder:text-slate-400 outline-none transition;
   }
-  .mc-input:hover { @apply border-white/20; }
+  .mc-input:hover {
+    @apply border-white/20;
+  }
   .mc-input:focus {
     border-color: var(--brand) !important;
     box-shadow: 0 0 0 3px rgba(38, 100, 236, 0.35);
@@ -59,8 +66,14 @@
     border: 1px solid var(--brand-light);
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
   }
-  .mc-btn-primary:hover { background: var(--brand-600); border-color: var(--brand-light); }
-  .mc-btn-primary:active { background: var(--brand-700); border-color: var(--brand-light); }
+  .mc-btn-primary:hover {
+    background: var(--brand-600);
+    border-color: var(--brand-light);
+  }
+  .mc-btn-primary:active {
+    background: var(--brand-700);
+    border-color: var(--brand-light);
+  }
 
   /* Bouton secondaire */
   .mc-btn-ghost {
@@ -68,17 +81,28 @@
     background: transparent;
     border: 1px solid rgba(255,255,255,0.15);
   }
-  .mc-btn-ghost:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.25); }
-  .mc-btn-ghost:active { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.3); }
-
-  /* --- Liens globaux --- */
-  a { text-decoration: none !important; transition: color 0.25s ease; }
-
-  /* --- Lien support : même rendu PARTOUT --- */
-  .mc-support-link {
-    color: rgba(173, 186, 255, 0.8);      /* comme la home */
+  .mc-btn-ghost:hover {
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(255,255,255,0.25);
   }
+  .mc-btn-ghost:active {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.3);
+  }
+
+  /* --- Liens généraux --- */
+  a {
+    text-decoration: none !important;
+    transition: color 0.25s ease;
+  }
+
+  /* --- Lien support (corrigé) --- */
+  .mc-support-link {
+    color: inherit; /* couleur de texte par défaut */
+    transition: color 0.25s ease;
+  }
+
   .mc-support-link:hover {
-    color: rgba(173, 186, 255, 1);        /* éclairci au survol */
+    color: var(--support-hover); /* bleu clair au survol */
   }
 }
