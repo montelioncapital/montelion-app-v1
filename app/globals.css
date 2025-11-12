@@ -14,9 +14,9 @@
 }
 
 @layer components {
-  /* --- Rectangle commun (card) --- */
+  /* --- Rectangle commun --- */
   .mc-card {
-    @apply w-full max-w-[700px] mx-4 sm:mx-auto rounded-2xl border;
+    @apply w-full max-w-[700px] rounded-2xl border;
     background: linear-gradient(
       180deg,
       rgba(255, 255, 255, 0.035),
@@ -27,34 +27,31 @@
   }
 
   .mc-section {
-    @apply p-5 sm:p-8 md:p-12; /* paddings responsives */
+    @apply p-8 sm:p-10 md:p-12;
   }
 
   .mc-title {
-    @apply text-2xl sm:text-3xl md:text-4xl font-semibold tracking-[-0.02em];
+    @apply text-3xl md:text-4xl font-semibold tracking-[-0.02em];
   }
 
-  /* Texte d'intro / paragraphes longs */
-  .mc-lead {
-    @apply text-slate-400 leading-relaxed;
-    font-size: 0.95rem;            /* ~15.2px */
-  }
-  @screen sm {
-    .mc-lead { font-size: 1.06rem; } /* ~17px */
-  }
-  @screen md {
-    .mc-lead { font-size: 1.125rem; } /* 18px */
+  /* --- Champs de texte --- */
+  .mc-input {
+    @apply w-full rounded-md bg-white/5 border border-white/10 px-4 py-3 text-slate-200 placeholder:text-slate-400 outline-none transition;
   }
 
-  /* Bloc des actions (boutons) */
-  .mc-actions {
-    @apply mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3;
+  .mc-input:hover {
+    @apply border-white/20;
+  }
+
+  .mc-input:focus {
+    @apply border-transparent;
+    box-shadow: 0 0 0 3px rgba(76, 99, 255, 0.25);
+    background: rgba(255, 255, 255, 0.06);
   }
 
   /* --- Boutons --- */
   .mc-btn {
-    @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition;
-    @apply px-4 py-2.5 sm:px-5 sm:py-3; /* plus compacts sur mobile */
+    @apply inline-flex items-center justify-center rounded-md px-5 py-3 text-sm font-medium transition;
   }
 
   .mc-btn-primary {
@@ -62,6 +59,7 @@
     background: var(--brand);
     transition: background-color 0.2s ease, filter 0.2s ease;
   }
+
   .mc-btn-primary:hover {
     filter: brightness(1.1);
     transform: none !important;
@@ -72,42 +70,24 @@
     @apply bg-white/5 text-slate-200 border border-white/10;
     transition: background-color 0.2s ease, border-color 0.2s ease;
   }
+
   .mc-btn-ghost:hover {
     @apply bg-white/10 border-white/20;
   }
 
-  /* --- Champs de texte --- */
-  .mc-input {
-    @apply w-full rounded-md bg-white/5 border border-white/10 px-4 py-3 text-slate-200 placeholder:text-slate-400 outline-none transition;
-  }
-  .mc-input:hover { @apply border-white/20; }
-  .mc-input:focus {
-    @apply border-transparent;
-    box-shadow: 0 0 0 3px rgba(76, 99, 255, 0.25);
-    background: rgba(255, 255, 255, 0.06);
-  }
-
-  /* --- Icône carrée --- */
-  .mc-brand {
-    @apply inline-flex items-center justify-center rounded-xl bg-white/5 border border-white/10;
-    width: 40px; height: 40px;        /* mobile */
-  }
-  .mc-brand img, .mc-brand svg { width: 22px; height: 22px; }
-
-  @screen sm {
-    .mc-brand { width: 48px; height: 48px; }
-    .mc-brand img, .mc-brand svg { width: 26px; height: 26px; }
-  }
-
-  /* --- Lien support (jamais souligné, hover doux) --- */
+  /* --- Lien support --- */
   a {
     transition: color 0.25s ease;
-    text-decoration: none !important;
+    text-decoration: none !important; /* <-- suppression du soulignement global */
   }
+
+  /* couleur normale */
   a[href*="Montelion"] {
     color: rgba(173, 186, 255, 0.8);
     text-decoration: none !important;
   }
+
+  /* couleur au survol — bleu clair mais doux */
   a[href*="Montelion"]:hover {
     color: rgba(173, 186, 255, 1);
     text-decoration: none !important;
