@@ -27,7 +27,7 @@
   }
 
   .mc-section {
-    @apply p-8 sm:p-10 md:p-12;
+    @apply p-6 sm:p-8 md:p-12;
   }
 
   .mc-title {
@@ -38,11 +38,7 @@
   .mc-input {
     @apply w-full rounded-md bg-white/5 border border-white/10 px-4 py-3 text-slate-200 placeholder:text-slate-400 outline-none transition;
   }
-
-  .mc-input:hover {
-    @apply border-white/20;
-  }
-
+  .mc-input:hover { @apply border-white/20; }
   .mc-input:focus {
     @apply border-transparent;
     box-shadow: 0 0 0 3px rgba(76, 99, 255, 0.25);
@@ -53,41 +49,33 @@
   .mc-btn {
     @apply inline-flex items-center justify-center rounded-md px-5 py-3 text-sm font-medium transition;
   }
-
   .mc-btn-primary {
     color: #fff;
     background: var(--brand);
     transition: background-color 0.2s ease, filter 0.2s ease;
   }
-
   .mc-btn-primary:hover {
     filter: brightness(1.1);
     transform: none !important;
     box-shadow: none !important;
   }
-
   .mc-btn-ghost {
     @apply bg-white/5 text-slate-200 border border-white/10;
     transition: background-color 0.2s ease, border-color 0.2s ease;
   }
+  .mc-btn-ghost:hover { @apply bg-white/10 border-white/20; }
 
-  .mc-btn-ghost:hover {
-    @apply bg-white/10 border-white/20;
-  }
-
-  /* --- Lien support --- */
+  /* --- Liens (globaux) --- */
   a {
     transition: color 0.25s ease;
-    text-decoration: none !important; /* <-- suppression du soulignement global */
+    text-decoration: none !important; /* jamais souligné */
   }
 
-  /* couleur normale */
+  /* Couleur par défaut du lien “Montelion Capital Support” */
   a[href*="Montelion"] {
     color: rgba(173, 186, 255, 0.8);
-    text-decoration: none !important;
   }
-
-  /* couleur au survol — bleu clair mais doux */
+  /* Survol : un peu plus clair, sans souligné */
   a[href*="Montelion"]:hover {
     color: rgba(173, 186, 255, 1);
     text-decoration: none !important;
