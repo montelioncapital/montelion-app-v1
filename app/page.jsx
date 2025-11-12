@@ -1,5 +1,3 @@
-import Image from "next/image";
-
 export const metadata = { title: "Montelion Capital" };
 
 export default function Page() {
@@ -8,13 +6,12 @@ export default function Page() {
       <div className="mc-section text-left">
         {/* Icône dans un carré arrondi */}
         <div className="mb-6 flex items-center justify-center w-12 h-12 rounded-xl bg-[#1b1f2a]">
-          <Image
-            src="/icone-montelion.svg" // <-- depuis /public
+          <img
+            src="/icone-montelion.svg" // <- le fichier doit être dans /public/
             alt="Montelion Icon"
             width={28}
             height={28}
             className="opacity-90"
-            priority
           />
         </div>
 
@@ -25,8 +22,12 @@ export default function Page() {
         </p>
 
         <div className="mt-8 flex gap-3">
-          <a href="/login" className="mc-btn mc-btn-primary">Sign in</a>
-          <a href="#" className="mc-btn mc-btn-ghost">Learn more</a>
+          <a href="/login" className="mc-btn mc-btn-primary">
+            Sign in
+          </a>
+          <a href="#" className="mc-btn mc-btn-ghost">
+            Learn more
+          </a>
         </div>
 
         <p className="mt-10 text-sm text-slate-500">
