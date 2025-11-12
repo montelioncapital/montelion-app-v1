@@ -2,33 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Couleurs de thème */
 :root{
-  --brand:#4C63FF;       /* bleu bouton validé */
-  --card:#0f141d;        /* fond carte */
+  --brand:#4C63FF;
+  --card:#0f141d;
   --card-border:rgba(255,255,255,0.08);
 }
 
-/* Fond global (renforcé par le gradient dans layout) */
 .bg-page{ background-color:#090e18; }
 
-/* Composants réutilisables */
 @layer components{
-  /* Rectangle commun : même largeur partout */
+  /* Rectangle commun — largeur réduite */
   .mc-card{
-    @apply w-full max-w-[960px] rounded-2xl border;
+    @apply w-full max-w-[700px] rounded-2xl border;
     background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.02));
     border-color: var(--card-border);
     box-shadow: 0 12px 40px rgba(0,0,0,.45);
   }
+
   .mc-section{ @apply p-8 sm:p-10 md:p-12; }
   .mc-title{ @apply text-3xl md:text-4xl font-semibold tracking-[-0.02em]; }
-  .mc-brand{ @apply text-[11px] tracking-[0.35em] text-slate-400; }
 
-  /* Inputs : hover/focus propres */
+  /* Inputs */
   .mc-input{
     @apply w-full rounded-md bg-white/5 border border-white/10 px-4 py-3 text-slate-200 placeholder:text-slate-400 outline-none transition;
-    box-shadow: inset 0 0 0 0 rgba(76,99,255,0);
   }
   .mc-input:hover{ @apply border-white/20; }
   .mc-input:focus{
@@ -37,7 +33,7 @@
     background: rgba(255,255,255,0.06);
   }
 
-  /* Boutons : primaire + ghost avec hover net */
+  /* Boutons */
   .mc-btn{
     @apply inline-flex items-center justify-center rounded-md px-5 py-3 text-sm font-medium transition;
   }
