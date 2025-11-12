@@ -2,56 +2,43 @@ export const metadata = { title: "Sign in • Montelion Capital" };
 
 export default function LoginPage() {
   return (
-    <main className="screen">
-      <section className="card card-pad">
-        {/* top line */}
-        <div className="flex items-center justify-between text-xs tracking-[0.2em] text-white/60">
-          <span className="invisible">.</span>
-          <span>MONTELION CAPITAL</span>
+    <div className="mc-card">
+      <div className="mc-section">
+        <div className="mb-8 flex items-center justify-between">
+          <div className="h-9 w-9 grid place-items-center rounded-xl bg-[--brand]/25 text-white font-medium">M</div>
+          <div className="mc-brand">MONTELION CAPITAL</div>
         </div>
 
-        {/* header */}
-        <div className="mt-6 text-center stack-sm">
-          <div className="inline-block">
-            <span className="badge">M</span>
-          </div>
-          <h1 className="title-xl">Montelion Capital</h1>
-          <p className="subtitle">Sign in to continue</p>
+        <div className="mb-8 text-center">
+          <div className="mx-auto h-10 w-10 grid place-items-center rounded-xl bg-[--brand]/25 text-white/90 font-medium">M</div>
+          <h1 className="mt-6 text-3xl font-semibold tracking-[-0.02em]">Montelion Capital</h1>
+          <p className="mt-2 text-slate-400">Sign in to continue</p>
         </div>
 
-        {/* form */}
-        <form className="mt-8">
-          <div className="stack-md">
-            <div className="stack-sm">
-              <label className="text-sm text-white/70">Email</label>
-              <input type="email" placeholder="you@example.com" className="input" />
-            </div>
+        <form className="space-y-4">
+          <label className="block text-sm text-slate-300">
+            Email
+            <input type="email" placeholder="you@example.com" className="mc-input mt-2" />
+          </label>
 
-            <div className="stack-sm">
-              <div className="flex items-center justify-between">
-                <label className="text-sm text-white/70">Password</label>
-                <a className="text-sm text-white/60 hover:text-white/80" href="#">
-                  Forgot password?
-                </a>
-              </div>
-              <input type="password" className="input" />
+          <div>
+            <div className="flex items-center justify-between text-sm text-slate-300">
+              <label>Password</label>
+              <a href="#" className="text-slate-400 hover:text-slate-300">Forgot password?</a>
             </div>
-
-            {/* spacing so it's not glued to inputs */}
-            <button type="submit" className="btn btn-primary w-full mt-6">
-              Sign in
-            </button>
+            <input type="password" placeholder="••••••••" className="mc-input mt-2" />
           </div>
+
+          <button type="submit" className="mc-btn mc-btn-primary w-full mt-3">Sign in</button>
         </form>
 
-        {/* help — with proper spacing */}
-        <p className="mt-6 text-center text-sm text-white/60">
+        <p className="mt-8 text-center text-sm text-slate-500">
           Need help? Contact{" "}
-          <a className="underline hover:no-underline" href="#">
+          <a href="#" className="underline decoration-white/20 hover:text-slate-300">
             Montelion Capital Support
           </a>.
         </p>
-      </section>
-    </main>
+      </div>
+    </div>
   );
 }
