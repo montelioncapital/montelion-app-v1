@@ -27,7 +27,6 @@ export default function LoginForm() {
     setLoading(false);
 
     if (error) {
-      // messages propres pour les cas courants
       if (error.message?.toLowerCase().includes("invalid")) {
         setErr("Email ou mot de passe incorrect.");
       } else {
@@ -36,10 +35,8 @@ export default function LoginForm() {
       return;
     }
 
-    // connecté ✅
     if (data?.user) {
       setOk("Connexion réussie.");
-      // redirection simple (ajuste la route si besoin)
       router.push("/");
     }
   }
@@ -52,12 +49,8 @@ export default function LoginForm() {
       </div>
 
       {/* Messages */}
-      {err ? (
-        <div className="mb-4 text-sm text-red-400">{err}</div>
-      ) : null}
-      {ok ? (
-        <div className="mb-4 text-sm text-emerald-400">{ok}</div>
-      ) : null}
+      {err ? <div className="mb-4 text-sm text-red-400">{err}</div> : null}
+      {ok ? <div className="mb-4 text-sm text-emerald-400">{ok}</div> : null}
 
       {/* Formulaire */}
       <form className="space-y-4" onSubmit={onSubmit}>
@@ -78,7 +71,10 @@ export default function LoginForm() {
         <div>
           <div className="flex items-center justify-between text-sm text-slate-300">
             <label>Password</label>
-            <a href="#" className="text-slate-400 hover:text-slate-300">
+            <a
+              href="/auth/forgot-password"
+              className="text-slate-400 hover:text-slate-300"
+            >
               Forgot password?
             </a>
           </div>
