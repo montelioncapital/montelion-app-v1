@@ -2,89 +2,94 @@
 @tailwind components;
 @tailwind utilities;
 
-/* === GLOBAL RESET === */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+/* --- Variables principales --- */
+:root {
+  --brand: #4C63FF; /* bleu des boutons */
+  --card-border: rgba(255, 255, 255, 0.08);
 }
 
-/* === BODY === */
-body {
-  @apply min-h-screen flex items-center justify-center;
-  background: radial-gradient(circle at top, #0b0f1a 0%, #05060a 100%);
-  color: white;
-  font-family: 'Inter', sans-serif;
+/* --- Fond global --- */
+.bg-page {
+  background-color: #090e18;
 }
 
-/* === CARD === */
-.mc-card {
-  @apply bg-[#0d1019]/80 backdrop-blur-xl rounded-2xl shadow-none p-10;
-  width: 480px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
+@layer components {
+  /* --- Rectangle commun --- */
+  .mc-card {
+    @apply w-full max-w-[700px] rounded-2xl border;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.035),
+      rgba(255, 255, 255, 0.02)
+    );
+    border-color: var(--card-border);
+    box-shadow: none !important;
+  }
 
-/* === SECTION (pour le contenu interne) === */
-.mc-section {
-  @apply flex flex-col items-start justify-center;
-}
+  .mc-section {
+    @apply p-8 sm:p-10 md:p-12;
+  }
 
-/* === TITRES === */
-.mc-title {
-  @apply text-3xl font-semibold text-white tracking-tight;
-}
+  .mc-title {
+    @apply text-3xl md:text-4xl font-semibold tracking-[-0.02em];
+  }
 
-/* === BOUTONS === */
-.mc-btn {
-  @apply px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-200;
-}
+  /* --- Champs de texte --- */
+  .mc-input {
+    @apply w-full rounded-md bg-white/5 border border-white/10 px-4 py-3 text-slate-200 placeholder:text-slate-400 outline-none transition;
+  }
 
-.mc-btn-primary {
-  @apply bg-indigo-600 text-white;
-}
+  .mc-input:hover {
+    @apply border-white/20;
+  }
 
-.mc-btn-primary:hover {
-  @apply bg-indigo-500;
-}
+  .mc-input:focus {
+    @apply border-transparent;
+    box-shadow: 0 0 0 3px rgba(76, 99, 255, 0.25);
+    background: rgba(255, 255, 255, 0.06);
+  }
 
-.mc-btn-ghost {
-  @apply bg-[#1a1d25] text-slate-300;
-}
+  /* --- Boutons --- */
+  .mc-btn {
+    @apply inline-flex items-center justify-center rounded-md px-5 py-3 text-sm font-medium transition;
+  }
 
-.mc-btn-ghost:hover {
-  @apply bg-[#222631] text-slate-100;
-}
+  .mc-btn-primary {
+    color: #fff;
+    background: var(--brand);
+    transition: background-color 0.2s ease, filter 0.2s ease;
+  }
 
-/* === INPUTS === */
-input {
-  @apply w-full bg-[#12151f] border border-[#1f2230] text-white rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-600;
-}
+  .mc-btn-primary:hover {
+    filter: brightness(1.1);
+    transform: none !important;
+    box-shadow: none !important;
+  }
 
-/* === TEXTE === */
-p {
-  @apply leading-relaxed text-slate-400;
-}
+  .mc-btn-ghost {
+    @apply bg-white/5 text-slate-200 border border-white/10;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+  }
 
-/* === LIENS GÉNÉRAUX === */
-a {
-  text-decoration: none;
-  transition: color 0.2s ease, opacity 0.2s ease;
-}
+  .mc-btn-ghost:hover {
+    @apply bg-white/10 border-white/20;
+  }
 
-/* === LIEN DE SUPPORT (jamais souligné, effet subtil) === */
-.mc-support-link {
-  text-decoration: none !important;
-  color: #94a3b8; /* text-slate-400 */
-  transition: color 0.2s ease, opacity 0.2s ease;
-}
+  /* --- Lien support --- */
+  a {
+    transition: color 0.25s ease;
+    text-decoration: none !important; /* <-- suppression du soulignement global */
+  }
 
-.mc-support-link:hover {
-  color: #cbd5e1; /* text-slate-300 */
-  text-decoration: none !important;
-  opacity: 0.9;
-}
+  /* couleur normale */
+  a[href*="Montelion"] {
+    color: rgba(173, 186, 255, 0.8);
+    text-decoration: none !important;
+  }
 
-/* === LOGO CONTAINER === */
-.mc-logo {
-  @apply flex items-center justify-center w-12 h-12 rounded-xl bg-[#1b1f2a];
+  /* couleur au survol — bleu clair mais doux */
+  a[href*="Montelion"]:hover {
+    color: rgba(173, 186, 255, 1);
+    text-decoration: none !important;
+  }
 }
