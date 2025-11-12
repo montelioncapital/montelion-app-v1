@@ -78,16 +78,18 @@
   /* --- Lien support --- */
   a {
     transition: color 0.25s ease;
+    text-decoration: none !important; /* <-- suppression du soulignement global */
   }
 
   /* couleur normale */
   a[href*="Montelion"] {
     color: rgba(173, 186, 255, 0.8);
+    text-decoration: none !important;
   }
 
   /* couleur au survol — bleu clair mais doux */
   a[href*="Montelion"]:hover {
     color: rgba(173, 186, 255, 1);
-    text-decoration: none;
+    text-decoration: none !important;
   }
 }
