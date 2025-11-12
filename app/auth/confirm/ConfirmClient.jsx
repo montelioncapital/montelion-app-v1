@@ -1,56 +1,51 @@
-'use client';
+// app/auth/confirm/ConfirmClient.jsx
+"use client";
 
-import { useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { supabase } from '@/lib/supabaseBrowser';
+import { useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
+/**
+ * Rôle: parse le hash OU la query (selon le lien d'invite Supabase),
+ * et redirige vers /auth/confirm/set-password avec les bons tokens en query.
+ */
 export default function ConfirmClient() {
   const router = useRouter();
-  const sp = useSearchParams();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
-    // 1) Récupère d’abord dans la query (?param=)
-    const qp = new URLSearchParams(sp?.toString() || '');
-    let access_token = qp.get('access_token');
-    let refresh_token = qp.get('refresh_token');
-    let type = qp.get('type');        // "invite", "recovery", ...
-    let code = qp.get('code');        // flow PKCE/code
+    // 1) Récupère à la fois le hash (#...) et la query (?...)
+    const hash = typeof window !== "undefined" ? window.location.hash : "";
+    const fromHash = new URLSearchParams(hash.startsWith("#") ? hash.slice(1) : "");
 
-    // 2) Si rien, regarde dans le hash (#param=)
-    if (!access_token && typeof window !== 'undefined') {
-      const hash = window.location.hash?.replace(/^#/, '') || '';
-      const hp = new URLSearchParams(hash);
-      access_token = hp.get('access_token') || access_token;
-      refresh_token = hp.get('refresh_token') || refresh_token;
-      type = type || hp.get('type');
-      code = code || hp.get('code');
+    // Préférence: si Supabase a mis les tokens dans le hash, on prend le hash; sinon on prend la query
+    const src = fromHash.get("access_token") ? fromHash : searchParams;
+
+    const access_token = src.get("access_token") || "";
+    const refresh_token = src.get("refresh_token") || "";
+    const type = (src.get("type") || "").toLowerCase();
+    const expires_at = src.get("expires_at") || "";
+    const expires_in = src.get("expires_in") || "";
+
+    if (access_token && (type === "invite" || type === "signup" || type === "recovery")) {
+      // 2) Redirige vers set-password avec les infos nécessaires en query
+      const q = new URLSearchParams({
+        access_token,
+        refresh_token,
+        type,
+        expires_at,
+        expires_in,
+      }).toString();
+
+      router.replace(`/auth/confirm/set-password?${q}`);
+    } else {
+      // Cas non attendu -> renvoie vers login
+      router.replace("/login");
     }
+  }, [router, searchParams]);
 
-    const goLogin = () => router.replace('/login');
-    const goSetPwd = () => router.replace('/auth/confirm/set-password'); // <<< Chemin correct
-
-    // 3) Cas flow "code" (PKCE / magic link moderne)
-    if (code && !access_token) {
-      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
-        if (error) return goLogin();
-        if (type === 'invite' || type === 'recovery') return goSetPwd();
-        return goLogin();
-      });
-      return;
-    }
-
-    // 4) Cas flow "implicit" (tokens dans l’URL)
-    if (access_token) {
-      supabase.auth.setSession({ access_token, refresh_token }).finally(() => {
-        if (type === 'invite' || type === 'recovery') return goSetPwd();
-        return goLogin();
-      });
-      return;
-    }
-
-    // 5) Rien trouvé → login
-    goLogin();
-  }, [router, sp]);
-
-  return null;
+  return (
+    <div className="p-6">
+      <p>Validation de votre invitation…</p>
+    </div>
+  );
 }
