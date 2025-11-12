@@ -20,20 +20,20 @@ export default function SetPasswordPage() {
   const [error, setError] = useState("");
   const [hasSession, setHasSession] = useState(false);
 
-  // ✅ 1) À l’arrivée sur la page, on essaie d’hydrater/valider la session
+  // ✅ nouveau : état de succès pour afficher l'écran de confirmation
+  const [done, setDone] = useState(false);
+
+  // Hydrate/valide la session à l’arrivée
   useEffect(() => {
     (async () => {
-      // a) déjà une session ?
       const { data } = await supabase.auth.getSession();
       if (data?.session) {
         setHasSession(true);
         return;
       }
 
-      // b) sinon, tenter de récupérer les tokens dans l’URL (hash OU query)
       const search = new URLSearchParams(window.location.search);
       const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-
       const access_token =
         search.get("access_token") || hash.get("access_token") || undefined;
       const refresh_token =
@@ -45,15 +45,12 @@ export default function SetPasswordPage() {
           refresh_token,
         });
         if (!error) {
-          // Nettoie l’URL (enlève les tokens)
           const cleanUrl = window.location.pathname;
           window.history.replaceState({}, "", cleanUrl);
           setHasSession(true);
           return;
         }
       }
-
-      // c) pas de session et pas de tokens valides
       setHasSession(false);
     })();
   }, []);
@@ -78,10 +75,9 @@ export default function SetPasswordPage() {
     setSubmitting(true);
     setError("");
 
-    // Double check session
     const { data } = await supabase.auth.getSession();
     if (!data?.session) {
-      setError("Auth session missing!");
+      setError("Auth session missing! Open the invite link again (from your email).");
       setSubmitting(false);
       return;
     }
@@ -93,15 +89,43 @@ export default function SetPasswordPage() {
       return;
     }
 
-    window.location.replace("/login");
+    // ✅ on affiche l'écran de confirmation (pas de redirection auto)
+    setDone(true);
+    setSubmitting(false);
   };
 
   const Check = ({ ok }) => (
-    <span className={ok ? "text-emerald-400" : "text-slate-400"}>
-      {ok ? "✓" : "×"}
-    </span>
+    <span className={ok ? "text-emerald-400" : "text-slate-400"}>{ok ? "✓" : "×"}</span>
   );
 
+  // ✅ ÉCRAN DE CONFIRMATION
+  if (done) {
+    return (
+      <div className="mc-card">
+        <div className="mc-section text-left">
+          <h1 className="mc-title mb-2">Password updated</h1>
+          <p className="text-slate-400 mb-8">
+            Your password has been saved successfully. You can now sign in to your account.
+          </p>
+
+          <button
+            className="mc-btn mc-btn-primary w-full"
+            onClick={async () => {
+              // optionnel : on nettoie la session d’invitation avant d’aller sur /login
+              try {
+                await supabase.auth.signOut();
+              } catch {}
+              window.location.href = "/login";
+            }}
+          >
+            Go to sign in
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Formulaire (inchangé, même design)
   return (
     <div className="mc-card">
       <div className="mc-section text-left">
@@ -131,7 +155,7 @@ export default function SetPasswordPage() {
                 aria-label={show1 ? "Hide password" : "Show password"}
               >
                 {show1 ? (
-                  // eye-off (même SVG que LoginForm)
+                  // eye-off (identique à la page Login)
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                     <path d="M3 3l18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                     <path
@@ -143,7 +167,7 @@ export default function SetPasswordPage() {
                     />
                   </svg>
                 ) : (
-                  // eye (même SVG que LoginForm)
+                  // eye
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                     <path
                       d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"
