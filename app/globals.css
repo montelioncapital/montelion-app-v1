@@ -2,74 +2,54 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ---------- Base ---------- */
-:root {
-  /* teinte du bouton principal (le bleu que tu voulais) */
-  --brand:  #4f64ff; /* indigo/blue punchy */
-  --brand-hover: #3f51ff;
+/* Couleurs de thème */
+:root{
+  --brand:#4C63FF;       /* bleu bouton validé */
+  --card:#0f141d;        /* fond carte */
+  --card-border:rgba(255,255,255,0.08);
 }
 
-@layer base {
-  html, body {
-    @apply min-h-screen;
-  }
-  body {
-    @apply text-white/90 antialiased;
-    background: radial-gradient(1000px 600px at 50% -200px, rgba(76, 93, 255, .15), transparent 60%),
-                radial-gradient(800px 500px at 50% 100%, rgba(10, 20, 60, .35), transparent 60%),
-                #0b0f16; /* fond sombre, uniforme et propre */
-  }
-}
+/* Fond global (renforcé par le gradient dans layout) */
+.bg-page{ background-color:#090e18; }
 
-/* ---------- Composants réutilisables ---------- */
-@layer components {
-  /* conteneur de page */
-  .screen {
-    @apply min-h-screen grid place-items-center;
+/* Composants réutilisables */
+@layer components{
+  /* Rectangle commun : même largeur partout */
+  .mc-card{
+    @apply w-full max-w-[960px] rounded-2xl border;
+    background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.02));
+    border-color: var(--card-border);
+    box-shadow: 0 12px 40px rgba(0,0,0,.45);
   }
+  .mc-section{ @apply p-8 sm:p-10 md:p-12; }
+  .mc-title{ @apply text-3xl md:text-4xl font-semibold tracking-[-0.02em]; }
+  .mc-brand{ @apply text-[11px] tracking-[0.35em] text-slate-400; }
 
-  /* largeur & style unifiés pour TOUTES les cartes */
-  .card {
-    @apply w-full max-w-[920px] rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl;
-    /* aucune ombre/lueur */
+  /* Inputs : hover/focus propres */
+  .mc-input{
+    @apply w-full rounded-md bg-white/5 border border-white/10 px-4 py-3 text-slate-200 placeholder:text-slate-400 outline-none transition;
+    box-shadow: inset 0 0 0 0 rgba(76,99,255,0);
   }
-  .card-pad {
-    @apply p-6 sm:p-8 lg:p-10;
-  }
-
-  /* Badge “M” */
-  .badge {
-    @apply inline-grid place-items-center h-9 w-9 rounded-xl bg-indigo-900/60 text-white/90;
+  .mc-input:hover{ @apply border-white/20; }
+  .mc-input:focus{
+    @apply border-transparent;
+    box-shadow: 0 0 0 3px rgba(76,99,255,0.25);
+    background: rgba(255,255,255,0.06);
   }
 
-  /* Titres */
-  .title-xl { @apply text-3xl sm:text-4xl font-semibold tracking-tight; }
-  .subtitle { @apply text-white/60; }
-
-  /* Inputs */
-  .input {
-    @apply w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-white/90
-           outline-none transition;
+  /* Boutons : primaire + ghost avec hover net */
+  .mc-btn{
+    @apply inline-flex items-center justify-center rounded-md px-5 py-3 text-sm font-medium transition;
   }
-  .input:hover  { @apply border-white/15; }
-  .input:focus  { @apply border-white/20 bg-white/7; }
-
-  /* Boutons */
-  .btn {
-    @apply inline-flex items-center justify-center rounded-xl px-4 py-3 font-medium transition;
-  }
-  .btn-primary {
+  .mc-btn-primary{
+    color:#fff;
     background: var(--brand);
-    color: white;
+    box-shadow: 0 8px 26px rgba(76,99,255,.38);
   }
-  .btn-primary:hover { background: var(--brand-hover); }
-  .btn-ghost {
-    @apply bg-white/5 border border-white/10 text-white/90;
+  .mc-btn-primary:hover{
+    transform: translateY(-1px);
+    box-shadow: 0 12px 34px rgba(76,99,255,.55);
   }
-  .btn-ghost:hover { @apply bg-white/7 border-white/15; }
-
-  /* Piles d’espacement */
-  .stack-sm { @apply space-y-3; }
-  .stack-md { @apply space-y-4; }
-  .stack-lg { @apply space-y-6; }
+  .mc-btn-ghost{ @apply bg-white/5 text-slate-200 border border-white/10; }
+  .mc-btn-ghost:hover{ @apply bg-white/10 border-white/20; }
 }
