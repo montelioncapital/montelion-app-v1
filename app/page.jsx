@@ -1,29 +1,37 @@
-// app/page.jsx
-export const metadata = { title: "Welcome • Montelion Capital" };
+export const metadata = {
+  title: "Welcome • Montelion Capital",
+};
 
 export default function Home() {
   return (
-    <div className="flex flex-col">
-      <div className="flex w-full items-start justify-between">
-        <div className="brand-dot">M</div>
-        <div className="brand-dot">MONTELION CAPITAL</div>
+    <div className="panel panel--welcome">
+      {/* header line */}
+      <div className="flex items-center justify-between text-[12px] uppercase tracking-[0.22em] text-[rgba(255,255,255,0.55)] mb-6">
+        <span className="opacity-0">.</span>
+        <span>Montelion Capital</span>
       </div>
 
-      <div className="mt-10 max-w-[720px]">
-        <h1 className="text-[32px] font-semibold">Welcome</h1>
-        <p className="mt-4 text-white/75">
-          Access your secure workspace. Use your email invite link, or sign in if your account is already active.
-        </p>
-
-        <div className="mt-8 flex gap-3">
-          <a href="/login" className="btn btn-primary px-6">Sign in</a>
-          <button className="btn btn-ghost px-6">Learn more</button>
-        </div>
-
-        <p className="mt-8 hint">
-          Need help? Contact <a className="underline hover:text-white/80" href="#">Montelion Capital Support</a>.
-        </p>
+      {/* badge */}
+      <div className="flex justify-start mb-6">
+        <div className="brand-badge">M</div>
       </div>
+
+      {/* main copy */}
+      <h1 className="h1 mb-4">Welcome</h1>
+      <p className="muted max-w-2xl">
+        Access your secure workspace. Use your email invite link, or sign in if your account is already active.
+      </p>
+
+      {/* actions */}
+      <div className="mt-8 flex flex-wrap gap-3">
+        <a className="btn btn-primary" href="/login">Sign in</a>
+        <a className="btn btn-ghost" href="#learn">Learn more</a>
+      </div>
+
+      {/* support */}
+      <p className="muted mt-10 text-sm">
+        Need help? Contact <a className="underline decoration-[rgba(255,255,255,0.2)] hover:decoration-[rgba(255,255,255,0.5)]" href="mailto:support@montelion-capital.com">Montelion Capital Support</a>.
+      </p>
     </div>
   );
 }
