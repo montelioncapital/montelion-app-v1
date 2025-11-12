@@ -1,9 +1,48 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "../lib/supabaseClient";
 
 export default function LoginForm() {
+  const router = useRouter();
   const [show, setShow] = useState(false);
+  const [email, setEmail] = useState("");
+  const [pwd, setPwd] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
+  const [ok, setOk] = useState("");
+
+  async function onSubmit(e) {
+    e.preventDefault();
+    setErr("");
+    setOk("");
+    setLoading(true);
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password: pwd,
+    });
+
+    setLoading(false);
+
+    if (error) {
+      // messages propres pour les cas courants
+      if (error.message?.toLowerCase().includes("invalid")) {
+        setErr("Email ou mot de passe incorrect.");
+      } else {
+        setErr(error.message || "Impossible de se connecter.");
+      }
+      return;
+    }
+
+    // connecté ✅
+    if (data?.user) {
+      setOk("Connexion réussie.");
+      // redirection simple (ajuste la route si besoin)
+      router.push("/");
+    }
+  }
 
   return (
     <>
@@ -12,8 +51,16 @@ export default function LoginForm() {
         <h1 className="mc-title">Sign in</h1>
       </div>
 
+      {/* Messages */}
+      {err ? (
+        <div className="mb-4 text-sm text-red-400">{err}</div>
+      ) : null}
+      {ok ? (
+        <div className="mb-4 text-sm text-emerald-400">{ok}</div>
+      ) : null}
+
       {/* Formulaire */}
-      <form className="space-y-4">
+      <form className="space-y-4" onSubmit={onSubmit}>
         <label className="block text-sm text-slate-300">
           Email
           <input
@@ -21,6 +68,10 @@ export default function LoginForm() {
             placeholder="you@example.com"
             className="mc-input mt-2"
             autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            inputMode="email"
           />
         </label>
 
@@ -39,6 +90,10 @@ export default function LoginForm() {
               placeholder="••••••••"
               className="mc-input pr-11"
               autoComplete="current-password"
+              value={pwd}
+              onChange={(e) => setPwd(e.target.value)}
+              required
+              minLength={6}
             />
             <button
               type="button"
@@ -86,8 +141,12 @@ export default function LoginForm() {
           </div>
         </div>
 
-        <button type="submit" className="mc-btn mc-btn-primary w-full mt-3">
-          Sign in
+        <button
+          type="submit"
+          className="mc-btn mc-btn-primary w-full mt-3 disabled:opacity-60"
+          disabled={loading}
+        >
+          {loading ? "Signing in…" : "Sign in"}
         </button>
       </form>
 
