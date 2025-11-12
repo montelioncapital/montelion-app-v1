@@ -9,7 +9,8 @@
   --brand-600: #1F54C8;       /* Hover */
   --brand-700: #1945A6;       /* Active */
   --card-border: rgba(255, 255, 255, 0.08);
-  --support-hover: #9DB4FF;   /* Bleu doux au survol du lien support */
+  --support: rgba(173, 186, 255, 0.8);   /* Couleur du lien support (par défaut) */
+  --support-hover: rgba(173, 186, 255, 1); /* Couleur au survol */
 }
 
 /* --- Fond global --- */
@@ -96,13 +97,13 @@
     transition: color 0.25s ease;
   }
 
-  /* --- Lien support (corrigé) --- */
+  /* --- Lien support : couleur cohérente avec la home --- */
   .mc-support-link {
-    color: inherit; /* couleur de texte par défaut */
+    color: var(--support);
     transition: color 0.25s ease;
   }
 
   .mc-support-link:hover {
-    color: var(--support-hover); /* bleu clair au survol */
+    color: var(--support-hover);
   }
 }
