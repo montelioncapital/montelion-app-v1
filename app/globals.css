@@ -44,8 +44,9 @@
   .mc-input:hover {
     @apply border-white/20;
   }
+  /* Focus = même bleu que le bouton + bordure bleue */
   .mc-input:focus {
-    @apply border-transparent;
+    border-color: var(--brand) !important;
     box-shadow: 0 0 0 3px rgba(38, 100, 236, 0.35);
     background: rgba(255, 255, 255, 0.06);
   }
@@ -58,7 +59,7 @@
     box-shadow: none !important;
   }
 
-  /* --- Bouton principal (plein) --- */
+  /* Plein */
   .mc-btn-primary {
     color: #fff;
     background: var(--brand);
@@ -74,7 +75,7 @@
     border-color: var(--brand-light);
   }
 
-  /* --- Bouton secondaire (contour) --- */
+  /* Contour */
   .mc-btn-ghost {
     color: #E6EAF2;
     background: transparent;
