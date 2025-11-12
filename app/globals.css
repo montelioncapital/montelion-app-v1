@@ -9,8 +9,6 @@
   --brand-600: #1F54C8;       /* Hover */
   --brand-700: #1945A6;       /* Active */
   --card-border: rgba(255, 255, 255, 0.08);
-  --support: rgba(173, 186, 255, 0.8);   /* Couleur du lien support (par défaut) */
-  --support-hover: rgba(173, 186, 255, 1); /* Couleur au survol */
 }
 
 /* --- Fond global --- */
@@ -46,6 +44,7 @@
   .mc-input:hover {
     @apply border-white/20;
   }
+  /* Focus = même bleu que le bouton + bordure bleue */
   .mc-input:focus {
     border-color: var(--brand) !important;
     box-shadow: 0 0 0 3px rgba(38, 100, 236, 0.35);
@@ -60,7 +59,7 @@
     box-shadow: none !important;
   }
 
-  /* Bouton principal */
+  /* Plein */
   .mc-btn-primary {
     color: #fff;
     background: var(--brand);
@@ -76,7 +75,7 @@
     border-color: var(--brand-light);
   }
 
-  /* Bouton secondaire */
+  /* Contour */
   .mc-btn-ghost {
     color: #E6EAF2;
     background: transparent;
@@ -91,19 +90,15 @@
     border-color: rgba(255,255,255,0.3);
   }
 
-  /* --- Liens généraux --- */
+  /* --- Lien Support --- */
   a {
+    transition: color 0.25s ease;
     text-decoration: none !important;
-    transition: color 0.25s ease;
   }
-
-  /* --- Lien support : couleur cohérente avec la home --- */
-  .mc-support-link {
-    color: var(--support);
-    transition: color 0.25s ease;
+  a[href*="Montelion"] {
+    color: rgba(173, 186, 255, 0.8);
   }
-
-  .mc-support-link:hover {
-    color: var(--support-hover);
+  a[href*="Montelion"]:hover {
+    color: rgba(173, 186, 255, 1);
   }
 }
