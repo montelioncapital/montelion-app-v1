@@ -4,9 +4,8 @@ import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseBrowser";
 
-// Empêche tout prérendu/ISR sur cette page
 export const dynamic = "force-dynamic";
-export const revalidate = 0; // <= un NOMBRE, pas un objet
+export const revalidate = 0; // <= un NOMBRE (ou false), pas un objet
 
 export default function ConfirmPage() {
   const router = useRouter();
@@ -18,7 +17,6 @@ export default function ConfirmPage() {
     const type = sp.get("type");
     const code = sp.get("code");
 
-    // Cas 1 : tokens dans le hash/URL -> on installe la session et on route
     if (access_token) {
       supabase.auth
         .setSession({ access_token, refresh_token })
@@ -32,13 +30,11 @@ export default function ConfirmPage() {
       return;
     }
 
-    // Cas 2 : lien d’invite/récupération avec ?type=...&code=...
     if (type === "invite" || type === "recovery" || code) {
       router.replace(`/auth/set-password?${sp.toString()}`);
       return;
     }
 
-    // Par défaut
     router.replace("/login");
   }, [router, sp]);
 
