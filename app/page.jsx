@@ -1,34 +1,46 @@
 export const metadata = { title: "Welcome • Montelion Capital" };
 
-export default function Home() {
+export default function Page() {
   return (
-    <main className="min-h-screen grid place-items-center p-6">
-      <section className="card max-w-hero w-full">
-        <div className="flex items-center justify-between gap-4 mb-8">
-          <div className="flex items-center gap-3">
-            <div className="grid h-10 w-10 place-items-center rounded-xl bg-accent/20 border border-accent/30 text-white font-semibold">
-              M
-            </div>
-          </div>
-          <div className="tracking-widest text-xs text-white/60">
-            MONTELION CAPITAL
-          </div>
+    <>
+      <div className="absolute top-8 right-8 text-xs tracking-widest text-white/60">
+        MONTELION CAPITAL
+      </div>
+
+      <div className="flex flex-col justify-center gap-6">
+        <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-[rgb(37,72,191)]/30 text-white font-medium">
+          M
         </div>
 
-        <h1 className="text-4xl font-semibold">Welcome</h1>
-        <p className="mt-3 max-w-[60ch] text-white/70">
-          Access your secure workspace. Use your email invite link, or sign in if your account is already active.
+        <h1 className="text-3xl font-semibold text-white">Welcome</h1>
+        <p className="text-white/70 max-w-[60ch]">
+          Access your secure workspace. Use your email invite link, or sign in
+          if your account is already active.
         </p>
 
-        <div className="mt-8 flex items-center gap-3">
-          <a href="/login" className="btn-primary !w-auto px-6">Sign in</a>
-          <a href="#" className="input !w-auto px-6 py-3 bg-white/0 hover:bg-white/5 transition">Learn more</a>
+        <div className="flex gap-3 mt-2">
+          <a
+            href="/login"
+            className="rounded-xl bg-[rgb(66,102,255)] px-6 py-3 font-medium text-white hover:brightness-110 active:brightness-95 transition"
+          >
+            Sign in
+          </a>
+          <a
+            href="#"
+            className="rounded-xl bg-white/5 border border-white/10 px-6 py-3 text-white/90 hover:bg-white/10 transition"
+          >
+            Learn more
+          </a>
         </div>
 
-        <p className="mt-8 hint">
-          Need help? Contact <a className="link" href="#">Montelion Capital Support</a>.
+        <p className="text-xs text-white/45 mt-8">
+          Need help? Contact{" "}
+          <a href="#" className="underline hover:text-white/70">
+            Montelion Capital Support
+          </a>
+          .
         </p>
-      </section>
-    </main>
+      </div>
+    </>
   );
 }
