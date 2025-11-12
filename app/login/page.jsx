@@ -3,12 +3,13 @@ export const metadata = { title: "Sign in • Montelion Capital" };
 export default function LoginPage() {
   return (
     <div className="mc-card">
-      <div className="mc-section">
-        <div className="mb-8 text-left">
-          <h1 className="mc-title">Sign in</h1>
-        </div>
+      <div className="mc-section text-left">
+        {/* Titre */}
+        <h1 className="mc-title">Sign in</h1>
 
-        <form className="space-y-4">
+        {/* Formulaire */}
+        <form className="mt-6 space-y-4">
+          {/* Email */}
           <label className="block text-sm text-slate-300">
             Email
             <input
@@ -18,6 +19,7 @@ export default function LoginPage() {
             />
           </label>
 
+          {/* Password + lien */}
           <div>
             <div className="flex items-center justify-between text-sm text-slate-300">
               <label>Password</label>
@@ -32,14 +34,18 @@ export default function LoginPage() {
             />
           </div>
 
-        <button type="submit" className="mc-btn mc-btn-primary w-full mt-3">
+          {/* Bouton */}
+          <button type="submit" className="mc-btn mc-btn-primary w-full mt-3">
             Sign in
           </button>
         </form>
 
-        <p className="mt-8 text-left text-sm text-slate-500">
+        {/* Support */}
+        <p className="mt-8 text-sm text-slate-500">
           Need help? Contact{" "}
-          <a href="#" className="mc-support-link">Montelion Capital Support</a>.
+          <a href="#" className="mc-support-link">
+            Montelion Capital Support
+          </a>.
         </p>
       </div>
     </div>
