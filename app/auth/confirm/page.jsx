@@ -4,8 +4,8 @@ import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseBrowser";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0; // <= un NOMBRE (ou false), pas un objet
+export const dynamic = "force-dynamic";   // empêche la pré-génération
+export const revalidate = false;          // <- PAS d’objet, c’est boolean
 
 export default function ConfirmPage() {
   const router = useRouter();
