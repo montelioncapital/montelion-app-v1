@@ -1,5 +1,5 @@
 import Image from "next/image";
-import icon from "./icone-montelion.svg";
+import icon from "../icone-montelion.svg";
 
 export default function Page() {
   return (
