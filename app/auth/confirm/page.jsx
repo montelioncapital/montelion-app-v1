@@ -2,11 +2,11 @@
 
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { supabase } from "@/lib/supabaseBrowser"; // ton client browser
+import { supabase } from "@/lib/supabaseBrowser";
 
 // Empêche tout prérendu/ISR sur cette page
 export const dynamic = "force-dynamic";
-export const revalidate = 0; // (un nombre, pas un objet)
+export const revalidate = 0; // <= un NOMBRE, pas un objet
 
 export default function ConfirmPage() {
   const router = useRouter();
@@ -15,12 +15,11 @@ export default function ConfirmPage() {
   useEffect(() => {
     const access_token = sp.get("access_token");
     const refresh_token = sp.get("refresh_token") || null;
-    const type = sp.get("type"); // invite | signup | recovery | magiclink…
+    const type = sp.get("type");
     const code = sp.get("code");
 
-    // 1) Si Supabase a mis des tokens dans l’URL-hash (#access_token=…)
+    // Cas 1 : tokens dans le hash/URL -> on installe la session et on route
     if (access_token) {
-      // Pose la session locale puis va sur set-password si invite/recovery sinon login
       supabase.auth
         .setSession({ access_token, refresh_token })
         .finally(() => {
@@ -33,13 +32,13 @@ export default function ConfirmPage() {
       return;
     }
 
-    // 2) Sinon, pour les liens `type=invite|recovery` (par ex. si Supabase redirige avec ?type=invite&code=…)
+    // Cas 2 : lien d’invite/récupération avec ?type=...&code=...
     if (type === "invite" || type === "recovery" || code) {
       router.replace(`/auth/set-password?${sp.toString()}`);
       return;
     }
 
-    // 3) Par défaut, on renvoie au login
+    // Par défaut
     router.replace("/login");
   }, [router, sp]);
 
