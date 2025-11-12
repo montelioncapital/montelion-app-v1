@@ -1,44 +1,38 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabaseBrowser"; // garde ton alias
+import { useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { supabase } from "@/lib/supabaseBrowser";
 
 export default function ConfirmClient() {
-  const params = useSearchParams();
   const router = useRouter();
-  const [msg, setMsg] = useState("Verifying…");
+  const sp = useSearchParams();
 
   useEffect(() => {
-    const token_hash = params.get("token_hash");
-    const type = params.get("type") || "signup"; // ou "recovery" selon tes liens
+    const access_token  = sp.get("access_token");
+    const refresh_token = sp.get("refresh_token");
+    const type          = sp.get("type");
+    const code          = sp.get("code");
 
-    if (!token_hash) {
-      setMsg("Missing token.");
+    const go = (p) => router.replace(p);
+
+    if (access_token) {
+      supabase.auth.setSession({ access_token, refresh_token })
+        .finally(() => {
+          if (type === "invite" || type === "recovery") go("/auth/set-password");
+          else go("/login");
+        });
       return;
     }
 
-    supabase.auth
-      .verifyOtp({ type, token_hash })
-      .then(({ error }) => {
-        if (error) {
-          setMsg("Link invalid or expired.");
-          return;
-        }
-        setMsg("Email verified. Redirecting…");
-        // si tu veux flux "set password" après invitation :
-        router.replace("/auth/set-password");
-        // sinon vers la connexion :
-        // router.replace("/login");
-      });
-  }, [params, router]);
+    if (code) {
+      supabase.auth.exchangeCodeForSession(code)
+        .finally(() => go("/auth/set-password"));
+      return;
+    }
 
-  return (
-    <div className="mc-card">
-      <div className="mc-section">
-        <h1 className="mc-title mb-2">Confirm</h1>
-        <p className="text-slate-400">{msg}</p>
-      </div>
-    </div>
-  );
+    go("/login");
+  }, [sp, router]);
+
+  return null;
 }
