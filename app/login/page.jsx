@@ -3,8 +3,8 @@ export const metadata = { title: "Sign in • Montelion Capital" };
 export default function LoginPage() {
   return (
     <div className="mc-card">
-      <div className="mc-section text-left">
-        <div className="mb-8">
+      <div className="mc-section">
+        <div className="mb-8 text-center">
           <h1 className="text-3xl font-semibold tracking-[-0.02em]">Montelion Capital</h1>
           <p className="mt-2 text-slate-400">Sign in to continue</p>
         </div>
@@ -26,10 +26,9 @@ export default function LoginPage() {
           <button type="submit" className="mc-btn mc-btn-primary w-full mt-3">Sign in</button>
         </form>
 
-        <p className="mt-8 text-sm text-slate-500">
+        <p className="mt-8 text-center text-sm text-slate-500">
           Need help? Contact{" "}
-          {/* Pas de soulignement, hover géré globalement */}
-          <a href="#" className="">
+          <a href="#" className="underline decoration-white/20 hover:text-slate-300">
             Montelion Capital Support
           </a>.
         </p>
