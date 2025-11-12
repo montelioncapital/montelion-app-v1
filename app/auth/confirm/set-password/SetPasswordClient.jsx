@@ -1,199 +1,190 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import supabase from "@/lib/supabaseBrowser";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
 
 export const dynamic = "force-dynamic";
 export const revalidate = false;
 
 export default function SetPasswordPage() {
-  const router = useRouter();
-
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
-  const [showPw, setShowPw] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
+  const [pwd, setPwd] = useState("");
+  const [pwd2, setPwd2] = useState("");
+  const [show1, setShow1] = useState(false);
+  const [show2, setShow2] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  // Règles de complexité
+  // règles
   const rules = useMemo(() => {
-    const length = password.length >= 8;
-    const special = /[^A-Za-z0-9]/.test(password);
-    const number = /\d/.test(password);
-    const upper = /[A-Z]/.test(password);
-    const match = password.length > 0 && password === confirm;
-    return { length, special, number, upper, match };
-  }, [password, confirm]);
+    const len = pwd.length >= 8;
+    const spec = /[^A-Za-z0-9]/.test(pwd);
+    const num = /[0-9]/.test(pwd);
+    const cap = /[A-Z]/.test(pwd);
+    const match = pwd.length > 0 && pwd === pwd2;
+    return { len, spec, num, cap, match };
+  }, [pwd, pwd2]);
 
-  const allValid =
-    rules.length && rules.special && rules.number && rules.upper && rules.match;
+  const allOk = rules.len && rules.spec && rules.num && rules.cap && rules.match;
 
-  // Si pas de session, renvoyer au /login
+  // Quand on arrive depuis le lien d’invite, on s’assure que le token est bien pris en charge
   useEffect(() => {
-    (async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!data?.session) router.replace("/login");
-    })();
-  }, [router]);
+    // rien à faire côté UI: Supabase a déjà validé l'URL d'invite en amont
+  }, []);
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    if (!allValid || submitting) return;
+    if (!allOk || submitting) return;
     setSubmitting(true);
     setError("");
 
-    const { error: upErr } = await supabase.auth.updateUser({ password });
-    if (upErr) {
-      setError(upErr.message || "Unable to set your password. Please try again.");
+    const { error: updateErr } = await supabase.auth.updateUser({ password: pwd });
+    if (updateErr) {
+      setError(updateErr.message || "Something went wrong, please try again.");
       setSubmitting(false);
       return;
     }
-    router.replace("/login");
+
+    // Option: rediriger vers /login
+    window.location.replace("/login");
   };
 
+  // Petite puce (✓/✗) avec couleur adaptée
+  const Check = ({ ok }) => (
+    <span className={ok ? "text-emerald-400" : "text-slate-400"}>
+      {ok ? "✓" : "×"}
+    </span>
+  );
+
   return (
-    <div className="min-h-[100svh] md:min-h-dvh bg-transparent flex items-center justify-center px-4">
-      <div className="mc-card max-w-xl w-full">
-        <div className="mc-section text-left">
-          <h1 className="mc-title mb-2">Set your password</h1>
-          <p className="text-slate-400 mb-8">
-            Finish activating your Montelion account.
+    <div className="mc-card">
+      <div className="mc-section text-left">
+        <h1 className="mc-title mb-2">Set your password</h1>
+        <p className="text-slate-400 mb-8">
+          Finish activating your Montelion account.
+        </p>
+
+        <form onSubmit={onSubmit} className="space-y-6">
+          {/* New password */}
+          <div>
+            <label className="block mb-2 text-slate-300">New password</label>
+            <div className="relative">
+              <input
+                type={show1 ? "text" : "password"}
+                value={pwd}
+                onChange={(e) => setPwd(e.target.value)}
+                placeholder="Enter a strong password"
+                className="mc-input pr-11"
+                autoComplete="new-password"
+                required
+              />
+              <button
+                type="button"
+                aria-label={show1 ? "Hide password" : "Show password"}
+                className="mc-input-icon-btn"
+                onClick={() => setShow1((v) => !v)}
+              >
+                {/* œil */}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  className="opacity-70"
+                >
+                  <path
+                    d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  />
+                  <circle cx="12" cy="12" r="3.5" stroke="currentColor" strokeWidth="1.5" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Confirm password */}
+          <div>
+            <label className="block mb-2 text-slate-300">Confirm password</label>
+            <div className="relative">
+              <input
+                type={show2 ? "text" : "password"}
+                value={pwd2}
+                onChange={(e) => setPwd2(e.target.value)}
+                placeholder="Retype your password"
+                className="mc-input pr-11"
+                autoComplete="new-password"
+                required
+              />
+              <button
+                type="button"
+                aria-label={show2 ? "Hide password" : "Show password"}
+                className="mc-input-icon-btn"
+                onClick={() => setShow2((v) => !v)}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  className="opacity-70"
+                >
+                  <path
+                    d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  />
+                  <circle cx="12" cy="12" r="3.5" stroke="currentColor" strokeWidth="1.5" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Rules */}
+          <div className="rounded-xl border border-white/5 bg-white/[0.02] p-4">
+            <p className="text-slate-300 mb-3">Your password must contain:</p>
+            <ul className="space-y-2 text-sm">
+              <li className="flex items-center gap-2 text-slate-400">
+                <Check ok={rules.len} /> At least 8 characters
+              </li>
+              <li className="flex items-center gap-2 text-slate-400">
+                <Check ok={rules.spec} /> At least one special character
+              </li>
+              <li className="flex items-center gap-2 text-slate-400">
+                <Check ok={rules.num} /> At least one number
+              </li>
+              <li className="flex items-center gap-2 text-slate-400">
+                <Check ok={rules.cap} /> At least one capital letter
+              </li>
+              <li className="flex items-center gap-2 text-slate-400">
+                <Check ok={rules.match} /> Passwords match
+              </li>
+            </ul>
+          </div>
+
+          {error && (
+            <p className="text-sm text-rose-400 -mt-2">{error}</p>
+          )}
+
+          <button
+            type="submit"
+            className={`mc-btn mc-btn-primary w-full ${!allOk || submitting ? "opacity-50 cursor-not-allowed" : ""}`}
+            disabled={!allOk || submitting}
+          >
+            {submitting ? "Saving..." : "Save password"}
+          </button>
+
+          <p className="text-center text-xs text-slate-500">
+            Invitation received via Supabase (invite).
           </p>
-
-          <form onSubmit={onSubmit} className="space-y-5">
-            {/* Password */}
-            <div>
-              <label className="mc-label">New password</label>
-              <div className="relative">
-                <input
-                  type={showPw ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter a strong password"
-                  className="mc-input pr-10"
-                  autoFocus
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPw((v) => !v)}
-                  className="mc-eye-btn"
-                  aria-label={showPw ? "Hide password" : "Show password"}
-                >
-                  <Eye open={showPw} />
-                </button>
-              </div>
-            </div>
-
-            {/* Confirm */}
-            <div>
-              <label className="mc-label">Confirm password</label>
-              <div className="relative">
-                <input
-                  type={showConfirm ? "text" : "password"}
-                  value={confirm}
-                  onChange={(e) => setConfirm(e.target.value)}
-                  placeholder="Retype your password"
-                  className="mc-input pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirm((v) => !v)}
-                  className="mc-eye-btn"
-                  aria-label={showConfirm ? "Hide password" : "Show password"}
-                >
-                  <Eye open={showConfirm} />
-                </button>
-              </div>
-            </div>
-
-            {/* Checklist */}
-            <div className="mc-box">
-              <p className="text-sm font-medium mb-3 text-slate-300">
-                Your password must contain:
-              </p>
-              <ul className="space-y-2 text-sm">
-                <Req ok={rules.length} text="At least 8 characters" />
-                <Req ok={rules.special} text="At least one special character" />
-                <Req ok={rules.number} text="At least one number" />
-                <Req ok={rules.upper} text="At least one capital letter" />
-                <Req ok={rules.match} text="Passwords match" />
-              </ul>
-            </div>
-
-            {error && (
-              <p className="mc-error">{error}</p>
-            )}
-
-            <button
-              type="submit"
-              disabled={!allValid || submitting}
-              className={`mc-btn mc-btn-primary w-full ${
-                (!allValid || submitting) ? "mc-btn-disabled" : ""
-              }`}
-            >
-              {submitting ? "Saving…" : "Save password"}
-            </button>
-
-            <p className="text-xs text-center text-slate-500">
-              Invitation received via Supabase (invite).
-            </p>
-          </form>
-        </div>
+        </form>
       </div>
     </div>
-  );
-}
-
-function Req({ ok, text }) {
-  return (
-    <li className="flex items-center gap-3">
-      <span
-        className={`mc-badge ${ok ? "mc-badge-ok" : "mc-badge-warn"}`}
-        aria-hidden="true"
-      >
-        {ok ? (
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M5 12.5l4 4 10-10"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        ) : (
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" />
-          </svg>
-        )}
-      </span>
-      <span className={ok ? "text-slate-200" : "text-slate-400"}>{text}</span>
-    </li>
-  );
-}
-
-function Eye({ open }) {
-  return open ? (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-      <path d="M3 3l18 18" stroke="currentColor" strokeWidth="1.6" />
-      <path
-        d="M2 12s3.5-6 10-6 10 6 10 6-1.4 2.4-3.9 4.2"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  ) : (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-      <path
-        d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"
-        stroke="currentColor"
-        strokeWidth="1.6"
-      />
-      <circle cx="12" cy="12" r="3.5" stroke="currentColor" strokeWidth="1.6" />
-    </svg>
   );
 }
