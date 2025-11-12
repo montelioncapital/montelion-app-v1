@@ -18,6 +18,45 @@ export default function SetPasswordPage() {
   const [show2, setShow2] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [hasSession, setHasSession] = useState(false);
+
+  // ✅ 1) À l’arrivée sur la page, on essaie d’hydrater/valider la session
+  useEffect(() => {
+    (async () => {
+      // a) déjà une session ?
+      const { data } = await supabase.auth.getSession();
+      if (data?.session) {
+        setHasSession(true);
+        return;
+      }
+
+      // b) sinon, tenter de récupérer les tokens dans l’URL (hash OU query)
+      const search = new URLSearchParams(window.location.search);
+      const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+
+      const access_token =
+        search.get("access_token") || hash.get("access_token") || undefined;
+      const refresh_token =
+        search.get("refresh_token") || hash.get("refresh_token") || undefined;
+
+      if (access_token && refresh_token) {
+        const { error } = await supabase.auth.setSession({
+          access_token,
+          refresh_token,
+        });
+        if (!error) {
+          // Nettoie l’URL (enlève les tokens)
+          const cleanUrl = window.location.pathname;
+          window.history.replaceState({}, "", cleanUrl);
+          setHasSession(true);
+          return;
+        }
+      }
+
+      // c) pas de session et pas de tokens valides
+      setHasSession(false);
+    })();
+  }, []);
 
   // Règles de validation
   const rules = useMemo(() => {
@@ -29,13 +68,23 @@ export default function SetPasswordPage() {
     return { len, spec, num, cap, match };
   }, [pwd, pwd2]);
 
-  const allOk = rules.len && rules.spec && rules.num && rules.cap && rules.match;
+  const allOk =
+    rules.len && rules.spec && rules.num && rules.cap && rules.match && hasSession;
 
+  // Soumission
   const onSubmit = async (e) => {
     e.preventDefault();
     if (!allOk || submitting) return;
     setSubmitting(true);
     setError("");
+
+    // Double check session
+    const { data } = await supabase.auth.getSession();
+    if (!data?.session) {
+      setError("Auth session missing!");
+      setSubmitting(false);
+      return;
+    }
 
     const { error: updateErr } = await supabase.auth.updateUser({ password: pwd });
     if (updateErr) {
@@ -82,14 +131,9 @@ export default function SetPasswordPage() {
                 aria-label={show1 ? "Hide password" : "Show password"}
               >
                 {show1 ? (
-                  // eye-off
+                  // eye-off (même SVG que LoginForm)
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M3 3l18 18"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
+                    <path d="M3 3l18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                     <path
                       d="M10.58 10.58A3 3 0 0012 15a3 3 0 002.42-4.42M9.88 5.09A10.94 10.94 0 0112 5c5.52 0 9 4.5 9 7-.23.83-1.07 2.19-2.54 3.53M6.53 6.53C4.51 7.74 3.23 9.3 3 12c0 2.5 3.48 7 9 7 1.21 0 2.34-.21 3.36-.6"
                       stroke="currentColor"
@@ -99,7 +143,7 @@ export default function SetPasswordPage() {
                     />
                   </svg>
                 ) : (
-                  // eye
+                  // eye (même SVG que LoginForm)
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                     <path
                       d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"
@@ -108,13 +152,7 @@ export default function SetPasswordPage() {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     />
-                    <circle
-                      cx="12"
-                      cy="12"
-                      r="3"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    />
+                    <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
                   </svg>
                 )}
               </button>
@@ -141,14 +179,8 @@ export default function SetPasswordPage() {
                 aria-label={show2 ? "Hide password" : "Show password"}
               >
                 {show2 ? (
-                  // eye-off
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M3 3l18 18"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
+                    <path d="M3 3l18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                     <path
                       d="M10.58 10.58A3 3 0 0012 15a3 3 0 002.42-4.42M9.88 5.09A10.94 10.94 0 0112 5c5.52 0 9 4.5 9 7-.23.83-1.07 2.19-2.54 3.53M6.53 6.53C4.51 7.74 3.23 9.3 3 12c0 2.5 3.48 7 9 7 1.21 0 2.34-.21 3.36-.6"
                       stroke="currentColor"
@@ -158,7 +190,6 @@ export default function SetPasswordPage() {
                     />
                   </svg>
                 ) : (
-                  // eye
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                     <path
                       d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"
@@ -167,13 +198,7 @@ export default function SetPasswordPage() {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     />
-                    <circle
-                      cx="12"
-                      cy="12"
-                      r="3"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    />
+                    <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
                   </svg>
                 )}
               </button>
@@ -202,6 +227,11 @@ export default function SetPasswordPage() {
             </ul>
           </div>
 
+          {!hasSession && (
+            <p className="text-sm text-rose-400 -mt-2">
+              Auth session missing! Open the invite link again (from your email).
+            </p>
+          )}
           {error && <p className="text-sm text-rose-400 -mt-2">{error}</p>}
 
           <button
