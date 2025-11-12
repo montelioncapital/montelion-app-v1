@@ -1,47 +1,42 @@
-// /app/login/page.jsx
-export const metadata = { title: "Sign in • Montelion Capital" };
-
 import Link from "next/link";
+
+export const metadata = { title: "Sign in • Montelion Capital" };
 
 export default function LoginPage() {
   return (
-    <main className="min-h-screen grid place-items-center p-4">
-      <div className="card w-full max-w-md space-y-6">
+    <section className="grid min-h-[100svh] place-items-center px-4">
+      <div className="card w-full max-w-2xl p-8 sm:p-10">
         {/* Brand */}
-        <div className="text-center space-y-2">
-          <div className="brand-dot">M</div>
-          <h1 className="text-2xl font-semibold">Montelion Capital</h1>
-          <p className="text-sm text-white/70">Sign in to continue</p>
+        <div className="grid place-items-center gap-2">
+          <div className="badge">M</div>
+          <h1 className="text-center text-2xl font-semibold sm:text-3xl">
+            Montelion Capital
+          </h1>
+          <p className="kicker">Sign in to continue</p>
         </div>
 
         {/* Form */}
-        <form className="space-y-4" action="#" method="post">
-          <div className="space-y-2">
-            <label htmlFor="email" className="text-sm">Email</label>
+        <form className="mx-auto mt-8 grid max-w-lg gap-4" action="#" method="post">
+          <div>
+            <label htmlFor="email" className="mb-2 block text-sm text-white/70">Email</label>
             <input id="email" name="email" type="email" placeholder="you@example.com" className="input" />
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label htmlFor="password" className="text-sm">Password</label>
-              <Link href="#" className="text-xs link">Forgot password?</Link>
+          <div>
+            <div className="mb-2 flex items-center justify-between text-sm">
+              <label htmlFor="password" className="text-white/70">Password</label>
+              <Link href="#" className="link">Forgot password?</Link>
             </div>
-            <input id="password" name="password" type="password" placeholder="••••••••" className="input" />
+            <input id="password" name="password" type="password" className="input" />
           </div>
 
-          <button type="submit" className="btn btn-primary w-full">
-            Sign in
-          </button>
+          <button type="submit" className="btn-primary mt-2">Sign in</button>
         </form>
 
-        <p className="text-sm text-center text-white/60">
-          Need help? Contact{" "}
-          <a href="mailto:support@montelion-capital.com" className="link">
-            Montelion Capital Support
-          </a>
-          .
+        <p className="kicker mx-auto mt-6 max-w-lg text-center">
+          Need help? Contact <a href="#" className="link">Montelion Capital Support</a>.
         </p>
       </div>
-    </main>
+    </section>
   );
 }
