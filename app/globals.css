@@ -4,8 +4,14 @@
 
 /* --- Variables principales --- */
 :root {
-  --brand: #2664EC; /* Nouveau bleu des boutons */
+  --brand: #2664EC;            /* Bleu principal */
+  --brand-600: #1F54C8;        /* Hover */
+  --brand-700: #1945A6;        /* Active */
   --card-border: rgba(255, 255, 255, 0.08);
+
+  /* Boutons */
+  --btn-radius: 14px;          /* arrondi type GitHub */
+  --btn-outline: #3A4250;      /* contour gris secondary */
 }
 
 /* --- Fond global --- */
@@ -38,57 +44,70 @@
   .mc-input {
     @apply w-full rounded-md bg-white/5 border border-white/10 px-4 py-3 text-slate-200 placeholder:text-slate-400 outline-none transition;
   }
-
   .mc-input:hover {
     @apply border-white/20;
   }
-
   .mc-input:focus {
     @apply border-transparent;
-    /* effet focus avec le nouveau bleu */
+    /* halo focus avec le nouveau bleu */
     box-shadow: 0 0 0 3px rgba(38, 100, 236, 0.35);
     background: rgba(255, 255, 255, 0.06);
   }
 
-  /* --- Boutons --- */
+  /* --- Boutons (style GitHub avec tes couleurs) --- */
   .mc-btn {
-    @apply inline-flex items-center justify-center rounded-md px-5 py-3 text-sm font-medium transition;
+    @apply inline-flex items-center justify-center text-sm font-medium px-5 py-3;
+    border-radius: var(--btn-radius);
+    transition: background-color .15s ease, border-color .15s ease, filter .15s ease;
+    transform: none !important;     /* jamais d’élévation */
+    box-shadow: none !important;    /* pas d’ombre “pop” */
   }
 
+  /* Primary = plein bleu */
   .mc-btn-primary {
     color: #fff;
     background: var(--brand);
-    transition: background-color 0.2s ease, filter 0.2s ease;
+    border: 1px solid rgba(0,0,0,.2);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.06),
+      0 1px 0 rgba(0,0,0,.10);
   }
-
   .mc-btn-primary:hover {
-    /* léger éclaircissement du nouveau bleu */
-    filter: brightness(1.1);
-    transform: none !important;
-    box-shadow: none !important;
+    background: var(--brand-600);
+    border-color: rgba(0,0,0,.25);
+    filter: none;
+  }
+  .mc-btn-primary:active {
+    background: var(--brand-700);
+    border-color: rgba(0,0,0,.30);
   }
 
+  /* Ghost = contour gris, fond transparent */
   .mc-btn-ghost {
-    @apply bg-white/5 text-slate-200 border border-white/10;
-    transition: background-color 0.2s ease, border-color 0.2s ease;
+    color: #E6EAF2;
+    background: transparent;
+    border: 1px solid var(--btn-outline);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
   }
-
   .mc-btn-ghost:hover {
-    @apply bg-white/10 border-white/20;
+    background: rgba(255,255,255,0.04);
+    border-color: #4A5364;
+  }
+  .mc-btn-ghost:active {
+    background: rgba(255,255,255,0.06);
+    border-color: #5A6476;
   }
 
-  /* --- Lien support --- */
+  /* --- Liens (Support non souligné) --- */
   a {
     transition: color 0.25s ease;
-    text-decoration: none !important; /* suppression du soulignement global */
+    text-decoration: none !important;  /* suppression du soulignement global */
   }
-
   /* couleur normale du lien support */
   a[href*="Montelion"] {
     color: rgba(173, 186, 255, 0.8);
     text-decoration: none !important;
   }
-
   /* couleur au survol — plus clair mais doux */
   a[href*="Montelion"]:hover {
     color: rgba(173, 186, 255, 1);
