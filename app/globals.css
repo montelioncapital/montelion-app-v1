@@ -5,19 +5,19 @@
 /* --- Variables principales --- */
 :root {
   --brand: #2664EC;           /* Bleu principal */
-  --brand-light: #3B77FF;     /* Bordure légère du bouton plein */
+  --brand-light: #3B77FF;     /* Bleu plus clair pour bordures */
   --brand-600: #1F54C8;       /* Hover */
-  --brand-700: #1945A6;       /* Active/pressed */
+  --brand-700: #1945A6;       /* Active */
   --card-border: rgba(255, 255, 255, 0.08);
 }
 
-/* --- Fond global (si utilisé) --- */
+/* --- Fond global --- */
 .bg-page {
   background-color: #090e18;
 }
 
 @layer components {
-  /* --- Carte / rectangle commun --- */
+  /* --- Rectangle commun --- */
   .mc-card {
     @apply w-full max-w-[700px] rounded-2xl border;
     background: linear-gradient(
@@ -44,7 +44,6 @@
   .mc-input:hover {
     @apply border-white/20;
   }
-  /* Focus = bleu identique aux boutons */
   .mc-input:focus {
     border-color: var(--brand) !important;
     box-shadow: 0 0 0 3px rgba(38, 100, 236, 0.35);
@@ -54,17 +53,17 @@
   /* --- Boutons --- */
   .mc-btn {
     @apply inline-flex items-center justify-center text-sm font-medium px-5 py-3 rounded-md;
-    transition: background-color 0.15s ease, border-color 0.15s ease, filter 0.15s ease;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
     transform: none !important;
     box-shadow: none !important;
   }
 
-  /* Bouton principal (plein) */
+  /* Plein */
   .mc-btn-primary {
     color: #fff;
     background: var(--brand);
     border: 1px solid var(--brand-light);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
   }
   .mc-btn-primary:hover {
     background: var(--brand-600);
@@ -75,32 +74,32 @@
     border-color: var(--brand-light);
   }
 
-  /* Bouton secondaire (contour) */
+  /* Contour */
   .mc-btn-ghost {
     color: #E6EAF2;
     background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255,255,255,0.15);
   }
   .mc-btn-ghost:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.25);
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(255,255,255,0.25);
   }
   .mc-btn-ghost:active {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.30);
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.3);
   }
 
-  /* --- Liens généraux --- */
+  /* --- Liens (nettoyés) --- */
   a {
     text-decoration: none !important;
     transition: color 0.25s ease;
   }
 
-  /* --- Lien "Montelion Capital Support" (même comportement partout) --- */
-  .mc-support-link {
-    color: rgba(173, 186, 255, 0.8);
+  /* Lien qui doit rester exactement comme le texte autour (aucun hover) */
+  .mc-link-muted {
+    color: inherit !important;
   }
-  .mc-support-link:hover {
-    color: rgba(173, 186, 255, 1);
+  .mc-link-muted:hover {
+    color: inherit !important;
   }
 }
