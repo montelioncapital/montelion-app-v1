@@ -1,79 +1,46 @@
-export const metadata = { title: "Sign in • Montelion Capital" };
+// app/login/page.jsx
+export const metadata = {
+  title: "Sign in • Montelion Capital",
+};
 
 export default function LoginPage() {
   return (
-    <>
-      <div className="mx-auto mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-[rgb(37,72,191)]/30 text-white font-medium">
-        M
+    <div className="flex flex-col items-center">
+      {/* En-tête carte */}
+      <div className="flex w-full items-start justify-between">
+        <div className="brand-dot">M</div>
+        <div className="brand-dot">MONTELION CAPITAL</div>
       </div>
 
-      <h1 className="text-center text-2xl font-semibold text-white">
-        Montelion Capital
-      </h1>
-      <p className="mt-1 text-center text-sm text-white/60">
-        Sign in to continue
-      </p>
+      {/* Corps */}
+      <div className="mt-10 flex flex-col items-center">
+        <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-white/5 border border-white/10">
+          <span className="font-semibold">M</span>
+        </div>
+        <h1 className="text-2xl font-semibold">Montelion Capital</h1>
+        <p className="mt-2 text-white/70">Sign in to continue</p>
 
-      <form className="mx-auto mt-8 max-w-[640px] space-y-4 w-full">
-        <div>
-          <label htmlFor="email" className="text-sm text-white/70">
-            Email
+        <form className="mt-10 w-full max-w-[720px] space-y-5" action="#" method="post">
+          <label className="block space-y-2">
+            <span className="text-sm text-white/75">Email</span>
+            <input className="input" id="email" name="email" type="email" placeholder="you@example.com" />
           </label>
-          <input
-            id="email"
-            type="email"
-            placeholder="you@example.com"
-            className="
-              mt-2 w-full rounded-xl bg-white/5 border border-white/10
-              text-white placeholder-white/30 h-12 px-4 outline-none
-              focus:border-white/20 focus:ring-0
-            "
-          />
-        </div>
 
-        <div>
-          <div className="mb-2 flex items-center justify-between">
-            <label htmlFor="password" className="text-sm text-white/70">
-              Password
-            </label>
-            <a
-              href="#"
-              className="text-xs text-white/50 hover:text-white/70 transition"
-            >
-              Forgot password?
-            </a>
-          </div>
-          <input
-            id="password"
-            type="password"
-            className="
-              w-full rounded-xl bg-white/5 border border-white/10
-              text-white placeholder-white/30 h-12 px-4 outline-none
-              focus:border-white/20 focus:ring-0
-            "
-          />
-        </div>
+          <label className="block space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-white/75">Password</span>
+              <a href="#" className="text-xs text-white/60 hover:text-white/80 transition">Forgot password?</a>
+            </div>
+            <input className="input" id="password" name="password" type="password" placeholder="••••••••" />
+          </label>
 
-        <button
-          type="submit"
-          className="
-            mt-2 inline-flex h-12 w-full items-center justify-center
-            rounded-xl bg-[rgb(66,102,255)]
-            text-white text-sm font-medium
-            hover:brightness-110 active:brightness-95 transition
-          "
-        >
-          Sign in
-        </button>
-      </form>
+          <button type="submit" className="btn btn-primary w-full mt-2">Sign in</button>
+        </form>
 
-      <p className="mt-6 text-center text-xs text-white/45">
-        Need help? Contact{" "}
-        <a className="underline hover:text-white/70" href="#">
-          Montelion Capital Support
-        </a>
-        .
-      </p>
-    </>
+        <p className="mt-6 hint">
+          Need help? Contact <a className="underline hover:text-white/80" href="#">Montelion Capital Support</a>.
+        </p>
+      </div>
+    </div>
   );
 }
