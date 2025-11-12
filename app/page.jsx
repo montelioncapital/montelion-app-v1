@@ -1,17 +1,17 @@
 import Image from "next/image";
-import logo from "../logo-montelion-02.svg";
+import icon from "../icone-montelion.svg";
 
 export default function Page() {
   return (
     <div className="mc-card">
       <div className="mc-section text-left">
-        {/* --- Logo ajouté ici --- */}
-        <div className="mb-6">
+        {/* Icône dans un carré arrondi */}
+        <div className="mb-6 flex items-center justify-center w-12 h-12 rounded-xl bg-[#1b1f2a]">
           <Image
-            src={logo}
-            alt="Montelion Capital"
-            width={160}
-            height={60}
+            src={icon}
+            alt="Montelion Icon"
+            width={28}
+            height={28}
             className="opacity-90"
             priority
           />
@@ -23,9 +23,7 @@ export default function Page() {
         </p>
 
         <div className="mt-8 flex gap-3">
-          <a href="/login" className="mc-btn mc-btn-primary">
-            Sign in
-          </a>
+          <a href="/login" className="mc-btn mc-btn-primary">Sign in</a>
           <button className="mc-btn mc-btn-ghost">Learn more</button>
         </div>
 
