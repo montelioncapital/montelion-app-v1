@@ -34,14 +34,7 @@ export default function Page({ searchParams }) {
 
         {/* Texte d’aide subtil */}
         <p className="mt-6 text-sm text-slate-500">
-          Didn’t receive the email? Check your spam filter, or{" "}
-          <a
-            href="/auth/forgot-password"
-            className="text-indigo-400 hover:text-indigo-300 transition-colors"
-          >
-            try another email address
-          </a>
-          .
+          Didn’t receive the email? Check your spam filter.
         </p>
       </div>
     </div>
