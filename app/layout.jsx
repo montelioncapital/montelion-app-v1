@@ -4,7 +4,7 @@ export const metadata = {
   title: "Montelion Capital",
   description: "Secure workspace",
   icons: {
-    icon: "/favicon.svg", // ✅ ton favicon officiel
+    icon: "../favicon.svg", // ✅ ton favicon officiel
   },
 };
 
