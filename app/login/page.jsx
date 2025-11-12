@@ -1,46 +1,49 @@
-// app/login/page.jsx
 export const metadata = {
   title: "Sign in • Montelion Capital",
 };
 
 export default function LoginPage() {
   return (
-    <div className="flex flex-col items-center">
-      {/* En-tête carte */}
-      <div className="flex w-full items-start justify-between">
-        <div className="brand-dot">M</div>
-        <div className="brand-dot">MONTELION CAPITAL</div>
+    <div className="panel panel--auth">
+      {/* header */}
+      <div className="flex items-center justify-between text-[12px] uppercase tracking-[0.22em] text-[rgba(255,255,255,0.55)] mb-8">
+        <span className="opacity-0">.</span>
+        <span>Montelion Capital</span>
       </div>
 
-      {/* Corps */}
-      <div className="mt-10 flex flex-col items-center">
-        <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-white/5 border border-white/10">
-          <span className="font-semibold">M</span>
+      <div className="flex flex-col items-center text-center">
+        <div className="brand-badge mb-5">M</div>
+        <h1 className="h1">Montelion Capital</h1>
+        <p className="muted mt-2">Sign in to continue</p>
+      </div>
+
+      <form className="mt-8 space-y-5" action="#" method="post">
+        {/* Email */}
+        <div>
+          <label htmlFor="email" className="block mb-2 text-sm muted text-left">Email</label>
+          <input id="email" name="email" type="email" placeholder="you@example.com" className="input" />
         </div>
-        <h1 className="text-2xl font-semibold">Montelion Capital</h1>
-        <p className="mt-2 text-white/70">Sign in to continue</p>
 
-        <form className="mt-10 w-full max-w-[720px] space-y-5" action="#" method="post">
-          <label className="block space-y-2">
-            <span className="text-sm text-white/75">Email</span>
-            <input className="input" id="email" name="email" type="email" placeholder="you@example.com" />
-          </label>
+        {/* Password + forgot */}
+        <div>
+          <div className="mb-2 flex items-center justify-between">
+            <label htmlFor="password" className="text-sm muted">Password</label>
+            <a href="#" className="text-sm text-[rgba(255,255,255,0.75)] hover:opacity-90">Forgot password?</a>
+          </div>
+          <input id="password" name="password" type="password" placeholder="••••••••" className="input" />
+        </div>
 
-          <label className="block space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-white/75">Password</span>
-              <a href="#" className="text-xs text-white/60 hover:text-white/80 transition">Forgot password?</a>
-            </div>
-            <input className="input" id="password" name="password" type="password" placeholder="••••••••" />
-          </label>
+        {/* Submit */}
+        <button type="submit" className="btn btn-primary w-full mt-4">Sign in</button>
+      </form>
 
-          <button type="submit" className="btn btn-primary w-full mt-2">Sign in</button>
-        </form>
-
-        <p className="mt-6 hint">
-          Need help? Contact <a className="underline hover:text-white/80" href="#">Montelion Capital Support</a>.
-        </p>
-      </div>
+      <p className="muted mt-6 text-center text-sm">
+        Need help? Contact{" "}
+        <a className="underline decoration-[rgba(255,255,255,0.2)] hover:decoration-[rgba(255,255,255,0.5)]"
+           href="mailto:support@montelion-capital.com">
+          Montelion Capital Support
+        </a>.
+      </p>
     </div>
   );
 }
