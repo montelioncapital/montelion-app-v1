@@ -4,14 +4,11 @@
 
 /* --- Variables principales --- */
 :root {
-  --brand: #2664EC;            /* Bleu principal */
-  --brand-600: #1F54C8;        /* Hover */
-  --brand-700: #1945A6;        /* Active */
+  --brand: #2664EC;           /* Bleu principal */
+  --brand-light: #3B77FF;     /* Bleu plus clair pour bordures */
+  --brand-600: #1F54C8;       /* Hover */
+  --brand-700: #1945A6;       /* Active */
   --card-border: rgba(255, 255, 255, 0.08);
-
-  /* Boutons */
-  --btn-radius: 14px;          /* arrondi type GitHub */
-  --btn-outline: #3A4250;      /* contour gris secondary */
 }
 
 /* --- Fond global --- */
@@ -49,68 +46,58 @@
   }
   .mc-input:focus {
     @apply border-transparent;
-    /* halo focus avec le nouveau bleu */
     box-shadow: 0 0 0 3px rgba(38, 100, 236, 0.35);
     background: rgba(255, 255, 255, 0.06);
   }
 
-  /* --- Boutons (style GitHub avec tes couleurs) --- */
+  /* --- Boutons --- */
   .mc-btn {
-    @apply inline-flex items-center justify-center text-sm font-medium px-5 py-3;
-    border-radius: var(--btn-radius);
-    transition: background-color .15s ease, border-color .15s ease, filter .15s ease;
-    transform: none !important;     /* jamais d’élévation */
-    box-shadow: none !important;    /* pas d’ombre “pop” */
+    @apply inline-flex items-center justify-center text-sm font-medium px-5 py-3 rounded-md;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+    transform: none !important;
+    box-shadow: none !important;
   }
 
-  /* Primary = plein bleu */
+  /* --- Bouton principal (plein) --- */
   .mc-btn-primary {
     color: #fff;
     background: var(--brand);
-    border: 1px solid rgba(0,0,0,.2);
-    box-shadow:
-      inset 0 1px 0 rgba(255,255,255,.06),
-      0 1px 0 rgba(0,0,0,.10);
+    border: 1px solid var(--brand-light);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
   }
   .mc-btn-primary:hover {
     background: var(--brand-600);
-    border-color: rgba(0,0,0,.25);
-    filter: none;
+    border-color: var(--brand-light);
   }
   .mc-btn-primary:active {
     background: var(--brand-700);
-    border-color: rgba(0,0,0,.30);
+    border-color: var(--brand-light);
   }
 
-  /* Ghost = contour gris, fond transparent */
+  /* --- Bouton secondaire (contour) --- */
   .mc-btn-ghost {
     color: #E6EAF2;
     background: transparent;
-    border: 1px solid var(--btn-outline);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,0.15);
   }
   .mc-btn-ghost:hover {
-    background: rgba(255,255,255,0.04);
-    border-color: #4A5364;
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(255,255,255,0.25);
   }
   .mc-btn-ghost:active {
-    background: rgba(255,255,255,0.06);
-    border-color: #5A6476;
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.3);
   }
 
-  /* --- Liens (Support non souligné) --- */
+  /* --- Lien Support --- */
   a {
     transition: color 0.25s ease;
-    text-decoration: none !important;  /* suppression du soulignement global */
+    text-decoration: none !important;
   }
-  /* couleur normale du lien support */
   a[href*="Montelion"] {
     color: rgba(173, 186, 255, 0.8);
-    text-decoration: none !important;
   }
-  /* couleur au survol — plus clair mais doux */
   a[href*="Montelion"]:hover {
     color: rgba(173, 186, 255, 1);
-    text-decoration: none !important;
   }
 }
