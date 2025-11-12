@@ -4,74 +4,101 @@
 
 /* --- Variables principales --- */
 :root {
-  --brand: #2664EC;
-  --brand-light: #3B77FF;
-  --brand-600: #1F54C8;
-  --brand-700: #1945A6;
+  --brand: #2664EC;           /* Bleu principal */
+  --brand-light: #3B77FF;     /* Bleu plus clair pour bordures */
+  --brand-600: #1F54C8;       /* Hover */
+  --brand-700: #1945A6;       /* Active */
   --card-border: rgba(255, 255, 255, 0.08);
 }
 
 /* --- Fond global --- */
-.bg-page { background-color: #090e18; }
+.bg-page {
+  background-color: #090e18;
+}
 
 @layer components {
-  /* Shell responsive qui centre la carte (mobile: un peu plus haut) */
-  .mc-shell {
-    @apply min-h-screen flex justify-center p-4;
-    /* mobile: démarre un peu plus haut pour éviter la barre d'URL */
-    @apply items-start;
-  }
-  @screen sm {
-    .mc-shell { @apply items-center p-6; }
-  }
-
-  /* Carte */
+  /* --- Rectangle commun --- */
   .mc-card {
-    @apply w-full max-w-[680px] mx-auto rounded-2xl border;
-    background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.02));
+    @apply w-full max-w-[560px] rounded-2xl border; /* â† rÃ©duit ici */
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.035),
+      rgba(255, 255, 255, 0.02)
+    );
     border-color: var(--card-border);
     box-shadow: none !important;
   }
 
-  .mc-section { @apply p-6 sm:p-10 md:p-12; }
+  .mc-section {
+    @apply p-8 sm:p-10 md:p-12;
+  }
 
-  .mc-title { @apply text-3xl md:text-4xl font-semibold tracking-[-0.02em]; }
+  .mc-title {
+    @apply text-3xl md:text-4xl font-semibold tracking-[-0.02em];
+  }
 
-  /* Inputs */
+  /* --- Champs de texte --- */
   .mc-input {
     @apply w-full rounded-md bg-white/5 border border-white/10 px-4 py-3 text-slate-200 placeholder:text-slate-400 outline-none transition;
   }
-  .mc-input:hover { @apply border-white/20; }
+  .mc-input:hover {
+    @apply border-white/20;
+  }
   .mc-input:focus {
     border-color: var(--brand) !important;
-    box-shadow: 0 0 0 3px rgba(38,100,236,.35);
-    background: rgba(255,255,255,.06);
+    box-shadow: 0 0 0 3px rgba(38, 100, 236, 0.35);
+    background: rgba(255, 255, 255, 0.06);
   }
 
-  /* Boutons */
+  /* --- Boutons --- */
   .mc-btn {
     @apply inline-flex items-center justify-center text-sm font-medium px-5 py-3 rounded-md;
-    transition: background-color .15s ease, border-color .15s ease;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+    transform: none !important;
+    box-shadow: none !important;
   }
+
+  /* Plein */
   .mc-btn-primary {
-    color:#fff; background:var(--brand); border:1px solid var(--brand-light);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+    color: #fff;
+    background: var(--brand);
+    border: 1px solid var(--brand-light);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
   }
-  .mc-btn-primary:hover { background:var(--brand-600); border-color:var(--brand-light); }
-  .mc-btn-primary:active { background:var(--brand-700); border-color:var(--brand-light); }
+  .mc-btn-primary:hover {
+    background: var(--brand-600);
+    border-color: var(--brand-light);
+  }
+  .mc-btn-primary:active {
+    background: var(--brand-700);
+    border-color: var(--brand-light);
+  }
 
+  /* Contour */
   .mc-btn-ghost {
-    @apply text-slate-200;
-    background:transparent; border:1px solid rgba(255,255,255,.15);
+    color: #E6EAF2;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.15);
   }
-  .mc-btn-ghost:hover { background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.25); }
-  .mc-btn-ghost:active { background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.3); }
+  .mc-btn-ghost:hover {
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(255,255,255,0.25);
+  }
+  .mc-btn-ghost:active {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.3);
+  }
 
-  /* Groupe d’actions responsive: pleine largeur en mobile */
-  .mc-actions { @apply flex gap-3 flex-col sm:flex-row; }
-  .mc-actions .mc-btn { @apply w-full sm:w-auto; }
+  /* --- Liens (aucun effet) --- */
+  a {
+    text-decoration: none !important;
+    transition: color 0.25s ease;
+  }
 
-  /* Liens généraux (pas d’effet sur Support) */
-  a { text-decoration: none !important; transition: color .25s ease; }
-  a[href*="Montelion"] { color: rgba(173,186,255,.8); }
+  .mc-link-muted {
+    color: inherit !important;
+  }
+  .mc-link-muted:hover {
+    color: inherit !important;
+  }
 }
