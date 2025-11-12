@@ -25,11 +25,24 @@ export default function Page({ searchParams }) {
           )}
         </p>
 
-        <div className="mt-6 flex justify-center">
+        {/* Bouton principal */}
+        <div className="mt-6">
           <a href="/login" className="mc-btn mc-btn-primary">
             Back to sign in
           </a>
         </div>
+
+        {/* Texte d’aide subtil */}
+        <p className="mt-6 text-sm text-slate-500">
+          Didn’t receive the email? Check your spam filter, or{" "}
+          <a
+            href="/auth/forgot-password"
+            className="text-indigo-400 hover:text-indigo-300 transition-colors"
+          >
+            try another email address
+          </a>
+          .
+        </p>
       </div>
     </div>
   );
