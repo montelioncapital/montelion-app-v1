@@ -1,49 +1,63 @@
+// app/page.jsx
 export const metadata = {
-  title: "Sign in • Montelion Capital",
+  title: "Welcome • Montelion Capital",
 };
 
-export default function LoginPage() {
+export default function HomePage() {
   return (
-    <div className="panel panel--auth">
-      {/* header */}
-      <div className="flex items-center justify-between text-[12px] uppercase tracking-[0.22em] text-[rgba(255,255,255,0.55)] mb-8">
-        <span className="opacity-0">.</span>
-        <span>Montelion Capital</span>
-      </div>
-
-      <div className="flex flex-col items-center text-center">
-        <div className="brand-badge mb-5">M</div>
-        <h1 className="h1">Montelion Capital</h1>
-        <p className="muted mt-2">Sign in to continue</p>
-      </div>
-
-      <form className="mt-8 space-y-5" action="#" method="post">
-        {/* Email */}
-        <div>
-          <label htmlFor="email" className="block mb-2 text-sm muted text-left">Email</label>
-          <input id="email" name="email" type="email" placeholder="you@example.com" className="input" />
-        </div>
-
-        {/* Password + forgot */}
-        <div>
-          <div className="mb-2 flex items-center justify-between">
-            <label htmlFor="password" className="text-sm muted">Password</label>
-            <a href="#" className="text-sm text-[rgba(255,255,255,0.75)] hover:opacity-90">Forgot password?</a>
+    <main className="min-h-screen grid place-items-center px-4">
+      <section
+        className="
+          w-full max-w-[1000px] mx-auto
+          rounded-3xl border border-white/5
+          bg-[rgba(8,10,14,0.6)] backdrop-blur
+          shadow-[0_40px_80px_-40px_rgba(0,0,0,0.6)]
+          px-6 md:px-10 lg:px-14 py-10 md:py-14
+        "
+      >
+        {/* Header line */}
+        <div className="flex items-center justify-between text-sm text-white/60">
+          <div className="inline-flex items-center justify-center h-8 w-8 rounded-xl bg-[#233463] text-white/90 font-medium">
+            M
           </div>
-          <input id="password" name="password" type="password" placeholder="••••••••" className="input" />
+          <span className="tracking-[0.25em]">MONTELION CAPITAL</span>
         </div>
 
-        {/* Submit */}
-        <button type="submit" className="btn btn-primary w-full mt-4">Sign in</button>
-      </form>
+        {/* Content */}
+        <div className="mt-8 md:mt-10">
+          <h1 className="text-3xl md:text-4xl font-semibold text-white">Welcome</h1>
+          <p className="mt-4 text-white/70 max-w-2xl">
+            Access your secure workspace. Use your email invite link, or sign in if your account
+            is already active.
+          </p>
 
-      <p className="muted mt-6 text-center text-sm">
-        Need help? Contact{" "}
-        <a className="underline decoration-[rgba(255,255,255,0.2)] hover:decoration-[rgba(255,255,255,0.5)]"
-           href="mailto:support@montelion-capital.com">
-          Montelion Capital Support
-        </a>.
-      </p>
-    </div>
+          <div className="mt-8 flex gap-3">
+            <a
+              href="/login"
+              className="inline-flex items-center justify-center h-11 px-5 rounded-xl
+                         bg-[#4362ff] text-white font-medium
+                         ring-1 ring-white/10
+                         transition transform-gpu
+                         hover:brightness-110 hover:-translate-y-[1px] active:translate-y-0"
+            >
+              Sign in
+            </a>
+            <a
+              href="#learn-more"
+              className="inline-flex items-center justify-center h-11 px-5 rounded-xl
+                         bg-white/[0.03] text-white/90 font-medium
+                         ring-1 ring-white/10
+                         transition hover:bg-white/[0.06]"
+            >
+              Learn more
+            </a>
+          </div>
+
+          <p className="mt-10 text-sm text-white/50">
+            Need help? Contact <a className="underline hover:text-white/70" href="mailto:support@montelion-capital.com">Montelion Capital Support</a>.
+          </p>
+        </div>
+      </section>
+    </main>
   );
 }
