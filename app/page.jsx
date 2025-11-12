@@ -23,16 +23,16 @@ export default function Page() {
         </p>
 
         <div className="mt-8 flex gap-3">
-          <a href="/login" className="mc-btn mc-btn-primary">Sign in</a>
+          <a href="/login" className="mc-btn mc-btn-primary">
+            Sign in
+          </a>
           <button className="mc-btn mc-btn-ghost">Learn more</button>
         </div>
 
+        {/* Aucun effet de survol sur le lien */}
         <p className="mt-10 text-sm text-slate-500">
           Need help? Contact{" "}
-          <a
-            href="#"
-            className="underline decoration-white/20 hover:text-slate-300"
-          >
+          <a href="#" className="text-slate-400">
             Montelion Capital Support
           </a>.
         </p>
