@@ -24,9 +24,8 @@ export default function LoginForm() {
       password: pwd,
     });
 
-    setLoading(false);
-
     if (error) {
+      setLoading(false);
       if (error.message?.toLowerCase().includes("invalid")) {
         setErr("Email ou mot de passe incorrect.");
       } else {
@@ -35,9 +34,61 @@ export default function LoginForm() {
       return;
     }
 
+    // connecté ✅
     if (data?.user) {
       setOk("Connexion réussie.");
-      router.push("/");
+
+      const userId = data.user.id;
+
+      try {
+        // 1) On regarde l'état d'onboarding pour cet utilisateur
+        const { data: onboarding, error: onboardingErr } = await supabase
+          .from("onboarding_state")
+          .select("current_step, completed")
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        if (onboardingErr && onboardingErr.code !== "PGRST116") {
+          console.error("onboarding_state error:", onboardingErr);
+        }
+
+        // 2) Si pas de ligne → on en crée une (step 1)
+        if (!onboarding) {
+          const { error: insertErr } = await supabase
+            .from("onboarding_state")
+            .insert({
+              user_id: userId,
+              current_step: 1,
+              completed: false,
+            });
+
+          if (insertErr) {
+            console.error("onboarding_state insert error:", insertErr);
+            // on ne bloque pas la connexion, on envoie juste sur la home
+            router.push("/");
+            return;
+          }
+
+          router.push("/onboarding");
+          return;
+        }
+
+        // 3) Si onboarding non terminé → on renvoie sur /onboarding
+        if (!onboarding.completed) {
+          router.push("/onboarding");
+          return;
+        }
+
+        // 4) Sinon onboarding terminé → home
+        router.push("/");
+      } catch (e) {
+        console.error(e);
+        router.push("/"); // fallback
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      setLoading(false);
     }
   }
 
@@ -50,7 +101,9 @@ export default function LoginForm() {
 
       {/* Messages */}
       {err ? <div className="mb-4 text-sm text-red-400">{err}</div> : null}
-      {ok ? <div className="mb-4 text-sm text-emerald-400">{ok}</div> : null}
+      {ok ? (
+        <div className="mb-4 text-sm text-emerald-400">{ok}</div>
+      ) : null}
 
       {/* Formulaire */}
       <form className="space-y-4" onSubmit={onSubmit}>
