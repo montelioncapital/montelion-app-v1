@@ -2,98 +2,74 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ===== Design tokens (dark + accent) ===== */
+/* ---------- Base ---------- */
 :root {
-  --bg-0: 10 12 16;        /* page deep */
-  --bg-1: 16 19 24;        /* card base */
-  --bg-2: 22 26 32;        /* inputs */
-  --border: 255 255 255;
-  --text: 229 232 238;
-  --muted: 160 167 181;
-  --accent: 59 91 255;     /* blue you picked */
+  /* teinte du bouton principal (le bleu que tu voulais) */
+  --brand:  #4f64ff; /* indigo/blue punchy */
+  --brand-hover: #3f51ff;
 }
 
-html, body, #__next {
-  height: 100%;
+@layer base {
+  html, body {
+    @apply min-h-screen;
+  }
+  body {
+    @apply text-white/90 antialiased;
+    background: radial-gradient(1000px 600px at 50% -200px, rgba(76, 93, 255, .15), transparent 60%),
+                radial-gradient(800px 500px at 50% 100%, rgba(10, 20, 60, .35), transparent 60%),
+                #0b0f16; /* fond sombre, uniforme et propre */
+  }
 }
 
-body {
-  @apply antialiased text-[rgba(var(--text)/0.92)] bg-[rgb(var(--bg-0))];
-  background-image:
-    radial-gradient(1200px 600px at 50% -10%, rgba(88,108,255,0.14), transparent 60%),
-    radial-gradient(900px 480px at 80% 10%, rgba(59,91,255,0.10), transparent 60%),
-    radial-gradient(1100px 520px at 20% 15%, rgba(59,91,255,0.08), transparent 55%);
-  background-repeat: no-repeat;
-}
-
-/* ===== Reusable layout primitives ===== */
+/* ---------- Composants réutilisables ---------- */
 @layer components {
-  .page-shell {
-    @apply min-h-screen grid place-items-center px-5 py-12;
+  /* conteneur de page */
+  .screen {
+    @apply min-h-screen grid place-items-center;
   }
 
-  /* unified card for ALL pages */
-  .panel {
-    @apply w-full rounded-3xl;
-    @apply bg-[rgba(var(--bg-1)/0.78)] backdrop-blur-xl;
-    @apply border border-[rgba(var(--border)/0.06)];
-    @apply shadow-[0_20px_60px_-30px_rgba(0,0,0,0.6),0_6px_18px_-10px_rgba(0,0,0,0.5)];
+  /* largeur & style unifiés pour TOUTES les cartes */
+  .card {
+    @apply w-full max-w-[920px] rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl;
+    /* aucune ombre/lueur */
+  }
+  .card-pad {
+    @apply p-6 sm:p-8 lg:p-10;
   }
 
-  /* headings & text tweaks */
-  .h1 {
-    @apply text-3xl sm:text-4xl font-semibold tracking-[-0.02em] text-white;
-  }
-  .muted {
-    @apply text-[rgba(var(--muted)/0.9)];
+  /* Badge “M” */
+  .badge {
+    @apply inline-grid place-items-center h-9 w-9 rounded-xl bg-indigo-900/60 text-white/90;
   }
 
-  /* inputs */
+  /* Titres */
+  .title-xl { @apply text-3xl sm:text-4xl font-semibold tracking-tight; }
+  .subtitle { @apply text-white/60; }
+
+  /* Inputs */
   .input {
-    @apply w-full rounded-xl bg-[rgba(var(--bg-2)/0.9)]
-           border border-[rgba(var(--border)/0.08)]
-           px-4 py-3 text-[15px] placeholder:text-[rgba(var(--muted)/0.7)]
-           transition-all duration-200 outline-none;
+    @apply w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-white/90
+           outline-none transition;
   }
-  .input:hover {
-    @apply border-[rgba(var(--border)/0.14)];
-  }
-  .input:focus {
-    box-shadow:
-      0 0 0 2px rgba(var(--accent)/0.20),
-      0 0 0 6px rgba(var(--accent)/0.06);
-    border-color: rgba(var(--accent)/0.45);
-    background-color: rgba(var(--bg-2)/0.98);
-  }
+  .input:hover  { @apply border-white/15; }
+  .input:focus  { @apply border-white/20 bg-white/7; }
 
-  /* primary & ghost buttons */
+  /* Boutons */
   .btn {
-    @apply inline-flex items-center justify-center rounded-xl px-5 py-3
-           text-[15px] font-medium transition-all duration-200 select-none;
+    @apply inline-flex items-center justify-center rounded-xl px-4 py-3 font-medium transition;
   }
   .btn-primary {
-    @apply text-white bg-[rgb(var(--accent))]
-           shadow-[0_12px_30px_-12px_rgba(59,91,255,0.65),0_2px_8px_-4px_rgba(59,91,255,0.85)];
+    background: var(--brand);
+    color: white;
   }
-  .btn-primary:hover { transform: translateY(-1px) scale(1.01); }
-  .btn-primary:active { transform: translateY(0); }
-
+  .btn-primary:hover { background: var(--brand-hover); }
   .btn-ghost {
-    @apply text-[rgba(var(--text)/0.92)] bg-[rgba(var(--bg-2)/0.6)]
-           border border-[rgba(var(--border)/0.08)];
+    @apply bg-white/5 border border-white/10 text-white/90;
   }
-  .btn-ghost:hover {
-    @apply bg-[rgba(var(--bg-2)/0.8)] border-[rgba(var(--border)/0.14)];
-  }
+  .btn-ghost:hover { @apply bg-white/7 border-white/15; }
 
-  /* badge circle for “M” */
-  .brand-badge {
-    @apply grid place-items-center h-10 w-10 rounded-xl
-           bg-[rgba(var(--accent)/0.18)] text-white font-medium;
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12);
-  }
-
-  /* panel size presets */
-  .panel--welcome { @apply max-w-5xl p-8 sm:p-10; }
-  .panel--auth    { @apply max-w-3xl p-8 sm:p-10; }
+  /* Piles d’espacement */
+  .stack-sm { @apply space-y-3; }
+  .stack-md { @apply space-y-4; }
+  .stack-lg { @apply space-y-6; }
 }
