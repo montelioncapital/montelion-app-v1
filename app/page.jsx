@@ -29,10 +29,7 @@ export default function Page() {
 
         <p className="mt-10 text-sm text-slate-500">
           Need help? Contact{" "}
-          <a
-            href="#"
-            className="underline decoration-white/20 hover:text-slate-300"
-          >
+          <a href="#" className="hover:text-slate-300">
             Montelion Capital Support
           </a>.
         </p>
