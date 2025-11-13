@@ -6,6 +6,13 @@ import { supabase } from "../lib/supabaseClient";
 
 const ID_DOC_TYPES = ["Passport", "Driving license", "National ID card"];
 
+// mapping label UI -> valeur ENUM dans Postgres
+const KYC_DOC_ENUM = {
+  "Passport": "passport",
+  "Driving license": "driving_license",
+  "National ID card": "national_id",
+};
+
 const POA_DOC_TYPES = [
   "Utility bill (water / electricity)",
   "Bank statement",
