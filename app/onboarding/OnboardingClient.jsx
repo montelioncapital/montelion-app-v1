@@ -770,11 +770,7 @@ export default function OnboardingClient() {
               {error}
             </div>
           )}
-          {ok && (
-            <div className="mb-4 text-sm text-emerald-400 bg-emerald-950/40 border border-emerald-900/40 px-3 py-2 rounded-lg">
-              {ok}
-            </div>
-          )}
+          
 
           <form onSubmit={handleKycIdentitySubmit} className="space-y-6">
             <div>
