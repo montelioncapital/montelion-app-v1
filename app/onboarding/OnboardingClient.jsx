@@ -7,7 +7,7 @@ import { supabase } from "../lib/supabaseClient";
 export default function OnboardingClient() {
   const router = useRouter();
 
-  // Step: 1 = profile, 2 = phone, 3 = otp
+  // Step: 1 = profile, 2 = phone, 3 = otp, 4 = done
   const [step, setStep] = useState(1);
 
   const [loading, setLoading] = useState(true);
@@ -31,7 +31,7 @@ export default function OnboardingClient() {
   // Step 3 — OTP
   const [otp, setOtp] = useState("");
   const [verifying, setVerifying] = useState(false);
-  const [otpStatus, setOtpStatus] = useState("idle"); // idle | valid | invalid
+  const [otpStatus, setOtpStatus] = useState("idle"); // "idle" | "valid" | "invalid"
 
   // Resend timer
   const [timer, setTimer] = useState(60);
@@ -80,7 +80,7 @@ export default function OnboardingClient() {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("first_name, last_name, date_of_birth")
+        .select("first_name, last_name, date_of_birth, phone_e164")
         .eq("id", uid)
         .maybeSingle();
 
@@ -88,6 +88,9 @@ export default function OnboardingClient() {
         setFirstName(profile.first_name || "");
         setLastName(profile.last_name || "");
         setDob(profile.date_of_birth || "");
+        if (profile.phone_e164) {
+          setPhoneE164(profile.phone_e164);
+        }
       }
 
       setLoading(false);
@@ -132,6 +135,7 @@ export default function OnboardingClient() {
 
       setStep(2);
     } catch (err) {
+      console.error(err);
       setError(err.message || "Something went wrong.");
     } finally {
       setSaving(false);
@@ -143,7 +147,7 @@ export default function OnboardingClient() {
   // -------------------------
   async function handleSendCode(e) {
     e.preventDefault();
-    if (sendingCode) return;
+    if (sendingCode || !userId) return;
 
     setError("");
     setOk("");
@@ -165,12 +169,19 @@ export default function OnboardingClient() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to send code.");
 
+      // Log "code sent" in phone_verifications (optionnel mais utile)
+      await supabase.from("phone_verifications").insert({
+        user_id: userId,
+        phone_e164: full,
+        status: "code_sent",
+      });
+
       setStep(3);
       setTimer(60);
       setOtp("");
       setOtpStatus("idle");
-      setOk("We have sent you a 6-digit code by SMS.");
     } catch (err) {
+      console.error(err);
       setError(err.message || "Something went wrong.");
     } finally {
       setSendingCode(false);
@@ -182,7 +193,7 @@ export default function OnboardingClient() {
   // -------------------------
   async function handleVerifyCode(e) {
     e.preventDefault();
-    if (verifying) return;
+    if (verifying || !userId) return;
 
     setError("");
     setOk("");
@@ -207,23 +218,54 @@ export default function OnboardingClient() {
         throw new Error(data.error || "Invalid or expired code.");
       }
 
+      // ✅ Code correct → bordure verte
       setOtpStatus("valid");
       setOk("Your phone number has been verified.");
 
-      if (userId) {
-        await supabase.from("onboarding_state").upsert(
+      const nowIso = new Date().toISOString();
+
+      // ✅ Enregistrer le téléphone vérifié dans profiles
+      const { error: profileErr } = await supabase
+        .from("profiles")
+        .update({
+          phone_e164: phoneE164,
+          phone_verified_at: nowIso,
+        })
+        .eq("id", userId);
+
+      if (profileErr) {
+        console.error(profileErr);
+        throw new Error("Phone verified but profile update failed.");
+      }
+
+      // ✅ Enregistrer "verified" dans phone_verifications
+      await supabase.from("phone_verifications").insert({
+        user_id: userId,
+        phone_e164: phoneE164,
+        status: "verified",
+      });
+
+      // ✅ Mettre à jour l'état d'onboarding → step 4
+      const { error: onboardingErr } = await supabase
+        .from("onboarding_state")
+        .upsert(
           {
             user_id: userId,
-            current_step: 3,
+            current_step: 4,
             completed: true,
           },
           { onConflict: "user_id" }
         );
+
+      if (onboardingErr) {
+        console.error(onboardingErr);
+        throw new Error("Phone verified but onboarding update failed.");
       }
 
-      // Navigation finale (à ajuster quand ton /dashboard sera prêt)
-      router.push("/dashboard");
+      // Passer à l'écran final
+      setStep(4);
     } catch (err) {
+      console.error(err);
       setError(err.message || "Something went wrong.");
     } finally {
       setVerifying(false);
@@ -240,6 +282,17 @@ export default function OnboardingClient() {
     const t = setTimeout(() => setTimer((t) => t - 1), 1000);
     return () => clearTimeout(t);
   }, [step, timer]);
+
+  // Classe dynamique pour l'input OTP (rouge / vert)
+  const otpInputClass =
+    "mc-input tracking-[0.3em] text-center " +
+    (otpStatus === "valid"
+      ? "border-emerald-500/70 focus:border-emerald-400 focus:ring-emerald-500/30"
+      : otpStatus === "invalid"
+      ? "border-rose-500/70 focus:border-rose-400 focus:ring-rose-500/30"
+      : "");
+
+  const canSubmitOtp = otp.length === 6 && !verifying;
 
   // -------------------------
   // Step 1 : PROFILE
@@ -302,8 +355,12 @@ export default function OnboardingClient() {
               />
             </div>
 
-            <button type="submit" className="mc-btn mc-btn-primary mt-4">
-              Continue
+            <button
+              type="submit"
+              className="mc-btn mc-btn-primary mt-4"
+              disabled={saving}
+            >
+              {saving ? "Saving…" : "Continue"}
             </button>
           </form>
         </div>
@@ -326,12 +383,6 @@ export default function OnboardingClient() {
           {error && (
             <div className="mb-4 text-sm text-rose-400 bg-rose-950/40 border border-rose-900/40 px-3 py-2 rounded-lg">
               {error}
-            </div>
-          )}
-
-          {ok && (
-            <div className="mb-4 text-sm text-emerald-400 bg-emerald-950/40 border border-emerald-900/40 px-3 py-2 rounded-lg">
-              {ok}
             </div>
           )}
 
@@ -375,7 +426,11 @@ export default function OnboardingClient() {
               </p>
             </div>
 
-            <button type="submit" className="mc-btn mc-btn-primary mt-4">
+            <button
+              type="submit"
+              className="mc-btn mc-btn-primary mt-4"
+              disabled={sendingCode}
+            >
               {sendingCode ? "Sending…" : "Send OTP"}
             </button>
           </form>
@@ -387,86 +442,98 @@ export default function OnboardingClient() {
   // -------------------------
   // Step 3 : OTP
   // -------------------------
-  const otpComplete = otp.length === 6;
+  if (step === 3) {
+    return (
+      <div className="mc-card">
+        <div className="mc-section text-left">
+          <h1 className="mc-title mb-2">Enter 6-digit verification code</h1>
+          <p className="text-slate-400 mb-8">
+            Please enter the 6-digit code we sent to{" "}
+            <span className="font-medium text-slate-100">
+              {phoneE164 || `${dialCode}${phoneLocal}`}
+            </span>
+            .
+          </p>
 
-  let otpInputClass =
-    "mc-input tracking-[0.3em] text-center transition-colors transition-shadow";
-  if (otpStatus === "valid") {
-    otpInputClass +=
-      " border-emerald-500/80 shadow-[0_0_0_1px_rgba(16,185,129,0.5)]";
-  } else if (otpStatus === "invalid") {
-    otpInputClass +=
-      " border-rose-500/80 shadow-[0_0_0_1px_rgba(244,63,94,0.5)]";
+          {error && (
+            <div className="mb-4 text-sm text-rose-400 bg-rose-950/40 border border-rose-900/40 px-3 py-2 rounded-lg">
+              {error}
+            </div>
+          )}
+          {ok && (
+            <div className="mb-4 text-sm text-emerald-400 bg-emerald-950/40 border border-emerald-900/40 px-3 py-2 rounded-lg">
+              {ok}
+            </div>
+          )}
+
+          <form onSubmit={handleVerifyCode} className="space-y-6">
+            <div>
+              <label className="block mb-2 text-sm">6-digit code</label>
+              <input
+                type="text"
+                className={otpInputClass}
+                placeholder="••••••"
+                value={otp}
+                onChange={(e) => {
+                  const v = e.target.value.replace(/\D/g, "");
+                  setOtp(v.slice(0, 6));
+                  setOtpStatus("idle");
+                }}
+                maxLength={6}
+                required
+              />
+            </div>
+
+            {/* Buttons side by side */}
+            <div className="mt-4 flex gap-3">
+              <button
+                type="submit"
+                className="mc-btn mc-btn-primary"
+                disabled={!canSubmitOtp}
+              >
+                {verifying ? "Continuing…" : "Continue"}
+              </button>
+
+              <button
+                type="button"
+                disabled={timer > 0}
+                onClick={() => {
+                  setStep(2);
+                }}
+                className={`mc-btn border text-sm ${
+                  timer > 0
+                    ? "border-slate-700 text-slate-600 cursor-not-allowed bg-transparent"
+                    : "border-slate-500 text-slate-300 hover:bg-slate-800"
+                }`}
+              >
+                {timer > 0 ? `Resend code in ${timer}s` : "Resend code"}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
   }
 
+  // -------------------------
+  // Step 4 : DONE
+  // -------------------------
   return (
     <div className="mc-card">
       <div className="mc-section text-left">
-        <h1 className="mc-title mb-2">Enter 6-digit verification code</h1>
+        <h1 className="mc-title mb-2">You’re all set</h1>
         <p className="text-slate-400 mb-8">
-          Please enter the 6-digit code we sent to{" "}
-          <span className="font-medium text-slate-100">
-            {phoneE164 || `${dialCode}${phoneLocal}`}
-          </span>
-          .
+          Your profile and phone number are verified. You can now access your
+          dashboard.
         </p>
 
-        {error && (
-          <div className="mb-4 text-sm text-rose-400 bg-rose-950/40 border border-rose-900/40 px-3 py-2 rounded-lg">
-            {error}
-          </div>
-        )}
-
-        {ok && (
-          <div className="mb-4 text-sm text-emerald-400 bg-emerald-950/40 border border-emerald-900/40 px-3 py-2 rounded-lg">
-            {ok}
-          </div>
-        )}
-
-        <form onSubmit={handleVerifyCode} className="space-y-6">
-          <div>
-            <label className="block mb-2 text-sm">6-digit code</label>
-            <input
-              type="text"
-              className={otpInputClass}
-              placeholder="••••••"
-              value={otp}
-              onChange={(e) => {
-                setOtp(e.target.value.replace(/\D/g, ""));
-                setOtpStatus("idle");
-                setError("");
-              }}
-              maxLength={6}
-              required
-            />
-          </div>
-
-          {/* Buttons side by side */}
-          <div className="mt-4 flex gap-3">
-            <button
-              type="submit"
-              className="mc-btn mc-btn-primary"
-              disabled={!otpComplete || verifying}
-            >
-              {verifying ? "Checking…" : "Continue"}
-            </button>
-
-            <button
-              type="button"
-              disabled={timer > 0}
-              onClick={() => {
-                setStep(2);
-              }}
-              className={`mc-btn border text-sm ${
-                timer > 0
-                  ? "border-slate-700 text-slate-600 cursor-not-allowed bg-transparent"
-                  : "border-slate-500 text-slate-300 hover:bg-slate-800"
-              }`}
-            >
-              {timer > 0 ? `Resend code in ${timer}s` : "Resend code"}
-            </button>
-          </div>
-        </form>
+        <button
+          type="button"
+          className="mc-btn mc-btn-primary"
+          onClick={() => router.push("/dashboard")}
+        >
+          Go to dashboard
+        </button>
       </div>
     </div>
   );
