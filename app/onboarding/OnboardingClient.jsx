@@ -31,6 +31,7 @@ export default function OnboardingClient() {
   // Step 3 — OTP
   const [otp, setOtp] = useState("");
   const [verifying, setVerifying] = useState(false);
+  const [otpStatus, setOtpStatus] = useState("idle"); // idle | valid | invalid
 
   // Resend timer
   const [timer, setTimer] = useState(60);
@@ -145,6 +146,7 @@ export default function OnboardingClient() {
     if (sendingCode) return;
 
     setError("");
+    setOk("");
     setSendingCode(true);
 
     try {
@@ -165,6 +167,9 @@ export default function OnboardingClient() {
 
       setStep(3);
       setTimer(60);
+      setOtp("");
+      setOtpStatus("idle");
+      setOk("We have sent you a 6-digit code by SMS.");
     } catch (err) {
       setError(err.message || "Something went wrong.");
     } finally {
@@ -180,10 +185,15 @@ export default function OnboardingClient() {
     if (verifying) return;
 
     setError("");
+    setOk("");
     setVerifying(true);
+    setOtpStatus("idle");
 
     try {
-      if (!/^\d{6}$/.test(otp)) throw new Error("Invalid code.");
+      if (!/^\d{6}$/.test(otp)) {
+        setOtpStatus("invalid");
+        throw new Error("Please enter the 6-digit code.");
+      }
 
       const res = await fetch("/api/phone/verify-code", {
         method: "POST",
@@ -192,7 +202,13 @@ export default function OnboardingClient() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Invalid or expired code.");
+      if (!res.ok) {
+        setOtpStatus("invalid");
+        throw new Error(data.error || "Invalid or expired code.");
+      }
+
+      setOtpStatus("valid");
+      setOk("Your phone number has been verified.");
 
       if (userId) {
         await supabase.from("onboarding_state").upsert(
@@ -205,6 +221,7 @@ export default function OnboardingClient() {
         );
       }
 
+      // Navigation finale (à ajuster quand ton /dashboard sera prêt)
       router.push("/dashboard");
     } catch (err) {
       setError(err.message || "Something went wrong.");
@@ -312,14 +329,19 @@ export default function OnboardingClient() {
             </div>
           )}
 
+          {ok && (
+            <div className="mb-4 text-sm text-emerald-400 bg-emerald-950/40 border border-emerald-900/40 px-3 py-2 rounded-lg">
+              {ok}
+            </div>
+          )}
+
           <form onSubmit={handleSendCode} className="space-y-6">
             <div>
               <label className="block mb-2 text-sm">Mobile number</label>
 
               <div className="flex gap-2">
-                {/* Sélecteur indicatif, même hauteur que l'input */}
+                {/* Dial code selector, same height as input */}
                 <div className="relative w-24">
-                  {/* Select natif invisible mais cliquable */}
                   <select
                     value={dialCode}
                     onChange={(e) => setDialCode(e.target.value)}
@@ -332,7 +354,6 @@ export default function OnboardingClient() {
                     ))}
                   </select>
 
-                  {/* Box visible : même hauteur que l'input de droite */}
                   <div className="mc-input w-full h-full flex items-center justify-center gap-1">
                     <span>{dialCode}</span>
                     <span className="text-[9px] leading-none">▼</span>
@@ -366,6 +387,18 @@ export default function OnboardingClient() {
   // -------------------------
   // Step 3 : OTP
   // -------------------------
+  const otpComplete = otp.length === 6;
+
+  let otpInputClass =
+    "mc-input tracking-[0.3em] text-center transition-colors transition-shadow";
+  if (otpStatus === "valid") {
+    otpInputClass +=
+      " border-emerald-500/80 shadow-[0_0_0_1px_rgba(16,185,129,0.5)]";
+  } else if (otpStatus === "invalid") {
+    otpInputClass +=
+      " border-rose-500/80 shadow-[0_0_0_1px_rgba(244,63,94,0.5)]";
+  }
+
   return (
     <div className="mc-card">
       <div className="mc-section text-left">
@@ -384,28 +417,38 @@ export default function OnboardingClient() {
           </div>
         )}
 
+        {ok && (
+          <div className="mb-4 text-sm text-emerald-400 bg-emerald-950/40 border border-emerald-900/40 px-3 py-2 rounded-lg">
+            {ok}
+          </div>
+        )}
+
         <form onSubmit={handleVerifyCode} className="space-y-6">
           <div>
             <label className="block mb-2 text-sm">6-digit code</label>
             <input
               type="text"
-              className="mc-input tracking-[0.3em] text-center"
+              className={otpInputClass}
               placeholder="••••••"
               value={otp}
-              onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+              onChange={(e) => {
+                setOtp(e.target.value.replace(/\D/g, ""));
+                setOtpStatus("idle");
+                setError("");
+              }}
               maxLength={6}
               required
             />
           </div>
 
-          {/* Boutons côte à côte */}
+          {/* Buttons side by side */}
           <div className="mt-4 flex gap-3">
             <button
               type="submit"
               className="mc-btn mc-btn-primary"
-              disabled={verifying}
+              disabled={!otpComplete || verifying}
             >
-              {verifying ? "Verifying…" : "Verify"}
+              {verifying ? "Checking…" : "Continue"}
             </button>
 
             <button
