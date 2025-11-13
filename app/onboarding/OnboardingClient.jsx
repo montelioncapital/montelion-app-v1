@@ -396,22 +396,27 @@ export default function OnboardingClient() {
         if (backUploadErr) throw backUploadErr;
       }
 
-      // Enregistrer en DB
-      const { error: kycErr } = await supabase.from("kyc_identities").upsert(
-        {
-          user_id: userId,
-          document_type: idDocType,
-          front_file_path: frontPath,
-          back_file_path: backPath,
-          status: "submitted",
-        },
-        { onConflict: "user_id" }
-      );
+      // Enregistrer en DB dans kyc_identities
+      const payload: any = {
+        user_id: userId,
+        doc_type: idDocType,   // ⚠️ colonne Supabase = doc_type
+        front_url: frontPath,  // ⚠️ colonne Supabase = front_url
+        status: "submitted",
+      };
+
+      // Pour permis / CNI on a aussi un verso
+      if (!isPassport && backPath) {
+        payload.back_url = backPath; // ⚠️ colonne Supabase = back_url
+      }
+
+      const { error: kycErr } = await supabase
+        .from("kyc_identities")
+        .upsert(payload, { onConflict: "user_id" });
 
       if (kycErr) throw kycErr;
 
       await updateOnboardingStep(6, false);
-    } catch (err) {
+    } catch (err: any) {
       setError(
         err.message ||
           "Something went wrong while uploading your identity document."
@@ -419,7 +424,6 @@ export default function OnboardingClient() {
     } finally {
       setSaving(false);
     }
-  }
 
   // -------------------------
   // Step 6 — Proof of Address
