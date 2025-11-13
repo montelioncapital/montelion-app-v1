@@ -151,7 +151,7 @@ export default function OnboardingClient() {
       const local = phoneLocal.replace(/\D/g, "");
       if (!local) throw new Error("Please enter your mobile number.");
 
-      const full = `${dialCode}${local}`;
+      const full = ${dialCode}${local};
       setPhoneE164(full);
 
       const res = await fetch("/api/phone/send-code", {
@@ -315,7 +315,7 @@ export default function OnboardingClient() {
               <label className="block mb-2 text-sm">Mobile number</label>
 
               <div className="flex gap-2">
-                {/* Sélecteur indicatif propre + flèche alignée */}
+                {/* 🔥 Sélecteur indicatif ULTRA propre, parfaitement centré */}
                 <div className="relative w-24">
                   {/* Select natif invisible mais cliquable */}
                   <select
@@ -371,7 +371,7 @@ export default function OnboardingClient() {
         <p className="text-slate-400 mb-8">
           Please enter the 6-digit code we sent to{" "}
           <span className="font-medium text-slate-100">
-            {phoneE164 || `${dialCode}${phoneLocal}`}
+            {phoneE164 || ${dialCode}${phoneLocal}}
           </span>
           .
         </p>
@@ -396,32 +396,30 @@ export default function OnboardingClient() {
             />
           </div>
 
-          {/* Boutons Verify + Resend côte à côte */}
-          <div className="mt-4 flex flex-wrap gap-3">
-            <button
-              type="submit"
-              className="mc-btn mc-btn-primary"
-              disabled={verifying}
-            >
-              {verifying ? "Verifying…" : "Verify"}
-            </button>
+          <button
+            type="submit"
+            className="mc-btn mc-btn-primary mt-4"
+            disabled={verifying}
+          >
+            {verifying ? "Verifying…" : "Verify"}
+          </button>
 
-            <button
-              type="button"
-              disabled={timer > 0}
-              onClick={() => {
-                // on revient à l'écran téléphone pour renvoyer un code
-                setStep(2);
-              }}
-              className={`px-4 text-sm rounded-lg border ${
-                timer > 0
-                  ? "border-slate-700 text-slate-600 cursor-not-allowed"
-                  : "border-slate-500 text-slate-300 hover:bg-slate-800"
-              }`}
-            >
-              {timer > 0 ? `Resend code in ${timer}s` : "Resend code"}
-            </button>
-          </div>
+          {/* Bouton resend avec timer 60s */}
+          <button
+            type="button"
+            disabled={timer > 0}
+            onClick={() => {
+              // on revient à l'écran téléphone pour renvoyer un code
+              setStep(2);
+            }}
+            className={w-full mt-3 text-sm py-2 rounded-lg border ${
+              timer > 0
+                ? "border-slate-700 text-slate-600 cursor-not-allowed"
+                : "border-slate-500 text-slate-300 hover:bg-slate-800"
+            }}
+          >
+            {timer > 0 ? Resend code in ${timer}s : "Resend code"}
+          </button>
         </form>
       </div>
     </div>
