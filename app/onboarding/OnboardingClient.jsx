@@ -293,7 +293,9 @@ export default function OnboardingClient() {
       setOk("Your phone number has been verified.");
       await updateOnboardingStep(4, false);
     } catch (err) {
-      setError(err.message || "Something went wrong while verifying the code.");
+      setError(
+        err.message || "Something went wrong while verifying the code."
+      );
     } finally {
       setVerifying(false);
     }
@@ -330,7 +332,6 @@ export default function OnboardingClient() {
 
       if (addrErr) throw addrErr;
 
-      // On ne montre pas de message ici, on passe directement à KYC Identity
       await updateOnboardingStep(5, false);
     } catch (err) {
       setError(
@@ -363,35 +364,39 @@ export default function OnboardingClient() {
         throw new Error("Please upload the back side of your document.");
       }
 
-      const bucket = "kyc"; // adapte si besoin
+      const bucket = "kyc";
+      let frontPath = null;
+      let backPath = null;
 
       // FRONT
       const safeFrontName = sanitizeFileName(idFrontFile.name);
-const frontPath = `identity/${userId}/front-${Date.now()}-${safeFrontName}`;
+      frontPath = `identity/${userId}/front-${Date.now()}-${safeFrontName}`;
 
-const { error: frontUploadErr } = await supabase.storage
-  .from(bucket)
-  .upload(frontPath, idFrontFile, {
-    cacheControl: "3600",
-    upsert: false,
-  });
+      const { error: frontUploadErr } = await supabase.storage
+        .from(bucket)
+        .upload(frontPath, idFrontFile, {
+          cacheControl: "3600",
+          upsert: false,
+        });
 
       if (frontUploadErr) throw frontUploadErr;
 
-      // BACK (si non passeport)
-      const safeBackName = sanitizeFileName(idBackFile.name);
-backPath = `identity/${userId}/back-${Date.now()}-${safeBackName}`;
+      // BACK (only if non-passport)
+      if (!isPassport && idBackFile) {
+        const safeBackName = sanitizeFileName(idBackFile.name);
+        backPath = `identity/${userId}/back-${Date.now()}-${safeBackName}`;
 
-const { error: backUploadErr } = await supabase.storage
-  .from(bucket)
-  .upload(backPath, idBackFile, {
-    cacheControl: "3600",
-    upsert: false,
-  });
+        const { error: backUploadErr } = await supabase.storage
+          .from(bucket)
+          .upload(backPath, idBackFile, {
+            cacheControl: "3600",
+            upsert: false,
+          });
+
         if (backUploadErr) throw backUploadErr;
       }
 
-      // Enregistrer en DB — on suppose les colonnes front_file_path / back_file_path
+      // Enregistrer en DB
       const { error: kycErr } = await supabase.from("kyc_identities").upsert(
         {
           user_id: userId,
@@ -432,7 +437,7 @@ const { error: backUploadErr } = await supabase.storage
         throw new Error("Please upload a proof of address document.");
       }
 
-      const bucket = "kyc"; // adapte si besoin
+      const bucket = "kyc";
       const safePoaName = sanitizeFileName(poaFile.name);
       const poaPath = `proof-of-address/${userId}/${Date.now()}-${safePoaName}`;
 
@@ -442,6 +447,7 @@ const { error: backUploadErr } = await supabase.storage
           cacheControl: "3600",
           upsert: false,
         });
+
       if (poaUploadErr) throw poaUploadErr;
 
       const { error: poaErr } = await supabase
@@ -458,9 +464,9 @@ const { error: backUploadErr } = await supabase.storage
 
       if (poaErr) throw poaErr;
 
-      await updateOnboardingStep(6, true); // completed
+      await updateOnboardingStep(6, true);
       setOk("Your KYC documents have been submitted.");
-      // tu pourras plus tard faire un router.push("/quelque-chose") ici
+      // plus tard: router.push("/dashboard") par ex
     } catch (err) {
       setError(
         err.message ||
@@ -818,7 +824,6 @@ const { error: backUploadErr } = await supabase.storage
               {error}
             </div>
           )}
-          {/* pas de message "Your address has been saved" ici */}
 
           <form onSubmit={handleKycIdentitySubmit} className="space-y-6">
             <div>
@@ -925,11 +930,14 @@ const { error: backUploadErr } = await supabase.storage
   );
 }
 
-function sanitizeFileName(name: string) {
-  return name
-    // enlever les accents
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    // garder uniquement lettres / chiffres / .-_ 
-    .replace(/[^a-zA-Z0-9.\-_]/g, "_");
+// ---------- filename sanitizer (no TS types here) ----------
+function sanitizeFileName(name) {
+  return (
+    name
+      // enlever les accents
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      // garder uniquement lettres / chiffres / . - _
+      .replace(/[^a-zA-Z0-9.\-_]/g, "_")
+  );
 }
