@@ -10,10 +10,10 @@ export default function OnboardingClient() {
   const router = useRouter();
 
   // --- global ---
-  const [userId, setUserId] = useState<string | null>(null);
-  const [step, setStep] = useState<1 | 2>(1);
+  const [userId, setUserId] = useState(null);
+  const [step, setStep] = useState(1); // 1 = profil, 2 = téléphone
   const [loadingInit, setLoadingInit] = useState(true);
-  const [globalError, setGlobalError] = useState<string | null>(null);
+  const [globalError, setGlobalError] = useState(null);
 
   // --- step 1: profile ---
   const [firstName, setFirstName] = useState("");
@@ -26,11 +26,11 @@ export default function OnboardingClient() {
   const [countryCode, setCountryCode] = useState("+33");
   const [localPhone, setLocalPhone] = useState(""); // ex: 612345678
   const [fullPhone, setFullPhone] = useState(""); // E.164 +336...
-  const [phoneMessage, setPhoneMessage] = useState<string | null>(null);
-  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [phoneMessage, setPhoneMessage] = useState(null);
+  const [phoneError, setPhoneError] = useState(null);
 
   const [sendingCode, setSendingCode] = useState(false);
-  const [codeScreen, setCodeScreen] = useState(false); // false = step 1/2 (phone), true = step 2/2 (code)
+  const [codeScreen, setCodeScreen] = useState(false); // false = enter phone, true = enter code
 
   const [codeDigits, setCodeDigits] = useState(["", "", "", "", "", ""]);
   const [verifyingCode, setVerifyingCode] = useState(false);
@@ -66,9 +66,9 @@ export default function OnboardingClient() {
         if (profileError && profileError.code !== "PGRST116") {
           console.error(profileError);
         } else if (profile) {
-          setFirstName(profile.first_name ?? "");
-          setLastName(profile.last_name ?? "");
-          setDob(profile.date_of_birth ?? "");
+          setFirstName(profile.first_name || "");
+          setLastName(profile.last_name || "");
+          setDob(profile.date_of_birth || "");
         }
 
         // Onboarding state
@@ -83,7 +83,7 @@ export default function OnboardingClient() {
         } else if (obState && obState.current_step >= 2) {
           setStep(2);
         }
-      } catch (e: any) {
+      } catch (e) {
         console.error(e);
         if (!cancelled) {
           setGlobalError("Unexpected error while loading onboarding.");
@@ -102,7 +102,7 @@ export default function OnboardingClient() {
   // --------------------------------------------------
   // Helpers
   // --------------------------------------------------
-  function makeE164Phone(cc: string, local: string) {
+  function makeE164Phone(cc, local) {
     const digits = local.replace(/[^\d]/g, "");
     if (!digits) return "";
     if (cc === "+33" && digits.startsWith("0")) {
@@ -111,14 +111,14 @@ export default function OnboardingClient() {
     return cc + digits;
   }
 
-  function codeToString(digits: string[]) {
+  function codeToString(digits) {
     return digits.join("");
   }
 
   // --------------------------------------------------
   // Step 1: enregistrer le profil
   // --------------------------------------------------
-  async function handleProfileSubmit(e: React.FormEvent) {
+  async function handleProfileSubmit(e) {
     e.preventDefault();
     if (!userId) return;
 
@@ -148,7 +148,7 @@ export default function OnboardingClient() {
 
       setProfileSaved(true);
       setStep(2);
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
       setGlobalError("Unable to save your profile. Please try again.");
     } finally {
@@ -159,7 +159,7 @@ export default function OnboardingClient() {
   // --------------------------------------------------
   // Step 2: envoyer le SMS
   // --------------------------------------------------
-  async function handleSendCode(e: React.FormEvent) {
+  async function handleSendCode(e) {
     e.preventDefault();
     setPhoneMessage(null);
     setPhoneError(null);
@@ -179,7 +179,7 @@ export default function OnboardingClient() {
       });
 
       const text = await res.text();
-      let data: any = null;
+      let data = null;
       try {
         data = JSON.parse(text);
       } catch {
@@ -188,8 +188,7 @@ export default function OnboardingClient() {
 
       if (!res.ok || !data.ok) {
         const msg =
-          data?.error ||
-          data?.message ||
+          (data && (data.error || data.message)) ||
           "Unable to send verification code. Please try again.";
         setPhoneError(msg);
         return;
@@ -198,7 +197,7 @@ export default function OnboardingClient() {
       setFullPhone(e164);
       setPhoneMessage("A verification code has been sent to your phone.");
       setCodeScreen(true);
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
       setPhoneError("Network error while sending code.");
     } finally {
@@ -209,7 +208,7 @@ export default function OnboardingClient() {
   // --------------------------------------------------
   // Step 2: vérifier le code
   // --------------------------------------------------
-  async function handleVerifyCode(e: React.FormEvent) {
+  async function handleVerifyCode(e) {
     e.preventDefault();
     setPhoneError(null);
 
@@ -228,7 +227,7 @@ export default function OnboardingClient() {
       });
 
       const text = await res.text();
-      let data: any = null;
+      let data = null;
       try {
         data = JSON.parse(text);
       } catch {
@@ -237,14 +236,13 @@ export default function OnboardingClient() {
 
       if (!res.ok || !data.ok) {
         const msg =
-          data?.error ||
-          data?.message ||
+          (data && (data.error || data.message)) ||
           "The code is invalid or expired. Please try again.";
         setPhoneError(msg);
         return;
       }
 
-      // Onboarding step suivant (pour plus tard) :
+      // Onboarding step suivant (pour plus tard)
       if (userId) {
         await supabase
           .from("onboarding_state")
@@ -254,9 +252,8 @@ export default function OnboardingClient() {
           );
       }
 
-      // Pour l’instant on renvoie vers la home après vérif
       router.push("/");
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
       setPhoneError("Network error while verifying code.");
     } finally {
@@ -272,7 +269,6 @@ export default function OnboardingClient() {
 
   const e164Preview = makeE164Phone(countryCode, localPhone);
 
-  // Input 6 cases
   function renderCodeInputs() {
     return (
       <div className="flex gap-3 justify-between">
@@ -293,8 +289,10 @@ export default function OnboardingClient() {
               if (v && idx < 5) {
                 const nextInput = document.getElementById(
                   `otp-${idx + 1}`
-                ) as HTMLInputElement | null;
-                nextInput?.focus();
+                );
+                if (nextInput) {
+                  nextInput.focus();
+                }
               }
             }}
             id={`otp-${idx}`}
@@ -508,7 +506,6 @@ export default function OnboardingClient() {
                 <button
                   type="button"
                   onClick={() => {
-                    // revenir à l’écran numéro, garder le numéro pré-rempli
                     setCodeScreen(false);
                     setCodeDigits(["", "", "", "", "", ""]);
                     setPhoneError(null);
