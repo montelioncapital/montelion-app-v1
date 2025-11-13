@@ -151,7 +151,7 @@ export default function OnboardingClient() {
       const local = phoneLocal.replace(/\D/g, "");
       if (!local) throw new Error("Please enter your mobile number.");
 
-      const full = ${dialCode}${local};
+      const full = `${dialCode}${local}`;
       setPhoneE164(full);
 
       const res = await fetch("/api/phone/send-code", {
@@ -371,7 +371,7 @@ export default function OnboardingClient() {
         <p className="text-slate-400 mb-8">
           Please enter the 6-digit code we sent to{" "}
           <span className="font-medium text-slate-100">
-            {phoneE164 || ${dialCode}${phoneLocal}}
+            {phoneE164 || `${dialCode}${phoneLocal}`}
           </span>
           .
         </p>
@@ -412,13 +412,13 @@ export default function OnboardingClient() {
               // on revient à l'écran téléphone pour renvoyer un code
               setStep(2);
             }}
-            className={w-full mt-3 text-sm py-2 rounded-lg border ${
+            className={`w-full mt-3 text-sm py-2 rounded-lg border ${
               timer > 0
                 ? "border-slate-700 text-slate-600 cursor-not-allowed"
                 : "border-slate-500 text-slate-300 hover:bg-slate-800"
-            }}
+            }`}
           >
-            {timer > 0 ? Resend code in ${timer}s : "Resend code"}
+            {timer > 0 ? `Resend code in ${timer}s` : "Resend code"}
           </button>
         </form>
       </div>
