@@ -15,7 +15,7 @@ export default function OnboardingClient() {
   const [error, setError] = useState("");
   const [ok, setOk] = useState("");
 
-  const [userId, setUserId] = useState(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
   // Step 1 — profile
   const [firstName, setFirstName] = useState("");
@@ -96,9 +96,9 @@ export default function OnboardingClient() {
   // -------------------------
   // Step 1 — Submit profile
   // -------------------------
-  async function handleProfileSubmit(e) {
+  async function handleProfileSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (saving) return;
+    if (saving || !userId) return;
 
     setError("");
     setSaving(true);
@@ -130,7 +130,7 @@ export default function OnboardingClient() {
       );
 
       setStep(2);
-    } catch (err) {
+    } catch (err: any) {
       setError(err.message);
     } finally {
       setSaving(false);
@@ -140,7 +140,7 @@ export default function OnboardingClient() {
   // -------------------------
   // Step 2 — Send code SMS
   // -------------------------
-  async function handleSendCode(e) {
+  async function handleSendCode(e: React.FormEvent) {
     e.preventDefault();
     if (sendingCode) return;
 
@@ -165,7 +165,7 @@ export default function OnboardingClient() {
 
       setStep(3);
       setTimer(60);
-    } catch (err) {
+    } catch (err: any) {
       setError(err.message);
     } finally {
       setSendingCode(false);
@@ -175,7 +175,7 @@ export default function OnboardingClient() {
   // -------------------------
   // Step 3 — Verify OTP
   // -------------------------
-  async function handleVerifyCode(e) {
+  async function handleVerifyCode(e: React.FormEvent) {
     e.preventDefault();
     if (verifying) return;
 
@@ -194,17 +194,19 @@ export default function OnboardingClient() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Invalid or expired code.");
 
-      await supabase.from("onboarding_state").upsert(
-        {
-          user_id: userId,
-          current_step: 3,
-          completed: true,
-        },
-        { onConflict: "user_id" }
-      );
+      if (userId) {
+        await supabase.from("onboarding_state").upsert(
+          {
+            user_id: userId,
+            current_step: 3,
+            completed: true,
+          },
+          { onConflict: "user_id" }
+        );
+      }
 
       router.push("/dashboard");
-    } catch (err) {
+    } catch (err: any) {
       setError(err.message);
     } finally {
       setVerifying(false);
@@ -315,7 +317,7 @@ export default function OnboardingClient() {
               <label className="block mb-2 text-sm">Mobile number</label>
 
               <div className="flex gap-2">
-                {/* 🔥 Sélecteur indicatif ULTRA propre, parfaitement centré */}
+                {/* Sélecteur indicatif */}
                 <div className="relative w-24">
                   {/* Select natif invisible mais cliquable */}
                   <select
@@ -330,8 +332,8 @@ export default function OnboardingClient() {
                     ))}
                   </select>
 
-                  {/* Box visible stylée */}
-                  <div className="mc-input w-full flex items-center justify-center gap-1 text-sm">
+                  {/* Box visible : même hauteur que l'input de droite */}
+                  <div className="mc-input w-full h-full flex items-center justify-center gap-1">
                     <span>{dialCode}</span>
                     <span className="text-[9px] leading-none">▼</span>
                   </div>
@@ -409,7 +411,6 @@ export default function OnboardingClient() {
             type="button"
             disabled={timer > 0}
             onClick={() => {
-              // on revient à l'écran téléphone pour renvoyer un code
               setStep(2);
             }}
             className={`w-full mt-3 text-sm py-2 rounded-lg border ${
