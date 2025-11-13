@@ -195,7 +195,7 @@ export default function OnboardingClient() {
     if (step !== 3) return;
     if (timer <= 0) return;
 
-    const t = setTimeout(() => setTimer(timer - 1), 1000);
+    const t = setTimeout(() => setTimer((t) => t - 1), 1000);
     return () => clearTimeout(t);
   }, [step, timer]);
 
@@ -215,7 +215,9 @@ export default function OnboardingClient() {
       <div className="mc-card">
         <div className="mc-section text-left">
           <h1 className="mc-title mb-2">Welcome</h1>
-          <p className="text-slate-400 mb-8">Choose how you’d like to be addressed.</p>
+          <p className="text-slate-400 mb-8">
+            Choose how you’d like to be addressed.
+          </p>
 
           {error && (
             <div className="mb-4 text-sm text-rose-400 bg-rose-950/40 border border-rose-900/40 px-3 py-2 rounded-lg">
@@ -290,9 +292,10 @@ export default function OnboardingClient() {
               <label className="block mb-2 text-sm">Mobile number</label>
 
               <div className="flex gap-2">
-                <div className="relative w-28">
+                {/* Sélecteur indicatif : plus petit et flèche bien centrée */}
+                <div className="relative">
                   <select
-                    className="mc-input w-full pl-3 pr-7 text-sm appearance-none"
+                    className="mc-input w-20 pr-7 pl-3 text-sm text-center appearance-none"
                     value={dialCode}
                     onChange={(e) => setDialCode(e.target.value)}
                   >
@@ -318,8 +321,9 @@ export default function OnboardingClient() {
                     <option value="+971">+971</option>
                   </select>
 
-                  <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-500 text-xs">
-                    ▾
+                  {/* Flèche fine, centrée dans la case */}
+                  <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 text-[10px]">
+                    ▼
                   </span>
                 </div>
 
@@ -382,16 +386,20 @@ export default function OnboardingClient() {
             />
           </div>
 
-          <button type="submit" className="mc-btn mc-btn-primary mt-4" disabled={verifying}>
+          <button
+            type="submit"
+            className="mc-btn mc-btn-primary mt-4"
+            disabled={verifying}
+          >
             {verifying ? "Verifying…" : "Verify"}
           </button>
 
-          {/* Resend button with timer */}
+          {/* Bouton resend avec timer 60s */}
           <button
             type="button"
             disabled={timer > 0}
             onClick={() => {
-              setStep(2);
+              setStep(2); // on revient à l'écran téléphone pour renvoyer un code
             }}
             className={`w-full mt-3 text-sm py-2 rounded-lg border ${
               timer > 0
