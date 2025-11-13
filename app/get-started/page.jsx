@@ -7,11 +7,11 @@ const STEPS = [
   {
     id: 1,
     title: "Start",
-    subtitle: "You’re creating your Montelion account",
+    subtitle: "You’ve just unlocked your Montelion access",
     bullets: [
+      "Private invitation validated",
       "Secure login with email & password",
-      "Basic identification of your profile",
-      "Access to your personal dashboard",
+      "Preparing your account for activation",
     ],
   },
   {
@@ -77,13 +77,13 @@ export default function GetStartedPage() {
                 key={step.id}
                 className="grid grid-cols-[32px,1fr] gap-4 items-stretch"
               >
-                {/* Colonne des pastilles + ligne */}
+                {/* Colonne pastille + ligne */}
                 <div className="flex flex-col items-center">
                   <div
                     className={[
                       "flex items-center justify-center h-7 w-7 rounded-full text-xs font-semibold shadow-[0_0_0_1px_rgba(15,23,42,0.9)]",
                       isCurrent
-                        ? "bg-sky-500 text-slate-950 border border-sky-300"
+                        ? "bg-blue-500 text-slate-950 border border-blue-300"
                         : "bg-slate-900 text-slate-300 border border-slate-700",
                     ].join(" ")}
                   >
@@ -94,30 +94,27 @@ export default function GetStartedPage() {
                   )}
                 </div>
 
-                {/* Carte de l’étape */}
+                {/* Carte étape (sans “STEP X”) */}
                 <div
                   className={[
                     "rounded-2xl border px-5 py-4 sm:py-5",
                     "bg-slate-900/40",
                     isCurrent
-                      ? "border-sky-500/60 shadow-[0_0_40px_rgba(56,189,248,0.15)]"
+                      ? "border-blue-500/60 shadow-[0_0_40px_rgba(59,130,246,0.15)]"
                       : "border-slate-800/80",
                   ].join(" ")}
                 >
-                  <div className="flex items-center justify-between gap-3 mb-1">
-                    <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
-                      Step {step.id}
+                  <div className="flex items-center justify-between gap-3 mb-1.5">
+                    <div className="text-sm font-semibold text-slate-50">
+                      {step.title}
                     </div>
                     {isCurrent && (
-                      <span className="inline-flex items-center rounded-full bg-sky-500/10 border border-sky-400/40 px-2 py-[2px] text-[10px] font-medium text-sky-300">
+                      <span className="inline-flex items-center rounded-full bg-blue-500/10 border border-blue-400/40 px-2.5 py-[3px] text-[10px] font-medium text-blue-300">
                         You&apos;re here
                       </span>
                     )}
                   </div>
 
-                  <div className="text-sm font-semibold text-slate-50">
-                    {step.title}
-                  </div>
                   <div className="text-sm text-slate-300 mb-3">
                     {step.subtitle}
                   </div>
