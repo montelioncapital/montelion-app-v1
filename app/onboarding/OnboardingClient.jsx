@@ -395,7 +395,8 @@ export default function OnboardingClient() {
 
         if (backUploadErr) throw backUploadErr;
       }
-
+      
+let backPath: string | null = null;
       // Enregistrer en DB dans kyc_identities
       const payload: any = {
         user_id: userId,
