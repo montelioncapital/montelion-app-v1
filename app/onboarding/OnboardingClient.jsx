@@ -61,7 +61,6 @@ export default function OnboardingClient() {
 
   /**
    * Étapes:
-   * 0 = écran d’intro (Get started)
    * 1 = profil
    * 2 = téléphone
    * 3 = OTP
@@ -69,7 +68,7 @@ export default function OnboardingClient() {
    * 5 = KYC identité
    * 6 = KYC proof of address
    */
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(1);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -167,11 +166,10 @@ export default function OnboardingClient() {
         .eq("user_id", uid)
         .maybeSingle();
 
-      if (!onboardErr && onboard?.current_step != null) {
+      if (!onboardErr && onboard?.current_step) {
         setStep(onboard.current_step);
       } else {
-        // Nouveau client => étape 0 (intro)
-        setStep(0);
+        setStep(1);
       }
 
       setLoading(false);
@@ -191,10 +189,7 @@ export default function OnboardingClient() {
 
   // Small helper
   async function updateOnboardingStep(nextStep, completed = false) {
-    if (!userId) {
-      setStep(nextStep);
-      return;
-    }
+    if (!userId) return;
     await supabase.from("onboarding_state").upsert(
       {
         user_id: userId,
@@ -509,7 +504,9 @@ export default function OnboardingClient() {
       if (poaErr) throw poaErr;
 
       await updateOnboardingStep(6, true);
-      setOk("Your proof of address has been submitted.");
+
+      // ✅ Redirection vers la future page de contrat
+      router.push("/mandate");
     } catch (err) {
       setError(
         err.message ||
@@ -565,127 +562,6 @@ export default function OnboardingClient() {
         <div className="mc-section text-left">
           <h1 className="mc-title mb-2">Welcome</h1>
           <p className="text-slate-400">Loading your profile…</p>
-        </div>
-      </div>
-    );
-  }
-
-  // STEP 0 — INTRO / GET STARTED (VERTICAL)
-  if (step === 0) {
-    return (
-      <div className="mc-card">
-        <div className="mc-section text-left space-y-10">
-          {/* Title */}
-          <div>
-            <h1 className="mc-title mb-3">Let’s get you fully set up</h1>
-            <p className="text-slate-400 text-base leading-relaxed max-w-xl">
-              In a few minutes, you&apos;ll be ready to let Montelion trade on
-              your exchange account while you keep full control of your funds.
-            </p>
-          </div>
-
-          {/* Steps — vertical */}
-          <div className="space-y-6">
-            {/* STEP 1 */}
-            <div className="border border-slate-700/50 bg-slate-900/40 rounded-xl p-6">
-              <div className="flex items-start gap-4">
-                <div className="text-blue-400 text-lg font-semibold mt-1">
-                  1
-                </div>
-                <div>
-                  <h3 className="text-slate-200 font-semibold mb-1">
-                    Personal onboarding
-                  </h3>
-                  <p className="text-slate-400 text-sm leading-relaxed">
-                    We collect your basic details, verify your phone, address
-                    and identity to comply with regulations.
-                  </p>
-                  <ul className="mt-3 text-sm text-slate-500 space-y-1">
-                    <li>• Profile &amp; date of birth</li>
-                    <li>• Phone verification (SMS)</li>
-                    <li>• Address &amp; KYC documents</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-            {/* STEP 2 */}
-            <div className="border border-slate-700/50 bg-slate-900/40 rounded-xl p-6">
-              <div className="flex items-start gap-4">
-                <div className="text-purple-400 text-lg font-semibold mt-1">
-                  2
-                </div>
-                <div>
-                  <h3 className="text-slate-200 font-semibold mb-1">
-                    Sign your mandate
-                  </h3>
-                  <p className="text-slate-400 text-sm leading-relaxed">
-                    You review and e-sign the discretionary management agreement
-                    that defines our responsibilities and fees.
-                  </p>
-                  <ul className="mt-3 text-sm text-slate-500 space-y-1">
-                    <li>• Clear terms &amp; risk disclosure</li>
-                    <li>• Digital signature in a few clicks</li>
-                    <li>• You can revoke the mandate at any time</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-            {/* STEP 3 */}
-            <div className="border border-slate-700/50 bg-slate-900/40 rounded-xl p-6">
-              <div className="flex items-start gap-4">
-                <div className="text-emerald-400 text-lg font-semibold mt-1">
-                  3
-                </div>
-                <div>
-                  <h3 className="text-slate-200 font-semibold mb-1">
-                    Connect your exchange
-                  </h3>
-                  <p className="text-slate-400 text-sm leading-relaxed">
-                    We guide you step-by-step to open your account, deposit
-                    funds and create a read-only trading API.
-                  </p>
-                  <ul className="mt-3 text-sm text-slate-500 space-y-1">
-                    <li>• Tutorial for your chosen exchange</li>
-                    <li>• You keep custody of your assets</li>
-                    <li>• Access can be revoked at any time</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Average time */}
-          <div className="flex items-center gap-2 text-slate-400 text-sm">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-4 w-4 text-emerald-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-            <span>
-              Average time to complete:{" "}
-              <span className="text-slate-200 font-medium">5–10 minutes</span>
-            </span>
-          </div>
-
-          {/* Get started button under the line */}
-          <button
-            type="button"
-            className="mc-btn mc-btn-primary w-full py-3"
-            onClick={() => updateOnboardingStep(1, false)}
-          >
-            Get started
-          </button>
         </div>
       </div>
     );
