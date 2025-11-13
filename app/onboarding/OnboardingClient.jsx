@@ -4,15 +4,17 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabaseClient";
 
-const ID_DOC_TYPES = ["Passport", "Driving license", "National ID card"]e;
+// Types de doc d’identité affichés dans l’UI
+const ID_DOC_TYPES = ["Passport", "Driving license", "National ID card"];
 
-// mapping label UI -> valeur ENUM dans Postgres
+// mapping label UI -> valeur ENUM dans Postgres (kyc_doc_type)
 const KYC_DOC_ENUM = {
-  "Passport": "passport",
+  Passport: "passport",
   "Driving license": "driving_license",
   "National ID card": "national_id",
 };
 
+// Types de proof of address affichés dans l’UI
 const POA_DOC_TYPES = [
   "Utility bill (water / electricity)",
   "Bank statement",
@@ -21,7 +23,7 @@ const POA_DOC_TYPES = [
   "Tax notice",
 ];
 
-// Mapping UI -> ENUM Supabase
+// Mapping label UI -> valeur ENUM pour doc_type dans proof_of_address
 const POA_DOC_TYPE_DB_MAP = {
   "Utility bill (water / electricity)": "utility_bill",
   "Bank statement": "bank_statement",
@@ -29,6 +31,30 @@ const POA_DOC_TYPE_DB_MAP = {
   "Rental agreement": "rental_agreement",
   "Tax notice": "tax_notice",
 };
+
+// Codes pays pour le téléphone
+const DIAL_CODES = [
+  "+1",
+  "+44",
+  "+33",
+  "+49",
+  "+39",
+  "+34",
+  "+31",
+  "+46",
+  "+41",
+  "+81",
+  "+82",
+  "+86",
+  "+91",
+  "+55",
+  "+52",
+  "+61",
+  "+7",
+  "+27",
+  "+65",
+  "+971",
+];
 
 export default function OnboardingClient() {
   const router = useRouter();
@@ -75,29 +101,6 @@ export default function OnboardingClient() {
     "Utility bill (water / electricity)"
   );
   const [poaFile, setPoaFile] = useState(null);
-
-  const DIAL_CODES = [
-    "+1",
-    "+44",
-    "+33",
-    "+49",
-    "+39",
-    "+34",
-    "+31",
-    "+46",
-    "+41",
-    "+81",
-    "+82",
-    "+86",
-    "+91",
-    "+55",
-    "+52",
-    "+61",
-    "+7",
-    "+27",
-    "+65",
-    "+971",
-  ];
 
   // -------------------------
   // Load session + pre-fill + read onboarding_state
@@ -411,7 +414,6 @@ export default function OnboardingClient() {
         if (backUploadErr) throw backUploadErr;
       }
 
-      // Convertir le label sélectionné en valeur ENUM pour Postgres
       const docTypeDb = KYC_DOC_ENUM[idDocType];
       if (!docTypeDb) {
         throw new Error("Unsupported document type.");
@@ -419,9 +421,9 @@ export default function OnboardingClient() {
 
       const payload = {
         user_id: userId,
-        doc_type: docTypeDb,   // valeur ENUM kyc_doc_type
+        doc_type: docTypeDb,
         front_url: frontPath,
-        status: "pending",
+        status: "pending", // enum kyc_status
       };
 
       if (!isPassport && backPath) {
@@ -445,62 +447,65 @@ export default function OnboardingClient() {
     }
   }
 
-// -------------------------
-// Step 6 — Proof of Address
-// -------------------------
-async function handlePoaSubmit(e) {
-  e.preventDefault();
-  if (!userId || saving) return;
+  // -------------------------
+  // Step 6 — Proof of Address
+  // -------------------------
+  async function handlePoaSubmit(e) {
+    e.preventDefault();
+    if (!userId || saving) return;
 
-  setError("");
-  setOk("");
-  setSaving(true);
+    setError("");
+    setOk("");
+    setSaving(true);
 
-  try {
-    if (!poaFile) {
-      throw new Error("Please upload a proof of address document.");
-    }
+    try {
+      if (!poaFile) {
+        throw new Error("Please upload a proof of address document.");
+      }
 
-    // 1) Upload to Supabase storage
-    const bucket = "kyc";
-    const safePoaName = sanitizeFileName(poaFile.name);
-    const poaPath = `proof-of-address/${userId}/${Date.now()}-${safePoaName}`;
+      const bucket = "kyc";
+      const safePoaName = sanitizeFileName(poaFile.name);
+      const poaPath = `proof-of-address/${userId}/${Date.now()}-${safePoaName}`;
 
-    const { error: poaUploadErr } = await supabase.storage
-      .from(bucket)
-      .upload(poaPath, poaFile, {
-        cacheControl: "3600",
-        upsert: false,
-      });
+      const { error: poaUploadErr } = await supabase.storage
+        .from(bucket)
+        .upload(poaPath, poaFile, {
+          cacheControl: "3600",
+          upsert: false,
+        });
 
-    if (poaUploadErr) throw poaUploadErr;
+      if (poaUploadErr) throw poaUploadErr;
 
-    // 2) Sauvegarde DB dans proof_of_address
-    const { error: poaErr } = await supabase
-      .from("proof_of_address")
-      .upsert(
-        {
-          user_id: userId,
-          doc_type: POA_DOC_TYPE_DB_MAP[poaDocType], // <-- ENUM CORRECT
-          file_url: poaPath,                         // <-- NOM DE COLONNE CORRECT
-          status: "submitted",                       // <-- ENUM CORRECT
-        },
-        { onConflict: "user_id" }
+      const docTypeDb = POA_DOC_TYPE_DB_MAP[poaDocType];
+      if (!docTypeDb) {
+        throw new Error("Unsupported proof of address type.");
+      }
+
+      const { error: poaErr } = await supabase
+        .from("proof_of_address")
+        .upsert(
+          {
+            user_id: userId,
+            doc_type: docTypeDb,
+            file_url: poaPath,
+            status: "pending", // même enum que kyc_status
+          },
+          { onConflict: "user_id" }
+        );
+
+      if (poaErr) throw poaErr;
+
+      await updateOnboardingStep(6, true);
+      setOk("Your proof of address has been submitted.");
+    } catch (err) {
+      setError(
+        err.message ||
+          "Something went wrong while uploading your proof of address."
       );
-
-    if (poaErr) throw poaErr;
-
-    await updateOnboardingStep(6, true);
-    setOk("Your proof of address has been submitted.");
-  } catch (err) {
-    setError(
-      err.message ||
-        "Something went wrong while uploading your proof of address."
-    );
-  } finally {
-    setSaving(false);
+    } finally {
+      setSaving(false);
+    }
   }
-}
 
   // -------------------------
   // Simple Dropzone component
@@ -876,7 +881,6 @@ async function handlePoaSubmit(e) {
               required
             />
 
-            {/* Back side only for non-passport */}
             {!isPassport && (
               <FileDropzone
                 label="Back side (required)"
@@ -960,6 +964,5 @@ function sanitizeFileName(name) {
   return name
     .normalize("NFD") // enlever les accents
     .replace(/[\u0300-\u036f]/g, "")
-    // garder uniquement lettres / chiffres / . - _
-    .replace(/[^a-zA-Z0-9.\-_]/g, "_");
+    .replace(/[^a-zA-Z0-9.\-_]/g, "_"); // garder uniquement lettres / chiffres / . - _
 }
