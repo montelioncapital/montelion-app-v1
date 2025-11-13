@@ -7,7 +7,7 @@ import { supabase } from "../lib/supabaseClient";
 export default function OnboardingClient() {
   const router = useRouter();
 
-  // Step: 1 = profile, 2 = phone, 3 = otp, 4 = address
+  // Step: 1 = profile, 2 = phone, 3 = otp, 4 = address, 5 = kyc identity, 6 = kyc address
   const [step, setStep] = useState(1);
 
   const [loading, setLoading] = useState(true);
@@ -40,6 +40,15 @@ export default function OnboardingClient() {
   const [city, setCity] = useState("");
   const [postalCode, setPostalCode] = useState("");
   const [country, setCountry] = useState("");
+
+  // Step 5 — KYC Identity
+  const [kycDocType, setKycDocType] = useState("passport");
+  const [kycFrontFile, setKycFrontFile] = useState(null);
+  const [kycBackFile, setKycBackFile] = useState(null);
+
+  // Step 6 — Proof of address
+  const [poaDocType, setPoaDocType] = useState("utility_bill");
+  const [poaFile, setPoaFile] = useState(null);
 
   const DIAL_CODES = [
     "+1",
@@ -123,7 +132,6 @@ export default function OnboardingClient() {
       if (!onboardErr && onboard?.current_step) {
         setStep(onboard.current_step);
       } else {
-        // si pas d’état, on reste à 1
         setStep(1);
       }
 
@@ -170,7 +178,6 @@ export default function OnboardingClient() {
 
       if (upsertErr) throw upsertErr;
 
-      // ➡️ Mettre à jour l’état d’onboarding
       const { error: onboardErr } = await supabase.from("onboarding_state").upsert(
         {
           user_id: userId,
@@ -207,7 +214,6 @@ export default function OnboardingClient() {
       const full = `${dialCode}${local}`;
       setPhoneE164(full);
 
-      // Enregistrer l’intention de vérification dans phone_verifications
       await supabase.from("phone_verifications").insert({
         user_id: userId,
         phone_e164: full,
@@ -225,7 +231,6 @@ export default function OnboardingClient() {
 
       setOk("A verification code has been sent by SMS.");
 
-      // ➡️ Mettre à jour l’état d’onboarding (step 3 = OTP)
       const { error: onboardErr } = await supabase.from("onboarding_state").upsert(
         {
           user_id: userId,
@@ -268,14 +273,11 @@ export default function OnboardingClient() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Invalid or expired code.");
 
-      // Marquer la vérification côté base :
-      // 1) Mettre à jour phone_verifications
       await supabase
         .from("phone_verifications")
         .update({ status: "verified" })
         .eq("phone_e164", phoneE164);
 
-      // 2) Mettre à jour le profil (numéro + date de vérification)
       await supabase
         .from("profiles")
         .update({
@@ -284,11 +286,10 @@ export default function OnboardingClient() {
         })
         .eq("id", userId);
 
-      // 3) Mettre à jour l’état d’onboarding → étape 4 (Address)
       const { error: onboardErr } = await supabase.from("onboarding_state").upsert(
         {
           user_id: userId,
-          current_step: 4,
+          current_step: 4, // next: address
           completed: false,
         },
         { onConflict: "user_id" }
@@ -325,9 +326,8 @@ export default function OnboardingClient() {
         throw new Error("Please fill in all fields.");
       }
 
-                 // Insert address (RLS: user_id must equal auth.uid())
       const { error: addrErr } = await supabase.from("addresses").insert({
-        user_id: userId,                         // 👈 IMPORTANT
+        user_id: userId,
         address_line: addressLine.trim(),
         city: city.trim(),
         postal_code: postalCode.trim(),
@@ -336,23 +336,118 @@ export default function OnboardingClient() {
 
       if (addrErr) throw addrErr;
 
-      // Mettre à jour l’état d’onboarding (on considère l’étape 4 comme la dernière pour l’instant)
+      // ➜ Go to KYC Identity (step 5)
       const { error: onboardErr } = await supabase.from("onboarding_state").upsert(
         {
           user_id: userId,
-          current_step: 4,
-          completed: true,
+          current_step: 5,
+          completed: false,
         },
         { onConflict: "user_id" }
       );
       if (onboardErr) throw onboardErr;
 
       setOk("Your address has been saved.");
-      // Pas de redirection pour l’instant (la prochaine page sera faite plus tard)
+      setStep(5);
     } catch (err) {
       setError(
         err.message ||
           "Something went wrong while saving your address (check RLS/policies in Supabase)."
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  // -------------------------
+  // Step 5 — Save KYC Identity
+  // -------------------------
+  async function handleKycIdentitySubmit(e) {
+    e.preventDefault();
+    if (!userId || saving) return;
+
+    setError("");
+    setOk("");
+    setSaving(true);
+
+    try {
+      if (!kycDocType || !kycFrontFile) {
+        throw new Error("Please select a document and upload the front side.");
+      }
+
+      const { error: kycErr } = await supabase.from("kyc_identities").insert({
+        user_id: userId,
+        document_type: kycDocType, // e.g. passport / driving_license / national_id
+        front_file_name: kycFrontFile.name || null,
+        back_file_name: kycBackFile ? kycBackFile.name : null,
+        status: "submitted",
+      });
+
+      if (kycErr) throw kycErr;
+
+      const { error: onboardErr } = await supabase.from("onboarding_state").upsert(
+        {
+          user_id: userId,
+          current_step: 6, // next: proof of address
+          completed: false,
+        },
+        { onConflict: "user_id" }
+      );
+      if (onboardErr) throw onboardErr;
+
+      setOk("Your identity document has been submitted.");
+      setStep(6);
+    } catch (err) {
+      setError(
+        err.message ||
+          "Something went wrong while saving your identity document."
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  // -------------------------
+  // Step 6 — Save Proof of Address
+  // -------------------------
+  async function handleProofOfAddressSubmit(e) {
+    e.preventDefault();
+    if (!userId || saving) return;
+
+    setError("");
+    setOk("");
+    setSaving(true);
+
+    try {
+      if (!poaDocType || !poaFile) {
+        throw new Error("Please select a document and upload a file.");
+      }
+
+      const { error: poaErr } = await supabase.from("proof_of_address").insert({
+        user_id: userId,
+        document_type: poaDocType, // e.g. utility_bill / bank_statement / etc.
+        file_name: poaFile.name || null,
+        status: "submitted",
+      });
+
+      if (poaErr) throw poaErr;
+
+      const { error: onboardErr } = await supabase.from("onboarding_state").upsert(
+        {
+          user_id: userId,
+          current_step: 6,
+          completed: true,
+        },
+        { onConflict: "user_id" }
+      );
+      if (onboardErr) throw onboardErr;
+
+      setOk("Your proof of address has been submitted.");
+      // On reste sur cette page pour l’instant, la page suivante sera faite plus tard
+    } catch (err) {
+      setError(
+        err.message ||
+          "Something went wrong while saving your proof of address."
       );
     } finally {
       setSaving(false);
@@ -463,7 +558,6 @@ export default function OnboardingClient() {
               <label className="block mb-2 text-sm">Mobile number</label>
 
               <div className="flex gap-2">
-                {/* Sélecteur indicatif, même hauteur que l'input */}
                 <div className="relative w-24">
                   <select
                     value={dialCode}
@@ -581,12 +675,221 @@ export default function OnboardingClient() {
   }
 
   // STEP 4 — ADDRESS
+  if (step === 4) {
+    return (
+      <div className="mc-card">
+        <div className="mc-section text-left">
+          <h1 className="mc-title mb-2">Address</h1>
+          <p className="text-slate-400 mb-8">
+            Tell us where you currently live.
+          </p>
+
+          {error && (
+            <div className="mb-4 text-sm text-rose-400 bg-rose-950/40 border border-rose-900/40 px-3 py-2 rounded-lg">
+              {error}
+            </div>
+          )}
+          {ok && (
+            <div className="mb-4 text-sm text-emerald-400 bg-emerald-950/40 border border-emerald-900/40 px-3 py-2 rounded-lg">
+              {ok}
+            </div>
+          )}
+
+          <form onSubmit={handleAddressSubmit} className="space-y-6">
+            <div>
+              <label className="block mb-2 text-sm">Address</label>
+              <input
+                type="text"
+                className="mc-input"
+                value={addressLine}
+                onChange={(e) => setAddressLine(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <label className="block mb-2 text-sm">City</label>
+                <input
+                  type="text"
+                  className="mc-input"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="w-40">
+                <label className="block mb-2 text-sm">Postal code</label>
+                <input
+                  type="text"
+                  className="mc-input"
+                  value={postalCode}
+                  onChange={(e) => setPostalCode(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block mb-2 text-sm">Country</label>
+              <input
+                type="text"
+                className="mc-input"
+                value={country}
+                onChange={(e) => setCountry(e.target.value)}
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="mc-btn mc-btn-primary mt-4"
+              disabled={saving}
+            >
+              {saving ? "Saving…" : "Continue"}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // STEP 5 — KYC IDENTITY
+  if (step === 5) {
+    return (
+      <div className="mc-card">
+        <div className="mc-section text-left">
+          <h1 className="mc-title mb-2">KYC (Identity)</h1>
+          <p className="text-slate-400 mb-8">
+            Select an ID document and upload the required images.
+          </p>
+
+          {error && (
+            <div className="mb-4 text-sm text-rose-400 bg-rose-950/40 border border-rose-900/40 px-3 py-2 rounded-lg">
+              {error}
+            </div>
+          )}
+          {ok && (
+            <div className="mb-4 text-sm text-emerald-400 bg-emerald-950/40 border border-emerald-900/40 px-3 py-2 rounded-lg">
+              {ok}
+            </div>
+          )}
+
+          <form onSubmit={handleKycIdentitySubmit} className="space-y-6">
+            <div>
+              <label className="block mb-2 text-sm">Document type</label>
+              <select
+                className="mc-input"
+                value={kycDocType}
+                onChange={(e) => setKycDocType(e.target.value)}
+              >
+                <option value="passport">Passport</option>
+                <option value="driving_license">Driving license</option>
+                <option value="national_id">National ID card</option>
+              </select>
+            </div>
+
+            {/* Front side */}
+            <div>
+              <label className="block mb-2 text-sm">
+                Front side (required)
+              </label>
+              <label
+                htmlFor="kyc-front"
+                className="mc-input flex flex-col items-center justify-center border-dashed border border-slate-600 cursor-pointer text-sm text-slate-400 py-6"
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const file = e.dataTransfer.files?.[0];
+                  if (file) setKycFrontFile(file);
+                }}
+              >
+                {kycFrontFile ? (
+                  <span className="text-slate-100">
+                    {kycFrontFile.name}
+                  </span>
+                ) : (
+                  <>
+                    <span>Drag & drop image here</span>
+                    <span className="text-xs text-slate-500">
+                      or click to browse
+                    </span>
+                  </>
+                )}
+              </label>
+              <input
+                id="kyc-front"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) setKycFrontFile(file);
+                }}
+              />
+            </div>
+
+            {/* Back side (optional, depending on document) */}
+            <div>
+              <label className="block mb-2 text-sm">
+                Back side (optional)
+              </label>
+              <label
+                htmlFor="kyc-back"
+                className="mc-input flex flex-col items-center justify-center border-dashed border border-slate-600 cursor-pointer text-sm text-slate-400 py-6"
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const file = e.dataTransfer.files?.[0];
+                  if (file) setKycBackFile(file);
+                }}
+              >
+                {kycBackFile ? (
+                  <span className="text-slate-100">
+                    {kycBackFile.name}
+                  </span>
+                ) : (
+                  <>
+                    <span>Drag & drop image here</span>
+                    <span className="text-xs text-slate-500">
+                      or click to browse
+                    </span>
+                  </>
+                )}
+              </label>
+              <input
+                id="kyc-back"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) setKycBackFile(file);
+                }}
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="mc-btn mc-btn-primary mt-4"
+              disabled={saving}
+            >
+              {saving ? "Saving…" : "Continue"}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // STEP 6 — PROOF OF ADDRESS
   return (
     <div className="mc-card">
       <div className="mc-section text-left">
-        <h1 className="mc-title mb-2">Address</h1>
+        <h1 className="mc-title mb-2">Proof of address</h1>
         <p className="text-slate-400 mb-8">
-          Tell us where you currently live.
+          Select one document and upload a copy.
         </p>
 
         {error && (
@@ -600,50 +903,55 @@ export default function OnboardingClient() {
           </div>
         )}
 
-        <form onSubmit={handleAddressSubmit} className="space-y-6">
+        <form onSubmit={handleProofOfAddressSubmit} className="space-y-6">
           <div>
-            <label className="block mb-2 text-sm">Address</label>
-            <input
-              type="text"
+            <label className="block mb-2 text-sm">Document type</label>
+            <select
               className="mc-input"
-              value={addressLine}
-              onChange={(e) => setAddressLine(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="flex gap-2">
-            <div className="flex-1">
-              <label className="block mb-2 text-sm">City</label>
-              <input
-                type="text"
-                className="mc-input"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="w-40">
-              <label className="block mb-2 text-sm">Postal code</label>
-              <input
-                type="text"
-                className="mc-input"
-                value={postalCode}
-                onChange={(e) => setPostalCode(e.target.value)}
-                required
-              />
-            </div>
+              value={poaDocType}
+              onChange={(e) => setPoaDocType(e.target.value)}
+            >
+              <option value="utility_bill">
+                Utility bill (water / electricity)
+              </option>
+              <option value="bank_statement">Bank statement</option>
+              <option value="phone_internet_bill">Phone / Internet bill</option>
+              <option value="rental_agreement">Rental agreement</option>
+              <option value="tax_notice">Tax notice</option>
+            </select>
           </div>
 
           <div>
-            <label className="block mb-2 text-sm">Country</label>
+            <label className="block mb-2 text-sm">Document file</label>
+            <label
+              htmlFor="poa-file"
+              className="mc-input flex flex-col items-center justify-center border-dashed border border-slate-600 cursor-pointer text-sm text-slate-400 py-6"
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault();
+                const file = e.dataTransfer.files?.[0];
+                if (file) setPoaFile(file);
+              }}
+            >
+              {poaFile ? (
+                <span className="text-slate-100">{poaFile.name}</span>
+              ) : (
+                <>
+                  <span>Drag & drop file here</span>
+                  <span className="text-xs text-slate-500">
+                    or click to browse
+                  </span>
+                </>
+              )}
+            </label>
             <input
-              type="text"
-              className="mc-input"
-              value={country}
-              onChange={(e) => setCountry(e.target.value)}
-              required
+              id="poa-file"
+              type="file"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) setPoaFile(file);
+              }}
             />
           </div>
 
