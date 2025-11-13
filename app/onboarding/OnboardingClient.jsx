@@ -59,8 +59,8 @@ const DIAL_CODES = [
 export default function OnboardingClient() {
   const router = useRouter();
 
-  // 1 = profile, 2 = phone, 3 = otp, 4 = address, 5 = kyc identity, 6 = kyc proof of address
-  const [step, setStep] = useState(1);
+  // 0 = intro, 1 = profile, 2 = phone, 3 = otp, 4 = address, 5 = kyc identity, 6 = kyc proof of address
+  const [step, setStep] = useState(0);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -158,10 +158,12 @@ export default function OnboardingClient() {
         .eq("user_id", uid)
         .maybeSingle();
 
-      if (!onboardErr && onboard?.current_step) {
+      if (!onboardErr && onboard && onboard.current_step !== null) {
+        // On respecte le step sauvegardé (0,1,2,...)
         setStep(onboard.current_step);
       } else {
-        setStep(1);
+        // Aucun enregistrement → on commence par l’intro
+        setStep(0);
       }
 
       setLoading(false);
@@ -181,7 +183,10 @@ export default function OnboardingClient() {
 
   // Small helper
   async function updateOnboardingStep(nextStep, completed = false) {
-    if (!userId) return;
+    if (!userId) {
+      setStep(nextStep);
+      return;
+    }
     await supabase.from("onboarding_state").upsert(
       {
         user_id: userId,
@@ -552,6 +557,103 @@ export default function OnboardingClient() {
         <div className="mc-section text-left">
           <h1 className="mc-title mb-2">Welcome</h1>
           <p className="text-slate-400">Loading your profile…</p>
+        </div>
+      </div>
+    );
+  }
+
+  // STEP 0 — INTRO
+  if (step === 0) {
+    return (
+      <div className="mc-card">
+        <div className="mc-section text-left">
+          <h1 className="mc-title mb-2">Let’s set up your account</h1>
+          <p className="text-slate-400 mb-6">
+            In a few minutes, you&apos;ll be fully ready to invest with
+            Montelion Capital. Here&apos;s what we&apos;ll do together:
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            {/* Step A */}
+            <div className="rounded-2xl border border-slate-700/60 bg-slate-900/40 px-4 py-5 flex flex-col gap-2">
+              <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-slate-500">
+                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-600/20 text-[11px] text-blue-400 border border-blue-500/40">
+                  1
+                </span>
+                Personal onboarding
+              </div>
+              <div className="text-sm font-medium text-slate-100">
+                Identity & contact
+              </div>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                We collect your basic details, verify your phone number, and
+                confirm your address for KYC and regulatory requirements.
+              </p>
+              <ul className="mt-2 text-[11px] text-slate-500 space-y-1">
+                <li>• Name & date of birth</li>
+                <li>• Mobile verification (SMS)</li>
+                <li>• Address & proof of residence</li>
+              </ul>
+            </div>
+
+            {/* Step B */}
+            <div className="rounded-2xl border border-slate-700/60 bg-slate-900/40 px-4 py-5 flex flex-col gap-2">
+              <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-slate-500">
+                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-600/20 text-[11px] text-blue-400 border border-blue-500/40">
+                  2
+                </span>
+                Investment agreement
+              </div>
+              <div className="text-sm font-medium text-slate-100">
+                Signature of the mandate
+              </div>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                You review and sign the management agreement defining how we
+                operate your strategy, fees, and risk parameters.
+              </p>
+              <ul className="mt-2 text-[11px] text-slate-500 space-y-1">
+                <li>• Digital signature</li>
+                <li>• Clear risk & fee schedule</li>
+                <li>• Downloadable PDF contract</li>
+              </ul>
+            </div>
+
+            {/* Step C */}
+            <div className="rounded-2xl border border-slate-700/60 bg-slate-900/40 px-4 py-5 flex flex-col gap-2">
+              <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-slate-500">
+                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-600/20 text-[11px] text-blue-400 border border-blue-500/40">
+                  3
+                </span>
+                Exchange connection
+              </div>
+              <div className="text-sm font-medium text-slate-100">
+                Fund & connect your account
+              </div>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                We guide you step-by-step to open your exchange account, deposit
+                funds, and create a secure API key for the bot.
+              </p>
+              <ul className="mt-2 text-[11px] text-slate-500 space-y-1">
+                <li>• Create your futures account</li>
+                <li>• Deposit USDT / stablecoins</li>
+                <li>• Generate read/trade-only API keys</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between gap-4">
+            <div className="text-xs text-slate-500">
+              Estimated time: <span className="text-slate-200">5–10 min</span>.
+              You can stop and resume at any time.
+            </div>
+            <button
+              type="button"
+              className="mc-btn mc-btn-primary"
+              onClick={() => updateOnboardingStep(1, false)}
+            >
+              Get started
+            </button>
+          </div>
         </div>
       </div>
     );
