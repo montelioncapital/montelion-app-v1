@@ -325,15 +325,21 @@ export default function OnboardingClient() {
         throw new Error("Please fill in all fields.");
       }
 
-      // Insérer l’adresse dans la table addresses
-      const { error: addrErr } = await supabase.from("addresses").insert({
-        address_line: addressLine.trim(),
-        city: city.trim(),
-        postal_code: postalCode.trim(),
-        country: country.trim(),
-        // ⚠️ si tu as une colonne user_id dans cette table, ajoute-la ici :
-        // user_id: userId,
-      });
+            // Insérer / mettre à jour l’adresse dans la table addresses
+      const { error: addrErr } = await supabase
+        .from("addresses")
+        .upsert(
+          {
+            user_id: userId, // 👈 OBLIGATOIRE pour passer la RLS
+            address_line: addressLine.trim(),
+            city: city.trim(),
+            postal_code: postalCode.trim(),
+            country: country.trim(),
+          },
+          {
+            onConflict: "user_id", // 1 seule adresse par user
+          }
+        );
 
       if (addrErr) throw addrErr;
 
