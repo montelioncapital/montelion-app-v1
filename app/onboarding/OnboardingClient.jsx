@@ -7,60 +7,35 @@ import { supabase } from "../lib/supabaseClient";
 export default function OnboardingClient() {
   const router = useRouter();
 
-  // Step: 1 = profile, 2 = phone, 3 = otp
+  // 1 = profil, 2 = téléphone, 3 = OTP
   const [step, setStep] = useState(1);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [sendingCode, setSendingCode] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+
   const [error, setError] = useState("");
-  const [ok, setOk] = useState("");
 
   const [userId, setUserId] = useState(null);
 
-  // Step 1 — profile
+  // Step 1 — profil
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [dob, setDob] = useState("");
+  const [dob, setDob] = useState(""); // YYYY-MM-DD
 
-  // Step 2 — phone
+  // Step 2 — téléphone
   const [dialCode, setDialCode] = useState("+33");
   const [phoneLocal, setPhoneLocal] = useState("");
   const [phoneE164, setPhoneE164] = useState("");
-  const [sendingCode, setSendingCode] = useState(false);
 
   // Step 3 — OTP
   const [otp, setOtp] = useState("");
-  const [verifying, setVerifying] = useState(false);
+  const [timer, setTimer] = useState(60); // resend timer
 
-  // Resend timer
-  const [timer, setTimer] = useState(60);
-
-  const DIAL_CODES = [
-    "+1",
-    "+44",
-    "+33",
-    "+49",
-    "+39",
-    "+34",
-    "+31",
-    "+46",
-    "+41",
-    "+81",
-    "+82",
-    "+86",
-    "+91",
-    "+55",
-    "+52",
-    "+61",
-    "+7",
-    "+27",
-    "+65",
-    "+971",
-  ];
-
-  // -------------------------
-  // Load session + pre-fill profile
-  // -------------------------
+  // --------------------------------------------------
+  // Chargement session + profil
+  // --------------------------------------------------
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -93,9 +68,9 @@ export default function OnboardingClient() {
     })();
   }, [router]);
 
-  // -------------------------
-  // Step 1 — Submit profile
-  // -------------------------
+  // --------------------------------------------------
+  // Step 1 — Save profile
+  // --------------------------------------------------
   async function handleProfileSubmit(e) {
     e.preventDefault();
     if (saving) return;
@@ -117,7 +92,6 @@ export default function OnboardingClient() {
         },
         { onConflict: "id" }
       );
-
       if (upsertErr) throw upsertErr;
 
       await supabase.from("onboarding_state").upsert(
@@ -131,15 +105,15 @@ export default function OnboardingClient() {
 
       setStep(2);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Something went wrong.");
     } finally {
       setSaving(false);
     }
   }
 
-  // -------------------------
-  // Step 2 — Send code SMS
-  // -------------------------
+  // --------------------------------------------------
+  // Step 2 — Send SMS code
+  // --------------------------------------------------
   async function handleSendCode(e) {
     e.preventDefault();
     if (sendingCode) return;
@@ -160,21 +134,21 @@ export default function OnboardingClient() {
         body: JSON.stringify({ phone: full }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Failed to send code.");
 
       setStep(3);
       setTimer(60);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Something went wrong.");
     } finally {
       setSendingCode(false);
     }
   }
 
-  // -------------------------
+  // --------------------------------------------------
   // Step 3 — Verify OTP
-  // -------------------------
+  // --------------------------------------------------
   async function handleVerifyCode(e) {
     e.preventDefault();
     if (verifying) return;
@@ -183,7 +157,9 @@ export default function OnboardingClient() {
     setVerifying(true);
 
     try {
-      if (!/^\d{6}$/.test(otp)) throw new Error("Invalid code.");
+      if (!/^\d{6}$/.test(otp)) {
+        throw new Error("Invalid code.");
+      }
 
       const res = await fetch("/api/phone/verify-code", {
         method: "POST",
@@ -191,7 +167,7 @@ export default function OnboardingClient() {
         body: JSON.stringify({ phone: phoneE164, code: otp }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Invalid or expired code.");
 
       await supabase.from("onboarding_state").upsert(
@@ -205,34 +181,38 @@ export default function OnboardingClient() {
 
       router.push("/dashboard");
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Something went wrong.");
     } finally {
       setVerifying(false);
     }
   }
 
-  // -------------------------
-  // OTP timer countdown
-  // -------------------------
+  // --------------------------------------------------
+  // Timer pour resend code (step 3)
+  // --------------------------------------------------
   useEffect(() => {
     if (step !== 3) return;
     if (timer <= 0) return;
 
-    const t = setTimeout(() => setTimer((t) => t - 1), 1000);
+    const t = setTimeout(() => setTimer((prev) => prev - 1), 1000);
     return () => clearTimeout(t);
   }, [step, timer]);
 
-  // -------------------------
-  // Step 1 : PROFILE
-  // -------------------------
+  // --------------------------------------------------
+  // RENDUS
+  // --------------------------------------------------
+
   if (loading) {
     return (
       <div className="mc-card">
-        <div className="mc-section text-left">Loading…</div>
+        <div className="mc-section text-left text-slate-400">
+          Loading…
+        </div>
       </div>
     );
   }
 
+  // STEP 1 : PROFILE
   if (step === 1) {
     return (
       <div className="mc-card">
@@ -256,6 +236,7 @@ export default function OnboardingClient() {
                 className="mc-input"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
+                autoComplete="given-name"
                 required
               />
             </div>
@@ -267,6 +248,7 @@ export default function OnboardingClient() {
                 className="mc-input"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
+                autoComplete="family-name"
                 required
               />
             </div>
@@ -283,8 +265,12 @@ export default function OnboardingClient() {
               />
             </div>
 
-            <button type="submit" className="mc-btn mc-btn-primary mt-4">
-              Continue
+            <button
+              type="submit"
+              className="mc-btn mc-btn-primary mt-4"
+              disabled={saving}
+            >
+              {saving ? "Saving…" : "Continue"}
             </button>
           </form>
         </div>
@@ -292,9 +278,7 @@ export default function OnboardingClient() {
     );
   }
 
-  // -------------------------
-  // Step 2 : PHONE NUMBER
-  // -------------------------
+  // STEP 2 : PHONE
   if (step === 2) {
     return (
       <div className="mc-card">
@@ -315,26 +299,39 @@ export default function OnboardingClient() {
               <label className="block mb-2 text-sm">Mobile number</label>
 
               <div className="flex gap-2">
-                {/* 🔥 Sélecteur indicatif ULTRA propre, parfaitement centré */}
+                {/* Sélecteur indicatif : centré, flèche propre */}
                 <div className="relative w-24">
-                  {/* Select natif invisible mais cliquable */}
                   <select
+                    className="mc-input w-full pl-3 pr-8 text-sm text-center appearance-none leading-none flex items-center justify-center"
                     value={dialCode}
                     onChange={(e) => setDialCode(e.target.value)}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                   >
-                    {DIAL_CODES.map((code) => (
-                      <option key={code} value={code}>
-                        {code}
-                      </option>
-                    ))}
+                    <option value="+1">+1</option>
+                    <option value="+44">+44</option>
+                    <option value="+33">+33</option>
+                    <option value="+49">+49</option>
+                    <option value="+39">+39</option>
+                    <option value="+34">+34</option>
+                    <option value="+31">+31</option>
+                    <option value="+46">+46</option>
+                    <option value="+41">+41</option>
+                    <option value="+81">+81</option>
+                    <option value="+82">+82</option>
+                    <option value="+86">+86</option>
+                    <option value="+91">+91</option>
+                    <option value="+55">+55</option>
+                    <option value="+52">+52</option>
+                    <option value="+61">+61</option>
+                    <option value="+7">+7</option>
+                    <option value="+27">+27</option>
+                    <option value="+65">+65</option>
+                    <option value="+971">+971</option>
                   </select>
 
-                  {/* Box visible stylée */}
-                  <div className="mc-input w-full flex items-center justify-center gap-1 text-sm">
-                    <span>{dialCode}</span>
-                    <span className="text-[9px] leading-none">▼</span>
-                  </div>
+                  {/* petite flèche centrée verticalement */}
+                  <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 text-[10px]">
+                    ▼
+                  </span>
                 </div>
 
                 <input
@@ -343,6 +340,7 @@ export default function OnboardingClient() {
                   placeholder="Your mobile number"
                   value={phoneLocal}
                   onChange={(e) => setPhoneLocal(e.target.value)}
+                  autoComplete="tel"
                   required
                 />
               </div>
@@ -352,7 +350,11 @@ export default function OnboardingClient() {
               </p>
             </div>
 
-            <button type="submit" className="mc-btn mc-btn-primary mt-4">
+            <button
+              type="submit"
+              className="mc-btn mc-btn-primary mt-4"
+              disabled={sendingCode}
+            >
               {sendingCode ? "Sending…" : "Send OTP"}
             </button>
           </form>
@@ -361,67 +363,66 @@ export default function OnboardingClient() {
     );
   }
 
-  // -------------------------
-// Step 3 : OTP
-// -------------------------
-return (
-  <div className="mc-card">
-    <div className="mc-section text-left">
-      <h1 className="mc-title mb-2">Enter 6-digit verification code</h1>
-      <p className="text-slate-400 mb-8">
-        Please enter the 6-digit code we sent to{" "}
-        <span className="font-medium text-slate-100">
-          {phoneE164 || `${dialCode}${phoneLocal}`}
-        </span>
-        .
-      </p>
+  // STEP 3 : OTP
+  return (
+    <div className="mc-card">
+      <div className="mc-section text-left">
+        <h1 className="mc-title mb-2">Enter 6-digit verification code</h1>
+        <p className="text-slate-400 mb-8">
+          Please enter the 6-digit code we sent to{" "}
+          <span className="font-medium text-slate-100">
+            {phoneE164 || `${dialCode}${phoneLocal}`}
+          </span>
+          .
+        </p>
 
-      {error && (
-        <div className="mb-4 text-sm text-rose-400 bg-rose-950/40 border border-rose-900/40 px-3 py-2 rounded-lg">
-          {error}
-        </div>
-      )}
+        {error && (
+          <div className="mb-4 text-sm text-rose-400 bg-rose-950/40 border border-rose-900/40 px-3 py-2 rounded-lg">
+            {error}
+          </div>
+        )}
 
-      <form onSubmit={handleVerifyCode} className="space-y-6">
-        <div>
-          <label className="block mb-2 text-sm">6-digit code</label>
-          <input
-            type="text"
-            className="mc-input tracking-[0.3em] text-center"
-            placeholder="••••••"
-            value={otp}
-            onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-            maxLength={6}
-            required
-          />
-        </div>
+        <form onSubmit={handleVerifyCode} className="space-y-6">
+          <div>
+            <label className="block mb-2 text-sm">6-digit code</label>
+            <input
+              type="text"
+              className="mc-input tracking-[0.3em] text-center"
+              placeholder="••••••"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+              maxLength={6}
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              required
+            />
+          </div>
 
-        {/* 🔥 Buttons side by side */}
-        <div className="flex items-center gap-3">
-          <button
-            type="submit"
-            className="mc-btn mc-btn-primary"
-            disabled={verifying}
-          >
-            {verifying ? "Verifying…" : "Verify"}
-          </button>
+          {/* Boutons côte à côte */}
+          <div className="flex items-center gap-3">
+            <button
+              type="submit"
+              className="mc-btn mc-btn-primary"
+              disabled={verifying}
+            >
+              {verifying ? "Verifying…" : "Verify"}
+            </button>
 
-          {/* Bouton resend avec timer 60s */}
-          <button
-            type="button"
-            disabled={timer > 0}
-            onClick={() => setStep(2)}
-            className={`mc-btn px-4 py-2 rounded-lg text-sm border 
-              ${
+            <button
+              type="button"
+              disabled={timer > 0}
+              onClick={() => setStep(2)}
+              className={`mc-btn px-4 py-2 rounded-lg text-sm border ${
                 timer > 0
                   ? "border-slate-700 text-slate-600 cursor-not-allowed"
                   : "border-slate-500 text-slate-300 hover:bg-slate-800"
               }`}
-          >
-            {timer > 0 ? `Resend code in ${timer}s` : "Resend code"}
-          </button>
-        </div>
-      </form>
+            >
+              {timer > 0 ? `Resend code in ${timer}s` : "Resend code"}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
-  </div>
-);
+  );
+}
