@@ -2,207 +2,217 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createBrowserSupabaseClient } from "../lib/supabaseBrowser";
-
-const supabase = createBrowserSupabaseClient();
-
-// --- Composants UI basiques (card, input, bouton) ---------------------------
-
-function OnboardingCard({ step, totalSteps, title, subtitle, children }) {
-  return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4">
-      <div className="w-full max-w-md rounded-3xl border border-slate-800 bg-slate-900/80 px-8 py-10 shadow-xl">
-        <div className="mb-8">
-          <p className="text-[11px] font-medium tracking-[0.28em] text-slate-500 uppercase">
-            Onboarding
-          </p>
-          <p className="mt-1 text-xs text-slate-500">
-            Step {step} of {totalSteps}
-          </p>
-        </div>
-
-        <h1 className="text-2xl font-semibold text-slate-50">{title}</h1>
-        {subtitle && (
-          <p className="mt-2 text-sm text-slate-400 leading-relaxed">
-            {subtitle}
-          </p>
-        )}
-
-        <div className="mt-8 space-y-6">{children}</div>
-      </div>
-    </div>
-  );
-}
-
-function Input({ label, ...props }) {
-  return (
-    <div className="space-y-2">
-      <label className="text-sm font-medium text-slate-200">{label}</label>
-      <input
-        className="w-full h-11 rounded-xl border border-slate-700 bg-slate-900/60 px-3 text-sm text-slate-50 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        {...props}
-      />
-    </div>
-  );
-}
-
-function PrimaryButton({ children, className = "", ...props }) {
-  return (
-    <button
-      className={
-        "mt-6 inline-flex h-11 w-full items-center justify-center rounded-xl bg-blue-600 px-4 text-sm font-medium text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60 " +
-        className
-      }
-      {...props}
-    >
-      {children}
-    </button>
-  );
-}
-
-// --- Composant principal ----------------------------------------------------
+import { supabase } from "../lib/supabaseClient";
 
 export default function OnboardingClient() {
   const router = useRouter();
 
-  const TOTAL_STEPS = 5; // on garde 1/5 pour rester cohérent avec ton UI
-
   const [loading, setLoading] = useState(true);
-  const [globalError, setGlobalError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [ok, setOk] = useState("");
+
+  const [userId, setUserId] = useState(null);
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [dob, setDob] = useState(""); // yyyy-mm-dd
+  const [dob, setDob] = useState(""); // YYYY-MM-DD
 
-  // Chargement initial: user + profil existant
+  // Au chargement : vérifier la session + pré-remplir si profil existe
   useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
+    (async () => {
       setLoading(true);
-      setGlobalError("");
+      setError("");
+      setOk("");
 
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
+      const { data: sessionData, error: sessionErr } =
+        await supabase.auth.getSession();
 
-      if (userError || !user) {
-        console.error(userError);
-        if (!cancelled) router.replace("/login");
+      if (sessionErr) {
+        setError(sessionErr.message || "Unable to get session.");
+        setLoading(false);
         return;
       }
 
-      try {
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("first_name, last_name, date_of_birth")
-          .eq("id", user.id)
-          .maybeSingle();
-
-        if (profileError) throw profileError;
-
-        if (!cancelled && profile) {
-          setFirstName(profile.first_name ?? "");
-          setLastName(profile.last_name ?? "");
-          if (profile.date_of_birth) setDob(profile.date_of_birth);
-        }
-      } catch (e) {
-        console.error(e);
-        if (!cancelled)
-          setGlobalError("Unexpected error while loading your profile.");
-      } finally {
-        if (!cancelled) setLoading(false);
+      const session = sessionData?.session;
+      if (!session?.user) {
+        // Pas connecté → retour à la page de login
+        router.replace("/login");
+        return;
       }
-    }
 
-    load();
-    return () => {
-      cancelled = true;
-    };
+      const uid = session.user.id;
+      setUserId(uid);
+
+      // Récupérer le profil existant (si déjà partiellement rempli)
+      const { data: profile, error: profErr } = await supabase
+        .from("profiles")
+        .select("first_name, last_name, date_of_birth")
+        .eq("id", uid)
+        .maybeSingle();
+
+      if (profErr && profErr.code !== "PGRST116") {
+        // PGRST116 = no rows found
+        console.error(profErr);
+        setError(profErr.message || "Unable to load profile.");
+        setLoading(false);
+        return;
+      }
+
+      if (profile) {
+        setFirstName(profile.first_name || "");
+        setLastName(profile.last_name || "");
+        setDob(profile.date_of_birth || "");
+      }
+
+      setLoading(false);
+    })();
   }, [router]);
 
-  async function handleSaveProfile() {
-    setGlobalError("");
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!userId || saving) return;
 
-    if (!firstName.trim() || !lastName.trim() || !dob) {
-      setGlobalError("Please fill in all fields.");
-      return;
-    }
-
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      setGlobalError("You are not authenticated.");
-      return;
-    }
+    setError("");
+    setOk("");
+    setSaving(true);
 
     try {
-      const { error: upsertError } = await supabase.from("profiles").upsert({
-        id: user.id,
-        first_name: firstName.trim(),
-        last_name: lastName.trim(),
-        date_of_birth: dob,
-      });
+      if (!firstName.trim() || !lastName.trim() || !dob) {
+        setError("Please fill in all fields.");
+        setSaving(false);
+        return;
+      }
 
-      if (upsertError) throw upsertError;
+      // 1) Upsert dans profiles
+      const { error: upsertErr } = await supabase
+        .from("profiles")
+        .upsert(
+          {
+            id: userId,
+            first_name: firstName.trim(),
+            last_name: lastName.trim(),
+            date_of_birth: dob, // string 'YYYY-MM-DD' → type date en DB
+          },
+          { onConflict: "id" }
+        );
 
-      // On peut garder une trace d'onboarding_state si tu veux
-      await supabase.from("onboarding_state").upsert({
-        user_id: user.id,
-        current_step: 1,
-      });
+      if (upsertErr) {
+        throw upsertErr;
+      }
 
-      // Pour l’instant, on finit l’onboarding ici
-      router.replace("/");
-    } catch (e) {
-      console.error(e);
-      setGlobalError("Could not save your profile. Please try again.");
+      // 2) Mettre à jour l'état d'onboarding (step 1 terminé → current_step = 2)
+      const { error: onboardingErr } = await supabase
+        .from("onboarding_state")
+        .upsert(
+          {
+            user_id: userId,
+            current_step: 2,
+            completed: false,
+          },
+          { onConflict: "user_id" }
+        );
+
+      if (onboardingErr) {
+        throw onboardingErr;
+      }
+
+      setOk("Profile saved successfully.");
+      // 🔜 plus tard : router.push("/onboarding/phone");
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Something went wrong, please try again.");
+    } finally {
+      setSaving(false);
     }
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-400">
-        Loading...
+      <div className="mc-card">
+        <div className="mc-section text-left">
+          <h1 className="mc-title mb-2">Onboarding</h1>
+          <p className="text-slate-400">Loading your profile…</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <OnboardingCard
-      step={1}
-      totalSteps={TOTAL_STEPS}
-      title="Welcome"
-      subtitle="Choose how you'd like to be addressed."
-    >
-      <Input
-        label="First name"
-        placeholder="Your first name"
-        value={firstName}
-        onChange={(e) => setFirstName(e.target.value)}
-      />
-      <Input
-        label="Last name"
-        placeholder="Your last name"
-        value={lastName}
-        onChange={(e) => setLastName(e.target.value)}
-      />
-      <Input
-        label="Date of birth"
-        type="date"
-        value={dob}
-        onChange={(e) => setDob(e.target.value)}
-      />
+    <div className="mc-card">
+      <div className="mc-section text-left">
+        <h1 className="mc-title mb-2">Welcome</h1>
+        <p className="text-slate-400 mb-8">
+          Choose how you’d like to be addressed.
+        </p>
 
-      {globalError && (
-        <p className="mt-2 text-xs text-red-400">{globalError}</p>
-      )}
+        {error && (
+          <div className="mb-4 text-sm text-rose-400 bg-rose-950/40 border border-rose-900/40 px-3 py-2 rounded-lg">
+            {error}
+          </div>
+        )}
+        {ok && (
+          <div className="mb-4 text-sm text-emerald-400 bg-emerald-950/40 border border-emerald-900/40 px-3 py-2 rounded-lg">
+            {ok}
+          </div>
+        )}
 
-      <PrimaryButton onClick={handleSaveProfile}>Continue</PrimaryButton>
-    </OnboardingCard>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* First name */}
+          <div>
+            <label className="block mb-2 text-sm text-slate-300">
+              First name
+            </label>
+            <input
+              type="text"
+              className="mc-input"
+              placeholder="John"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              autoComplete="given-name"
+              required
+            />
+          </div>
+
+          {/* Last name */}
+          <div>
+            <label className="block mb-2 text-sm text-slate-300">
+              Last name
+            </label>
+            <input
+              type="text"
+              className="mc-input"
+              placeholder="Doe"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              autoComplete="family-name"
+              required
+            />
+          </div>
+
+          {/* Date of birth */}
+          <div>
+            <label className="block mb-2 text-sm text-slate-300">
+              Date of birth
+            </label>
+            <input
+              type="date"
+              className="mc-input"
+              value={dob}
+              onChange={(e) => setDob(e.target.value)}
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="mc-btn mc-btn-primary mt-4"
+            disabled={saving}
+          >
+            {saving ? "Saving…" : "Continue"}
+          </button>
+        </form>
+      </div>
+    </div>
   );
 }
