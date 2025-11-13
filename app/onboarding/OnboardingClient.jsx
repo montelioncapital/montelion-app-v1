@@ -4,10 +4,20 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabaseClient";
 
+const ID_DOC_TYPES = ["Passport", "Driving license", "National ID card"];
+
+const POA_DOC_TYPES = [
+  "Utility bill (water / electricity)",
+  "Bank statement",
+  "Phone / Internet bill",
+  "Rental agreement",
+  "Tax notice",
+];
+
 export default function OnboardingClient() {
   const router = useRouter();
 
-  // Step: 1 = profile, 2 = phone, 3 = otp, 4 = address, 5 = kyc identity, 6 = kyc address
+  // 1 = profile, 2 = phone, 3 = otp, 4 = address, 5 = kyc identity, 6 = kyc proof of address
   const [step, setStep] = useState(1);
 
   const [loading, setLoading] = useState(true);
@@ -31,8 +41,6 @@ export default function OnboardingClient() {
   // Step 3 — OTP
   const [otp, setOtp] = useState("");
   const [verifying, setVerifying] = useState(false);
-
-  // Resend timer
   const [timer, setTimer] = useState(60);
 
   // Step 4 — address
@@ -41,13 +49,15 @@ export default function OnboardingClient() {
   const [postalCode, setPostalCode] = useState("");
   const [country, setCountry] = useState("");
 
-  // Step 5 — KYC Identity
-  const [kycDocType, setKycDocType] = useState("passport");
-  const [kycFrontFile, setKycFrontFile] = useState(null);
-  const [kycBackFile, setKycBackFile] = useState(null);
+  // Step 5 — KYC identity
+  const [idDocType, setIdDocType] = useState("Passport");
+  const [idFrontFile, setIdFrontFile] = useState(null);
+  const [idBackFile, setIdBackFile] = useState(null);
 
   // Step 6 — Proof of address
-  const [poaDocType, setPoaDocType] = useState("utility_bill");
+  const [poaDocType, setPoaDocType] = useState(
+    "Utility bill (water / electricity)"
+  );
   const [poaFile, setPoaFile] = useState(null);
 
   const DIAL_CODES = [
@@ -150,6 +160,20 @@ export default function OnboardingClient() {
     return () => clearTimeout(t);
   }, [step, timer]);
 
+  // Small helper
+  async function updateOnboardingStep(nextStep, completed = false) {
+    if (!userId) return;
+    await supabase.from("onboarding_state").upsert(
+      {
+        user_id: userId,
+        current_step: nextStep,
+        completed,
+      },
+      { onConflict: "user_id" }
+    );
+    setStep(nextStep);
+  }
+
   // -------------------------
   // Step 1 — Submit profile
   // -------------------------
@@ -178,17 +202,7 @@ export default function OnboardingClient() {
 
       if (upsertErr) throw upsertErr;
 
-      const { error: onboardErr } = await supabase.from("onboarding_state").upsert(
-        {
-          user_id: userId,
-          current_step: 2,
-          completed: false,
-        },
-        { onConflict: "user_id" }
-      );
-      if (onboardErr) throw onboardErr;
-
-      setStep(2);
+      await updateOnboardingStep(2, false);
     } catch (err) {
       setError(err.message || "Something went wrong.");
     } finally {
@@ -231,18 +245,8 @@ export default function OnboardingClient() {
 
       setOk("A verification code has been sent by SMS.");
 
-      const { error: onboardErr } = await supabase.from("onboarding_state").upsert(
-        {
-          user_id: userId,
-          current_step: 3,
-          completed: false,
-        },
-        { onConflict: "user_id" }
-      );
-      if (onboardErr) throw onboardErr;
-
+      await updateOnboardingStep(3, false);
       setTimer(60);
-      setStep(3);
     } catch (err) {
       setError(err.message || "Something went wrong.");
     } finally {
@@ -286,18 +290,8 @@ export default function OnboardingClient() {
         })
         .eq("id", userId);
 
-      const { error: onboardErr } = await supabase.from("onboarding_state").upsert(
-        {
-          user_id: userId,
-          current_step: 4, // next: address
-          completed: false,
-        },
-        { onConflict: "user_id" }
-      );
-      if (onboardErr) throw onboardErr;
-
       setOk("Your phone number has been verified.");
-      setStep(4);
+      await updateOnboardingStep(4, false);
     } catch (err) {
       setError(err.message || "Something went wrong while verifying the code.");
     } finally {
@@ -336,19 +330,8 @@ export default function OnboardingClient() {
 
       if (addrErr) throw addrErr;
 
-      // ➜ Go to KYC Identity (step 5)
-      const { error: onboardErr } = await supabase.from("onboarding_state").upsert(
-        {
-          user_id: userId,
-          current_step: 5,
-          completed: false,
-        },
-        { onConflict: "user_id" }
-      );
-      if (onboardErr) throw onboardErr;
-
-      setOk("Your address has been saved.");
-      setStep(5);
+      // On ne montre pas de message ici, on passe directement à KYC Identity
+      await updateOnboardingStep(5, false);
     } catch (err) {
       setError(
         err.message ||
@@ -360,8 +343,10 @@ export default function OnboardingClient() {
   }
 
   // -------------------------
-  // Step 5 — Save KYC Identity
+  // Step 5 — KYC Identity
   // -------------------------
+  const isPassport = idDocType === "Passport";
+
   async function handleKycIdentitySubmit(e) {
     e.preventDefault();
     if (!userId || saving) return;
@@ -371,36 +356,60 @@ export default function OnboardingClient() {
     setSaving(true);
 
     try {
-      if (!kycDocType || !kycFrontFile) {
-        throw new Error("Please select a document and upload the front side.");
+      if (!idFrontFile) {
+        throw new Error("Please upload the front side of your document.");
+      }
+      if (!isPassport && !idBackFile) {
+        throw new Error("Please upload the back side of your document.");
       }
 
-      const { error: kycErr } = await supabase.from("kyc_identities").insert({
-        user_id: userId,
-        document_type: kycDocType, // e.g. passport / driving_license / national_id
-        front_file_name: kycFrontFile.name || null,
-        back_file_name: kycBackFile ? kycBackFile.name : null,
-        status: "submitted",
-      });
+      const bucket = "kyc"; // adapte si besoin
 
-      if (kycErr) throw kycErr;
+      // FRONT
+      const frontPath = `identity/${userId}/front-${Date.now()}-${
+        idFrontFile.name
+      }`;
+      const { error: frontUploadErr } = await supabase.storage
+        .from(bucket)
+        .upload(frontPath, idFrontFile, {
+          cacheControl: "3600",
+          upsert: false,
+        });
 
-      const { error: onboardErr } = await supabase.from("onboarding_state").upsert(
+      if (frontUploadErr) throw frontUploadErr;
+
+      // BACK (si non passeport)
+      let backPath = null;
+      if (!isPassport && idBackFile) {
+        backPath = `identity/${userId}/back-${Date.now()}-${idBackFile.name}`;
+        const { error: backUploadErr } = await supabase.storage
+          .from(bucket)
+          .upload(backPath, idBackFile, {
+            cacheControl: "3600",
+            upsert: false,
+          });
+        if (backUploadErr) throw backUploadErr;
+      }
+
+      // Enregistrer en DB — on suppose les colonnes front_file_path / back_file_path
+      const { error: kycErr } = await supabase.from("kyc_identities").upsert(
         {
           user_id: userId,
-          current_step: 6, // next: proof of address
-          completed: false,
+          document_type: idDocType,
+          front_file_path: frontPath,
+          back_file_path: backPath,
+          status: "submitted",
         },
         { onConflict: "user_id" }
       );
-      if (onboardErr) throw onboardErr;
 
-      setOk("Your identity document has been submitted.");
-      setStep(6);
+      if (kycErr) throw kycErr;
+
+      await updateOnboardingStep(6, false);
     } catch (err) {
       setError(
         err.message ||
-          "Something went wrong while saving your identity document."
+          "Something went wrong while uploading your identity document."
       );
     } finally {
       setSaving(false);
@@ -408,9 +417,9 @@ export default function OnboardingClient() {
   }
 
   // -------------------------
-  // Step 6 — Save Proof of Address
+  // Step 6 — Proof of Address
   // -------------------------
-  async function handleProofOfAddressSubmit(e) {
+  async function handlePoaSubmit(e) {
     e.preventDefault();
     if (!userId || saving) return;
 
@@ -419,39 +428,82 @@ export default function OnboardingClient() {
     setSaving(true);
 
     try {
-      if (!poaDocType || !poaFile) {
-        throw new Error("Please select a document and upload a file.");
+      if (!poaFile) {
+        throw new Error("Please upload a proof of address document.");
       }
 
-      const { error: poaErr } = await supabase.from("proof_of_address").insert({
-        user_id: userId,
-        document_type: poaDocType, // e.g. utility_bill / bank_statement / etc.
-        file_name: poaFile.name || null,
-        status: "submitted",
-      });
+      const bucket = "kyc"; // adapte si besoin
+      const poaPath = `proof-of-address/${userId}/${Date.now()}-${poaFile.name}`;
+
+      const { error: poaUploadErr } = await supabase.storage
+        .from(bucket)
+        .upload(poaPath, poaFile, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+      if (poaUploadErr) throw poaUploadErr;
+
+      const { error: poaErr } = await supabase
+        .from("proof_of_address")
+        .upsert(
+          {
+            user_id: userId,
+            document_type: poaDocType,
+            file_path: poaPath,
+            status: "submitted",
+          },
+          { onConflict: "user_id" }
+        );
 
       if (poaErr) throw poaErr;
 
-      const { error: onboardErr } = await supabase.from("onboarding_state").upsert(
-        {
-          user_id: userId,
-          current_step: 6,
-          completed: true,
-        },
-        { onConflict: "user_id" }
-      );
-      if (onboardErr) throw onboardErr;
-
-      setOk("Your proof of address has been submitted.");
-      // On reste sur cette page pour l’instant, la page suivante sera faite plus tard
+      await updateOnboardingStep(6, true); // completed
+      setOk("Your KYC documents have been submitted.");
+      // tu pourras plus tard faire un router.push("/quelque-chose") ici
     } catch (err) {
       setError(
         err.message ||
-          "Something went wrong while saving your proof of address."
+          "Something went wrong while uploading your proof of address."
       );
     } finally {
       setSaving(false);
     }
+  }
+
+  // -------------------------
+  // Simple Dropzone component
+  // -------------------------
+  function FileDropzone({ label, file, onFileChange, required }) {
+    return (
+      <div>
+        {label && (
+          <div className="mb-1 text-xs text-slate-400">
+            {label} {required && <span className="text-rose-400">*</span>}
+          </div>
+        )}
+        <label className="block border border-dashed border-slate-600/70 rounded-xl px-4 py-6 text-center text-sm text-slate-400 hover:border-slate-300 hover:bg-slate-900/40 cursor-pointer transition">
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) onFileChange(f);
+            }}
+          />
+          {file ? (
+            <span className="text-slate-100">{file.name}</span>
+          ) : (
+            <>
+              <div>Drag &amp; drop image here</div>
+              <div className="text-xs text-slate-500 mt-1">
+                or click to browse
+              </div>
+            </>
+          )}
+        </label>
+      </div>
+    );
   }
 
   // -------------------------
@@ -689,11 +741,6 @@ export default function OnboardingClient() {
               {error}
             </div>
           )}
-          {ok && (
-            <div className="mb-4 text-sm text-emerald-400 bg-emerald-950/40 border border-emerald-900/40 px-3 py-2 rounded-lg">
-              {ok}
-            </div>
-          )}
 
           <form onSubmit={handleAddressSubmit} className="space-y-6">
             <div>
@@ -770,101 +817,43 @@ export default function OnboardingClient() {
               {error}
             </div>
           )}
-          
+          {/* pas de message "Your address has been saved" ici */}
 
           <form onSubmit={handleKycIdentitySubmit} className="space-y-6">
             <div>
               <label className="block mb-2 text-sm">Document type</label>
               <select
                 className="mc-input"
-                value={kycDocType}
-                onChange={(e) => setKycDocType(e.target.value)}
+                value={idDocType}
+                onChange={(e) => {
+                  setIdDocType(e.target.value);
+                  setIdBackFile(null);
+                }}
               >
-                <option value="passport">Passport</option>
-                <option value="driving_license">Driving license</option>
-                <option value="national_id">National ID card</option>
+                {ID_DOC_TYPES.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
               </select>
             </div>
 
-            {/* Front side */}
-            <div>
-              <label className="block mb-2 text-sm">
-                Front side (required)
-              </label>
-              <label
-                htmlFor="kyc-front"
-                className="mc-input flex flex-col items-center justify-center border-dashed border border-slate-600 cursor-pointer text-sm text-slate-400 py-6"
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  const file = e.dataTransfer.files?.[0];
-                  if (file) setKycFrontFile(file);
-                }}
-              >
-                {kycFrontFile ? (
-                  <span className="text-slate-100">
-                    {kycFrontFile.name}
-                  </span>
-                ) : (
-                  <>
-                    <span>Drag & drop image here</span>
-                    <span className="text-xs text-slate-500">
-                      or click to browse
-                    </span>
-                  </>
-                )}
-              </label>
-              <input
-                id="kyc-front"
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) setKycFrontFile(file);
-                }}
-              />
-            </div>
+            <FileDropzone
+              label="Front side (required)"
+              file={idFrontFile}
+              onFileChange={setIdFrontFile}
+              required
+            />
 
-            {/* Back side (optional, depending on document) */}
-            <div>
-              <label className="block mb-2 text-sm">
-                Back side (optional)
-              </label>
-              <label
-                htmlFor="kyc-back"
-                className="mc-input flex flex-col items-center justify-center border-dashed border border-slate-600 cursor-pointer text-sm text-slate-400 py-6"
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  const file = e.dataTransfer.files?.[0];
-                  if (file) setKycBackFile(file);
-                }}
-              >
-                {kycBackFile ? (
-                  <span className="text-slate-100">
-                    {kycBackFile.name}
-                  </span>
-                ) : (
-                  <>
-                    <span>Drag & drop image here</span>
-                    <span className="text-xs text-slate-500">
-                      or click to browse
-                    </span>
-                  </>
-                )}
-              </label>
-              <input
-                id="kyc-back"
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) setKycBackFile(file);
-                }}
+            {/* Back side only for non-passport */}
+            {!isPassport && (
+              <FileDropzone
+                label="Back side (required)"
+                file={idBackFile}
+                onFileChange={setIdBackFile}
+                required
               />
-            </div>
+            )}
 
             <button
               type="submit"
@@ -899,7 +888,7 @@ export default function OnboardingClient() {
           </div>
         )}
 
-        <form onSubmit={handleProofOfAddressSubmit} className="space-y-6">
+        <form onSubmit={handlePoaSubmit} className="space-y-6">
           <div>
             <label className="block mb-2 text-sm">Document type</label>
             <select
@@ -907,56 +896,27 @@ export default function OnboardingClient() {
               value={poaDocType}
               onChange={(e) => setPoaDocType(e.target.value)}
             >
-              <option value="utility_bill">
-                Utility bill (water / electricity)
-              </option>
-              <option value="bank_statement">Bank statement</option>
-              <option value="phone_internet_bill">Phone / Internet bill</option>
-              <option value="rental_agreement">Rental agreement</option>
-              <option value="tax_notice">Tax notice</option>
+              {POA_DOC_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
             </select>
           </div>
 
-          <div>
-            <label className="block mb-2 text-sm">Document file</label>
-            <label
-              htmlFor="poa-file"
-              className="mc-input flex flex-col items-center justify-center border-dashed border border-slate-600 cursor-pointer text-sm text-slate-400 py-6"
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={(e) => {
-                e.preventDefault();
-                const file = e.dataTransfer.files?.[0];
-                if (file) setPoaFile(file);
-              }}
-            >
-              {poaFile ? (
-                <span className="text-slate-100">{poaFile.name}</span>
-              ) : (
-                <>
-                  <span>Drag & drop file here</span>
-                  <span className="text-xs text-slate-500">
-                    or click to browse
-                  </span>
-                </>
-              )}
-            </label>
-            <input
-              id="poa-file"
-              type="file"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) setPoaFile(file);
-              }}
-            />
-          </div>
+          <FileDropzone
+            label="Document (required)"
+            file={poaFile}
+            onFileChange={setPoaFile}
+            required
+          />
 
           <button
             type="submit"
             className="mc-btn mc-btn-primary mt-4"
             disabled={saving}
           >
-            {saving ? "Saving…" : "Continue"}
+            {saving ? "Submitting…" : "Continue"}
           </button>
         </form>
       </div>
