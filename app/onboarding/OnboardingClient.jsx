@@ -2,132 +2,171 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createBrowserSupabaseClient } from "../lib/supabaseBrowser"; // adapte si chemin différent
+import { createBrowserSupabaseClient } from "../lib/supabaseBrowser";
 
 const supabase = createBrowserSupabaseClient();
 
-export default function OnboardingPage() {
+export default function OnboardingClient() {
   const router = useRouter();
 
-  // Step global (1 = profil, 2 = téléphone)
-  const [step, setStep] = useState(1);
+  // --- global ---
+  const [userId, setUserId] = useState<string | null>(null);
+  const [step, setStep] = useState<1 | 2>(1);
+  const [loadingInit, setLoadingInit] = useState(true);
+  const [globalError, setGlobalError] = useState<string | null>(null);
 
-  // Profil (step 1)
+  // --- step 1: profile ---
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [dob, setDob] = useState(""); // yyyy-mm-dd
+  const [savingProfile, setSavingProfile] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
-  const [loadingProfile, setLoadingProfile] = useState(true);
 
-  // Phone (step 2)
-  const [phone, setPhone] = useState(""); // +336...
-  const [code, setCode] = useState("");
-  const [phoneStatus, setPhoneStatus] = useState(null); // "pending" | "approved" | "error"
+  // --- step 2: phone ---
+  const [countryCode, setCountryCode] = useState("+33");
+  const [localPhone, setLocalPhone] = useState(""); // ex: 612345678
+  const [fullPhone, setFullPhone] = useState(""); // E.164 +336...
+  const [phoneMessage, setPhoneMessage] = useState<string | null>(null);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+
   const [sendingCode, setSendingCode] = useState(false);
+  const [codeScreen, setCodeScreen] = useState(false); // false = step 1/2 (phone), true = step 2/2 (code)
+
+  const [codeDigits, setCodeDigits] = useState(["", "", "", "", "", ""]);
   const [verifyingCode, setVerifyingCode] = useState(false);
-  const [phoneMessage, setPhoneMessage] = useState("");
 
-  // Session + onboarding_state + profil
+  // --------------------------------------------------
+  // Initialisation : récupérer user + profil + onboarding_state
+  // --------------------------------------------------
   useEffect(() => {
-    const init = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+    let cancelled = false;
 
-      if (!session) {
-        router.replace("/login");
-        return;
+    async function load() {
+      try {
+        const { data: authData, error: authError } =
+          await supabase.auth.getUser();
+
+        if (authError || !authData.user) {
+          router.push("/login");
+          return;
+        }
+
+        const uid = authData.user.id;
+        if (cancelled) return;
+
+        setUserId(uid);
+
+        // Profil
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("first_name,last_name,date_of_birth")
+          .eq("id", uid)
+          .maybeSingle();
+
+        if (profileError && profileError.code !== "PGRST116") {
+          console.error(profileError);
+        } else if (profile) {
+          setFirstName(profile.first_name ?? "");
+          setLastName(profile.last_name ?? "");
+          setDob(profile.date_of_birth ?? "");
+        }
+
+        // Onboarding state
+        const { data: obState, error: obError } = await supabase
+          .from("onboarding_state")
+          .select("current_step")
+          .eq("user_id", uid)
+          .maybeSingle();
+
+        if (obError && obError.code !== "PGRST116") {
+          console.error(obError);
+        } else if (obState && obState.current_step >= 2) {
+          setStep(2);
+        }
+      } catch (e: any) {
+        console.error(e);
+        if (!cancelled) {
+          setGlobalError("Unexpected error while loading onboarding.");
+        }
+      } finally {
+        if (!cancelled) setLoadingInit(false);
       }
+    }
 
-      const userId = session.user.id;
-
-      // Onboarding state
-      const { data: onboarding, error: onboardingError } = await supabase
-        .from("onboarding_state")
-        .select("*")
-        .eq("user_id", userId)
-        .single();
-
-      if (onboardingError && onboardingError.code === "PGRST116") {
-        // aucune ligne => on en crée une
-        await supabase.from("onboarding_state").insert({
-          user_id: userId,
-          current_step: 1,
-          completed: false,
-        });
-        setStep(1);
-      } else if (onboarding) {
-        setStep(onboarding.current_step || 1);
-      }
-
-      // Profil
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .single();
-
-      if (profile) {
-        if (profile.first_name) setFirstName(profile.first_name);
-        if (profile.last_name) setLastName(profile.last_name);
-        if (profile.date_of_birth) setDob(profile.date_of_birth);
-        if (profile.phone_e164) setPhone(profile.phone_e164);
-      }
-
-      setLoadingProfile(false);
+    load();
+    return () => {
+      cancelled = true;
     };
-
-    init();
   }, [router]);
 
-  const handleProfileSubmit = async (e) => {
+  // --------------------------------------------------
+  // Helpers
+  // --------------------------------------------------
+  function makeE164Phone(cc: string, local: string) {
+    const digits = local.replace(/[^\d]/g, "");
+    if (!digits) return "";
+    if (cc === "+33" && digits.startsWith("0")) {
+      return cc + digits.substring(1);
+    }
+    return cc + digits;
+  }
+
+  function codeToString(digits: string[]) {
+    return digits.join("");
+  }
+
+  // --------------------------------------------------
+  // Step 1: enregistrer le profil
+  // --------------------------------------------------
+  async function handleProfileSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!userId) return;
+
+    setSavingProfile(true);
     setProfileSaved(false);
+    setGlobalError(null);
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (!session) {
-      router.replace("/login");
-      return;
+    try {
+      const { error } = await supabase.from("profiles").upsert(
+        {
+          id: userId,
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
+          date_of_birth: dob || null,
+        },
+        { onConflict: "id" }
+      );
+
+      if (error) throw error;
+
+      await supabase
+        .from("onboarding_state")
+        .upsert(
+          { user_id: userId, current_step: 2, completed: false },
+          { onConflict: "user_id" }
+        );
+
+      setProfileSaved(true);
+      setStep(2);
+    } catch (err: any) {
+      console.error(err);
+      setGlobalError("Unable to save your profile. Please try again.");
+    } finally {
+      setSavingProfile(false);
     }
-    const userId = session.user.id;
+  }
 
-    const { error: upsertError } = await supabase.from("profiles").upsert(
-      {
-        id: userId,
-        first_name: firstName,
-        last_name: lastName,
-        date_of_birth: dob || null,
-      },
-      { onConflict: "id" }
-    );
+  // --------------------------------------------------
+  // Step 2: envoyer le SMS
+  // --------------------------------------------------
+  async function handleSendCode(e: React.FormEvent) {
+    e.preventDefault();
+    setPhoneMessage(null);
+    setPhoneError(null);
 
-    if (upsertError) {
-      console.error("Error saving profile:", upsertError);
-      return;
-    }
-
-    // Passe step = 2 en DB
-    const { error: onboardingError } = await supabase
-      .from("onboarding_state")
-      .update({ current_step: 2 })
-      .eq("user_id", userId);
-
-    if (onboardingError) {
-      console.error("Error updating onboarding step:", onboardingError);
-    }
-
-    setProfileSaved(true);
-    setStep(2);
-  };
-
-  const handleSendCode = async () => {
-    setPhoneMessage("");
-    setPhoneStatus(null);
-
-    if (!phone || !phone.startsWith("+")) {
-      setPhoneMessage("Please enter a valid phone number in international format.");
+    const e164 = makeE164Phone(countryCode, localPhone);
+    if (!e164.startsWith("+") || e164.length < 8) {
+      setPhoneError("Please enter a valid phone number.");
       return;
     }
 
@@ -136,40 +175,47 @@ export default function OnboardingPage() {
       const res = await fetch("/api/phone/send-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone }),
+        body: JSON.stringify({ phone: e164 }),
       });
 
       const text = await res.text();
-      let json;
+      let data: any = null;
       try {
-        json = JSON.parse(text);
+        data = JSON.parse(text);
       } catch {
-        console.error("Not JSON:", text);
+        throw new Error("Invalid response from server.");
       }
 
-      if (!res.ok) {
-        setPhoneMessage(json?.error || "Failed to send code");
-        setPhoneStatus("error");
-      } else {
-        setPhoneMessage("We sent you a code by SMS.");
-        setPhoneStatus("pending");
+      if (!res.ok || !data.ok) {
+        const msg =
+          data?.error ||
+          data?.message ||
+          "Unable to send verification code. Please try again.";
+        setPhoneError(msg);
+        return;
       }
-    } catch (err) {
+
+      setFullPhone(e164);
+      setPhoneMessage("A verification code has been sent to your phone.");
+      setCodeScreen(true);
+    } catch (err: any) {
       console.error(err);
-      setPhoneMessage("Server error while sending code.");
-      setPhoneStatus("error");
+      setPhoneError("Network error while sending code.");
     } finally {
       setSendingCode(false);
     }
-  };
+  }
 
-  const handleVerifyCode = async (e) => {
+  // --------------------------------------------------
+  // Step 2: vérifier le code
+  // --------------------------------------------------
+  async function handleVerifyCode(e: React.FormEvent) {
     e.preventDefault();
-    setPhoneMessage("");
-    setPhoneStatus(null);
+    setPhoneError(null);
 
-    if (!phone || !code) {
-      setPhoneMessage("Phone and code are required.");
+    const code = codeToString(codeDigits);
+    if (code.length !== 6) {
+      setPhoneError("Please enter the 6-digit code.");
       return;
     }
 
@@ -178,215 +224,304 @@ export default function OnboardingPage() {
       const res = await fetch("/api/phone/verify-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone, code }),
+        body: JSON.stringify({ phone: fullPhone, code }),
       });
 
       const text = await res.text();
-      let json;
+      let data: any = null;
       try {
-        json = JSON.parse(text);
+        data = JSON.parse(text);
       } catch {
-        console.error("Not JSON:", text);
+        throw new Error("Invalid response from server.");
       }
 
-      if (!res.ok || !json?.ok) {
-        setPhoneMessage(json?.error || "Invalid code.");
-        setPhoneStatus("error");
-      } else {
-        setPhoneMessage("Phone number verified successfully.");
-        setPhoneStatus("approved");
+      if (!res.ok || !data.ok) {
+        const msg =
+          data?.error ||
+          data?.message ||
+          "The code is invalid or expired. Please try again.";
+        setPhoneError(msg);
+        return;
+      }
 
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        if (!session) {
-          router.replace("/login");
-          return;
-        }
-        const userId = session.user.id;
-
-        // Met à jour le profil
-        await supabase
-          .from("profiles")
-          .update({
-            phone_e164: phone,
-            phone_verified_at: new Date().toISOString(),
-          })
-          .eq("id", userId);
-
-        // Log dans phone_verifications (optionnel mais clean)
-        await supabase.from("phone_verifications").insert({
-          user_id: userId,
-          phone_e164: phone,
-          status: "verified",
-        });
-
-        // On passe à l’étape 3 (adresse) – pour l’instant juste stocké
+      // Onboarding step suivant (pour plus tard) :
+      if (userId) {
         await supabase
           .from("onboarding_state")
-          .update({ current_step: 3 })
-          .eq("user_id", userId);
-
-        // TODO: plus tard → router.push("/onboarding/address") ou step 3 UI
+          .upsert(
+            { user_id: userId, current_step: 3, completed: false },
+            { onConflict: "user_id" }
+          );
       }
-    } catch (err) {
+
+      // Pour l’instant on renvoie vers la home après vérif
+      router.push("/");
+    } catch (err: any) {
       console.error(err);
-      setPhoneMessage("Server error while verifying code.");
-      setPhoneStatus("error");
+      setPhoneError("Network error while verifying code.");
     } finally {
       setVerifyingCode(false);
     }
-  };
+  }
 
-  if (loadingProfile) {
+  // --------------------------------------------------
+  // Render helpers UI
+  // --------------------------------------------------
+  const disabledProfile =
+    !firstName.trim() || !lastName.trim() || savingProfile || loadingInit;
+
+  const e164Preview = makeE164Phone(countryCode, localPhone);
+
+  // Input 6 cases
+  function renderCodeInputs() {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#020617] text-slate-200">
+      <div className="flex gap-3 justify-between">
+        {codeDigits.map((digit, idx) => (
+          <input
+            key={idx}
+            type="text"
+            inputMode="numeric"
+            maxLength={1}
+            className="w-12 h-12 rounded-xl border border-slate-700 bg-slate-900/80 text-center text-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={digit}
+            onChange={(e) => {
+              const v = e.target.value.replace(/[^\d]/g, "").slice(0, 1);
+              const next = [...codeDigits];
+              next[idx] = v;
+              setCodeDigits(next);
+
+              if (v && idx < 5) {
+                const nextInput = document.getElementById(
+                  `otp-${idx + 1}`
+                ) as HTMLInputElement | null;
+                nextInput?.focus();
+              }
+            }}
+            id={`otp-${idx}`}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  // --------------------------------------------------
+  // Render global
+  // --------------------------------------------------
+  if (loadingInit) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-300">
         Loading...
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-200 flex items-center justify-center px-4">
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(1200px_600px_at_50%_-200px,#101b4a_0%,#0b1226_35%,#020617_60%,#020617_100%)] opacity-80" />
-      <div className="relative z-10 w-full max-w-xl">
-        <div className="bg-slate-950/70 border border-slate-800/60 rounded-3xl shadow-xl px-8 py-10">
-          {/* HEADER */}
-          <div className="mb-8">
-            <p className="text-xs font-medium tracking-[0.25em] text-slate-500 uppercase mb-2">
-              Onboarding
-            </p>
-            <h1 className="text-3xl font-semibold text-white mb-2">
-              {step === 1 ? "Welcome" : "Verify your phone"}
-            </h1>
-            <p className="text-sm text-slate-400">
-              {step === 1
-                ? "Choose how you’d like to be addressed."
-                : "Enter your phone number and confirm it with the code you receive."}
-            </p>
+    <div className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900 flex items-center justify-center px-4">
+      <div className="w-full max-w-md rounded-3xl bg-slate-900/80 border border-slate-800 shadow-2xl p-8">
+        {/* Badge / Step info */}
+        <div className="mb-6">
+          <p className="text-xs uppercase tracking-[0.25em] text-slate-500 mb-2">
+            Onboarding
+          </p>
+          <p className="text-xs text-slate-500">
+            Step {step === 1 ? "1 of 5" : codeScreen ? "2 of 2" : "1 of 2"}
+          </p>
+        </div>
+
+        {globalError && (
+          <div className="mb-4 rounded-xl border border-red-500/60 bg-red-500/10 px-3 py-2 text-xs text-red-200">
+            {globalError}
           </div>
+        )}
 
-          {/* STEP 1 : PROFIL */}
-          {step === 1 && (
-            <form onSubmit={handleProfileSubmit} className="space-y-6">
-              {profileSaved && (
-                <div className="text-xs rounded-md bg-emerald-500/10 border border-emerald-500/40 text-emerald-300 px-3 py-2">
-                  Profile saved successfully.
-                </div>
-              )}
+        {step === 1 ? (
+          /* ------------- STEP 1 : PROFILE ------------- */
+          <form onSubmit={handleProfileSubmit} className="space-y-6">
+            <div>
+              <h1 className="text-2xl font-semibold text-white mb-1">
+                Welcome
+              </h1>
+              <p className="text-sm text-slate-400">
+                Choose how you&apos;d like to be addressed.
+              </p>
+            </div>
 
-              <div className="space-y-2">
-                <label className="text-sm text-slate-300">First name</label>
+            {profileSaved && (
+              <div className="rounded-xl border border-emerald-500/60 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-200">
+                Profile saved successfully.
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-slate-300">
+                  First name
+                </label>
                 <input
                   type="text"
-                  className="w-full rounded-lg bg-slate-900/70 border border-slate-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/70 focus:border-blue-500/70"
+                  className="w-full rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  required
                 />
               </div>
-
-              <div className="space-y-2">
-                <label className="text-sm text-slate-300">Last name</label>
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-slate-300">
+                  Last name
+                </label>
                 <input
                   type="text"
-                  className="w-full rounded-lg bg-slate-900/70 border border-slate-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/70 focus:border-blue-500/70 uppercase"
+                  className="w-full rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={lastName}
-                  onChange={(e) => setLastName(e.target.value.toUpperCase())}
-                  required
+                  onChange={(e) => setLastName(e.target.value)}
                 />
               </div>
-
-              <div className="space-y-2">
-                <label className="text-sm text-slate-300">Date of birth</label>
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-slate-300">
+                  Date of birth
+                </label>
                 <input
                   type="date"
-                  className="w-full rounded-lg bg-slate-900/70 border border-slate-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/70 focus:border-blue-500/70"
+                  className="w-full rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={dob}
                   onChange={(e) => setDob(e.target.value)}
-                  required
                 />
               </div>
+            </div>
 
-              <button
-                type="submit"
-                className="mt-4 inline-flex items-center justify-center rounded-lg bg-blue-600 hover:bg-blue-500 transition-colors text-sm font-medium text-white px-4 py-2 w-full sm:w-auto"
-              >
-                Continue
-              </button>
-            </form>
-          )}
-
-          {/* STEP 2 : PHONE */}
-          {step === 2 && (
-            <form onSubmit={handleVerifyCode} className="space-y-6">
-              {phoneStatus === "approved" && (
-                <div className="text-xs rounded-md bg-emerald-500/10 border border-emerald-500/40 text-emerald-300 px-3 py-2">
-                  Phone verified successfully.
+            <button
+              type="submit"
+              disabled={disabledProfile}
+              className="mt-2 inline-flex w-full items-center justify-center rounded-xl bg-blue-600 px-3 py-2.5 text-sm font-medium text-white shadow hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-slate-700"
+            >
+              {savingProfile ? "Saving..." : "Continue"}
+            </button>
+          </form>
+        ) : (
+          /* ------------- STEP 2 : PHONE (Twilio) ------------- */
+          <div className="space-y-6">
+            {!codeScreen ? (
+              /* ------ screen 1: enter mobile number ------ */
+              <form onSubmit={handleSendCode} className="space-y-6">
+                <div>
+                  <p className="text-xs text-emerald-400 mb-1">Step 1 of 2</p>
+                  <h1 className="text-2xl font-semibold text-white mb-1">
+                    Enter your mobile number
+                  </h1>
+                  <p className="text-sm text-slate-400">
+                    We&apos;ll send you a 6-digit verification code to confirm
+                    your account.
+                  </p>
                 </div>
-              )}
 
-              <div className="space-y-2">
-                <label className="text-sm text-slate-300">Phone number</label>
-                <input
-                  type="tel"
-                  placeholder="+33612345678"
-                  className="w-full rounded-lg bg-slate-900/70 border border-slate-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/70 focus:border-blue-500/70"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  required
-                />
+                {phoneError && (
+                  <div className="rounded-xl border border-red-500/60 bg-red-500/10 px-3 py-2 text-xs text-red-200">
+                    {phoneError}
+                  </div>
+                )}
+                {phoneMessage && (
+                  <div className="rounded-xl border border-emerald-500/60 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-200">
+                    {phoneMessage}
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-slate-300">
+                    Mobile number
+                  </label>
+                  <div className="flex gap-2">
+                    <select
+                      className="w-24 rounded-xl border border-slate-700 bg-slate-900/70 px-2 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={countryCode}
+                      onChange={(e) => setCountryCode(e.target.value)}
+                    >
+                      <option value="+33">🇫🇷 +33</option>
+                      <option value="+41">🇨🇭 +41</option>
+                      <option value="+44">🇬🇧 +44</option>
+                      <option value="+1">🇺🇸 +1</option>
+                    </select>
+                    <input
+                      type="tel"
+                      placeholder="6 12 34 56 78"
+                      className="flex-1 rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={localPhone}
+                      onChange={(e) => setLocalPhone(e.target.value)}
+                    />
+                  </div>
+                  {e164Preview && (
+                    <p className="text-[11px] text-slate-500">
+                      We will send the code to{" "}
+                      <span className="text-slate-300 font-medium">
+                        {e164Preview}
+                      </span>
+                      .
+                    </p>
+                  )}
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={sendingCode || !localPhone}
+                  className="inline-flex w-full items-center justify-center rounded-xl bg-emerald-500 px-3 py-2.5 text-sm font-medium text-slate-950 shadow hover:bg-emerald-400 disabled:cursor-not-allowed disabled:bg-slate-700"
+                >
+                  {sendingCode ? "Sending..." : "Send OTP"}
+                </button>
+              </form>
+            ) : (
+              /* ------ screen 2: enter 6-digit code ------ */
+              <form onSubmit={handleVerifyCode} className="space-y-6">
+                <div>
+                  <p className="text-xs text-emerald-400 mb-1">Step 2 of 2</p>
+                  <h1 className="text-2xl font-semibold text-white mb-1">
+                    Enter 6-digit verification code
+                  </h1>
+                  <p className="text-sm text-slate-400">
+                    Please enter the 6-digit code we sent to{" "}
+                    <span className="font-medium text-slate-200">
+                      {fullPhone}
+                    </span>
+                    .
+                  </p>
+                </div>
+
+                {phoneError && (
+                  <div className="rounded-xl border border-red-500/60 bg-red-500/10 px-3 py-2 text-xs text-red-200">
+                    {phoneError}
+                  </div>
+                )}
+
+                <div className="space-y-3">
+                  {renderCodeInputs()}
+                  <p className="text-[11px] text-slate-500">
+                    Didn&apos;t receive the code? Wait a few seconds and check
+                    your SMS or try again.
+                  </p>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={verifyingCode}
+                  className="inline-flex w-full items-center justify-center rounded-xl bg-emerald-500 px-3 py-2.5 text-sm font-medium text-slate-950 shadow hover:bg-emerald-400 disabled:cursor-not-allowed disabled:bg-slate-700"
+                >
+                  {verifyingCode ? "Verifying..." : "Verify"}
+                </button>
+
                 <button
                   type="button"
-                  onClick={handleSendCode}
-                  disabled={sendingCode}
-                  className="mt-2 inline-flex items-center justify-center rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors text-xs font-medium text-slate-100 px-3 py-1.5"
+                  onClick={() => {
+                    // revenir à l’écran numéro, garder le numéro pré-rempli
+                    setCodeScreen(false);
+                    setCodeDigits(["", "", "", "", "", ""]);
+                    setPhoneError(null);
+                    setPhoneMessage(null);
+                  }}
+                  className="w-full text-center text-xs text-slate-400 hover:text-slate-200"
                 >
-                  {sendingCode ? "Sending..." : "Send code"}
+                  ← Change phone number
                 </button>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm text-slate-300">Verification code</label>
-                <input
-                  type="text"
-                  maxLength={6}
-                  placeholder="6-digit code"
-                  className="w-full rounded-lg bg-slate-900/70 border border-slate-800 px-3 py-2 text-sm tracking-[0.4em] text-center focus:outline-none focus:ring-2 focus:ring-blue-500/70 focus:border-blue-500/70"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-                  required
-                />
-              </div>
-
-              {phoneMessage && (
-                <p
-                  className={`text-xs ${
-                    phoneStatus === "error"
-                      ? "text-rose-400"
-                      : phoneStatus === "approved"
-                      ? "text-emerald-300"
-                      : "text-slate-400"
-                  }`}
-                >
-                  {phoneMessage}
-                </p>
-              )}
-
-              <button
-                type="submit"
-                disabled={verifyingCode}
-                className="mt-2 inline-flex items-center justify-center rounded-lg bg-blue-600 hover:bg-blue-500 transition-colors text-sm font-medium text-white px-4 py-2 w-full sm:w-auto"
-              >
-                {verifyingCode ? "Verifying..." : "Confirm phone"}
-              </button>
-
-              <p className="mt-4 text-xs text-slate-500">
-                We use your phone number for secure 2FA. It cannot be disabled.
-              </p>
-            </form>
-          )}
-        </div>
+              </form>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
