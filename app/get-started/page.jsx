@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { supabase } from "../lib/supabaseClient";
 
 const STEPS = [
@@ -13,7 +14,7 @@ const STEPS = [
     bullets: [
       "Private invitation validated",
       "Secure login with email & password",
-      "Preparing your account for activation",
+      "First access to your Montelion journey",
     ],
   },
   {
@@ -61,26 +62,17 @@ const STEPS = [
 export default function GetStartedPage() {
   const router = useRouter();
   const [userId, setUserId] = useState(null);
+  const [currentStep, setCurrentStep] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
 
-  // 1) Vérifier la session + savoir si l'onboarding a déjà commencé
+  // Charger la session + current_step
   useEffect(() => {
     (async () => {
       setLoading(true);
-      setError("");
 
-      const { data: sessionData, error: sessionErr } =
-        await supabase.auth.getSession();
-
-      if (sessionErr) {
-        setError(sessionErr.message || "Unable to get session.");
-        setLoading(false);
-        return;
-      }
-
+      const { data: sessionData } = await supabase.auth.getSession();
       const session = sessionData?.session;
+
       if (!session?.user) {
         router.replace("/login");
         return;
@@ -89,56 +81,41 @@ export default function GetStartedPage() {
       const uid = session.user.id;
       setUserId(uid);
 
-      // Regarder s'il existe déjà un onboarding_state
-      const { data: onboard, error: onboardErr } = await supabase
+      const { data: onboard } = await supabase
         .from("onboarding_state")
-        .select("current_step, completed")
+        .select("current_step")
         .eq("user_id", uid)
         .maybeSingle();
 
-      // Erreur autre que "row not found"
-      if (onboardErr && onboardErr.code !== "PGRST116") {
-        setError(onboardErr.message || "Unable to load onboarding state.");
-        setLoading(false);
-        return;
-      }
-
-      // Si l'onboarding a déjà commencé => on envoie direct sur /onboarding
-      if (onboard && onboard.current_step != null) {
-        router.replace("/onboarding");
-        return;
-      }
-
-      // Sinon on affiche la page "Get started"
+      setCurrentStep(onboard?.current_step ?? 0);
       setLoading(false);
     })();
   }, [router]);
 
   async function handleGetStarted() {
-    if (!userId || saving) return;
-
-    setSaving(true);
-    setError("");
-
-    try {
-      const { error: upsertErr } = await supabase
-        .from("onboarding_state")
-        .upsert(
-          {
-            user_id: userId,
-            current_step: 1,
-            completed: false,
-          },
-          { onConflict: "user_id" }
-        );
-
-      if (upsertErr) throw upsertErr;
-
-      router.push("/onboarding");
-    } catch (err) {
-      setError(err.message || "Something went wrong.");
-      setSaving(false);
+    if (!userId) {
+      router.push("/login");
+      return;
     }
+
+    // Si jamais l'utilisateur a déjà commencé (step >= 1),
+    // on ne réécrase pas, on le renvoie juste vers /onboarding.
+    if (currentStep != null && currentStep > 0) {
+      router.push("/onboarding");
+      return;
+    }
+
+    // Sinon, on initialise current_step à 1
+    await supabase.from("onboarding_state").upsert(
+      {
+        user_id: userId,
+        current_step: 1,
+        completed: false,
+      },
+      { onConflict: "user_id" }
+    );
+
+    router.push("/onboarding");
   }
 
   if (loading) {
@@ -146,7 +123,7 @@ export default function GetStartedPage() {
       <div className="mc-card">
         <div className="mc-section text-left">
           <h1 className="mc-title mb-2">Let&apos;s get you fully set up</h1>
-          <p className="text-slate-400">Loading your access…</p>
+          <p className="text-slate-400">Loading your journey…</p>
         </div>
       </div>
     );
@@ -156,16 +133,10 @@ export default function GetStartedPage() {
     <div className="mc-card">
       <div className="mc-section text-left max-w-2xl mx-auto">
         <h1 className="mc-title mb-3">Let&apos;s get you fully set up</h1>
-        <p className="text-slate-400 mb-6">
+        <p className="text-slate-400 mb-10">
           In a few minutes, you&apos;ll be ready to let Montelion trade on your
           exchange account while you keep full control of your funds.
         </p>
-
-        {error && (
-          <div className="mb-4 text-sm text-rose-400 bg-rose-950/40 border border-rose-900/40 px-3 py-2 rounded-lg">
-            {error}
-          </div>
-        )}
 
         {/* Timeline verticale */}
         <div className="space-y-5 mb-8">
@@ -184,13 +155,12 @@ export default function GetStartedPage() {
                     className={[
                       "flex items-center justify-center h-7 w-7 rounded-full text-xs font-semibold shadow-[0_0_0_1px_rgba(15,23,42,0.9)]",
                       isCurrent
-                        ? "bg-[#2564EC] text-white border border-[#2564EC]"
-                        : "bg-slate-900 text-white border border-slate-700",
+                        ? "bg-[#2564ec] text-white border border-[#2564ec]"
+                        : "bg-slate-900 text-slate-300 border border-slate-700",
                     ].join(" ")}
                   >
                     {step.id}
                   </div>
-
                   {!isLast && (
                     <div className="flex-1 w-px bg-gradient-to-b from-slate-700/80 via-slate-800/80 to-slate-900 mt-1" />
                   )}
@@ -199,10 +169,9 @@ export default function GetStartedPage() {
                 {/* Carte étape */}
                 <div
                   className={[
-                    "rounded-2xl border px-5 py-4 sm:py-5",
-                    "bg-slate-900/40",
+                    "rounded-2xl border px-5 py-4 sm:py-5 bg-slate-900/40",
                     isCurrent
-                      ? "border-[#2564EC] shadow-[0_0_40px_rgba(37,100,236,0.25)]"
+                      ? "border-[#2564ec]/80 shadow-[0_0_40px_rgba(37,100,236,0.2)]"
                       : "border-slate-800/80",
                   ].join(" ")}
                 >
@@ -210,9 +179,8 @@ export default function GetStartedPage() {
                     <div className="text-sm font-semibold text-slate-50">
                       {step.title}
                     </div>
-
                     {isCurrent && (
-                      <span className="inline-flex items-center rounded-full bg-[#2564EC]/10 border border-[#2564EC]/40 px-2.5 py-[3px] text-[10px] font-medium text-[#2564EC]">
+                      <span className="inline-flex items-center rounded-full bg-[#2564ec]/10 border border-[#2564ec]/60 px-2.5 py-[3px] text-[10px] font-medium text-[#7ea3ff]">
                         You&apos;re here
                       </span>
                     )}
@@ -248,10 +216,9 @@ export default function GetStartedPage() {
           <button
             type="button"
             onClick={handleGetStarted}
-            disabled={saving}
-            className="mc-btn mc-btn-primary inline-flex items-center justify-center disabled:opacity-70"
+            className="mc-btn mc-btn-primary inline-flex items-center justify-center"
           >
-            {saving ? "Starting…" : "Get started"}
+            Get started
           </button>
         </div>
       </div>
