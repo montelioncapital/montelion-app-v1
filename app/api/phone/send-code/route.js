@@ -4,58 +4,62 @@ import twilio from "twilio";
 
 export async function POST(req) {
   try {
-    const body = await req.json().catch(() => null);
+    const body = await req.json();
     const phone = body?.phone;
 
     if (!phone) {
       return NextResponse.json(
-        { error: "Missing 'phone' in body" },
+        { error: "Missing phone number" },
         { status: 400 }
       );
     }
 
-    // On récupère les variables d'environnement côté serveur
-    const accountSid = process.env.TWILIO_ACCOUNT_SID;
-    const authToken = process.env.TWILIO_AUTH_TOKEN;
-    const verifyServiceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
+    const {
+      TWILIO_ACCOUNT_SID,
+      TWILIO_AUTH_TOKEN,
+      TWILIO_VERIFY_SERVICE_SID,
+    } = process.env;
 
-    if (!accountSid || !authToken || !verifyServiceSid) {
-      console.error("Twilio env missing", {
-        hasAccountSid: !!accountSid,
-        hasAuthToken: !!authToken,
-        hasVerifyServiceSid: !!verifyServiceSid,
-      });
+    // 💡 DEBUG : on log juste la présence (pas les valeurs)
+    console.log("[Twilio ENV]", {
+      hasAccountSid: !!TWILIO_ACCOUNT_SID,
+      hasAuthToken: !!TWILIO_AUTH_TOKEN,
+      hasVerifySid: !!TWILIO_VERIFY_SERVICE_SID,
+    });
 
+    if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_VERIFY_SERVICE_SID) {
       return NextResponse.json(
-        { error: "Twilio configuration missing on server" },
+        {
+          error: "Twilio configuration missing on server",
+          debug: {
+            hasAccountSid: !!TWILIO_ACCOUNT_SID,
+            hasAuthToken: !!TWILIO_AUTH_TOKEN,
+            hasVerifySid: !!TWILIO_VERIFY_SERVICE_SID,
+          },
+        },
         { status: 500 }
       );
     }
 
-    // On crée le client *dans* le handler, comme ça si ça throw on le catch
-    const client = twilio(accountSid, authToken);
+    const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
 
-    // Appel à Twilio Verify
     const verification = await client.verify.v2
-      .services(verifyServiceSid)
+      .services(TWILIO_VERIFY_SERVICE_SID)
       .verifications.create({
         to: phone,
         channel: "sms",
       });
 
-    // On renvoie un JSON propre
     return NextResponse.json({
       ok: true,
-      sid: verification.sid,
-      status: verification.status, // "pending" normalement
+      status: verification.status,
     });
   } catch (err) {
-    console.error("Twilio send-code error:", err);
-
+    console.error("[Twilio send-code error]", err);
     return NextResponse.json(
       {
-        error: "Twilio error",
-        message: err.message ?? "Unknown error",
+        error: "Failed to send verification code",
+        detail: err.message,
       },
       { status: 500 }
     );
