@@ -402,16 +402,21 @@ export default function OnboardingClient() {
         if (backUploadErr) throw backUploadErr;
       }
 
-      // Enregistrer en DB dans kyc_identities
+      // Convertir le label sélectionné en valeur ENUM pour Postgres
+      const docTypeDb = KYC_DOC_ENUM[idDocType];
+      if (!docTypeDb) {
+        throw new Error("Unsupported document type.");
+      }
+
       const payload = {
         user_id: userId,
-        doc_type: idDocType, // colonne Supabase
-        front_url: frontPath, // colonne Supabase
+        doc_type: docTypeDb,   // valeur ENUM kyc_doc_type
+        front_url: frontPath,
         status: "submitted",
       };
 
-      if (backPath) {
-        payload.back_url = backPath; // colonne Supabase
+      if (!isPassport && backPath) {
+        payload.back_url = backPath;
       }
 
       const { error: kycErr } = await supabase
