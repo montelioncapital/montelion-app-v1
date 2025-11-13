@@ -156,7 +156,7 @@ export default function OnboardingClient() {
     if (step !== 3) return;
     if (timer <= 0) return;
 
-    const t = setTimeout(() => setTimer((t) => t - 1), 1000);
+    const t = setTimeout(() => setTimer((tPrev) => tPrev - 1), 1000);
     return () => clearTimeout(t);
   }, [step, timer]);
 
@@ -365,12 +365,10 @@ export default function OnboardingClient() {
       }
 
       const bucket = "kyc";
-      let frontPath = null;
-      let backPath = null;
 
       // FRONT
       const safeFrontName = sanitizeFileName(idFrontFile.name);
-      frontPath = `identity/${userId}/front-${Date.now()}-${safeFrontName}`;
+      const frontPath = `identity/${userId}/front-${Date.now()}-${safeFrontName}`;
 
       const { error: frontUploadErr } = await supabase.storage
         .from(bucket)
@@ -382,6 +380,7 @@ export default function OnboardingClient() {
       if (frontUploadErr) throw frontUploadErr;
 
       // BACK (only if non-passport)
+      let backPath = null;
       if (!isPassport && idBackFile) {
         const safeBackName = sanitizeFileName(idBackFile.name);
         backPath = `identity/${userId}/back-${Date.now()}-${safeBackName}`;
@@ -395,19 +394,17 @@ export default function OnboardingClient() {
 
         if (backUploadErr) throw backUploadErr;
       }
-      
-let backPath: string | null = null;
+
       // Enregistrer en DB dans kyc_identities
-      const payload: any = {
+      const payload = {
         user_id: userId,
-        doc_type: idDocType,   // ⚠️ colonne Supabase = doc_type
-        front_url: frontPath,  // ⚠️ colonne Supabase = front_url
+        doc_type: idDocType, // colonne Supabase
+        front_url: frontPath, // colonne Supabase
         status: "submitted",
       };
 
-      // Pour permis / CNI on a aussi un verso
-      if (!isPassport && backPath) {
-        payload.back_url = backPath; // ⚠️ colonne Supabase = back_url
+      if (backPath) {
+        payload.back_url = backPath; // colonne Supabase
       }
 
       const { error: kycErr } = await supabase
@@ -417,7 +414,7 @@ let backPath: string | null = null;
       if (kycErr) throw kycErr;
 
       await updateOnboardingStep(6, false);
-    } catch (err: any) {
+    } catch (err) {
       setError(
         err.message ||
           "Something went wrong while uploading your identity document."
@@ -425,6 +422,7 @@ let backPath: string | null = null;
     } finally {
       setSaving(false);
     }
+  }
 
   // -------------------------
   // Step 6 — Proof of Address
@@ -935,14 +933,11 @@ let backPath: string | null = null;
   );
 }
 
-// ---------- filename sanitizer (no TS types here) ----------
+// ---------- filename sanitizer ----------
 function sanitizeFileName(name) {
-  return (
-    name
-      // enlever les accents
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      // garder uniquement lettres / chiffres / . - _
-      .replace(/[^a-zA-Z0-9.\-_]/g, "_")
-  );
+  return name
+    .normalize("NFD") // enlever les accents
+    .replace(/[\u0300-\u036f]/g, "")
+    // garder uniquement lettres / chiffres / . - _
+    .replace(/[^a-zA-Z0-9.\-_]/g, "_");
 }
