@@ -1,4 +1,5 @@
 // app/get-started/page.jsx
+"use client";
 
 import Link from "next/link";
 
@@ -6,7 +7,7 @@ const STEPS = [
   {
     id: 1,
     title: "Start",
-    subtitle: "Create your Montelion account",
+    subtitle: "You’re creating your Montelion account",
     bullets: [
       "Secure login with email & password",
       "Basic identification of your profile",
@@ -58,49 +59,69 @@ const STEPS = [
 export default function GetStartedPage() {
   return (
     <div className="mc-card">
-      <div className="mc-section text-left">
+      <div className="mc-section text-left max-w-2xl mx-auto">
         <h1 className="mc-title mb-3">Let&apos;s get you fully set up</h1>
-        <p className="text-slate-400 mb-10 max-w-xl">
+        <p className="text-slate-400 mb-10">
           In a few minutes, you&apos;ll be ready to let Montelion trade on your
           exchange account while you keep full control of your funds.
         </p>
 
         {/* Timeline verticale */}
-        <div className="relative pl-10 space-y-6 mb-8">
-          {/* Ligne verticale */}
-          <div className="absolute left-4 top-1 bottom-4 w-px bg-slate-800/80 pointer-events-none" />
-
+        <div className="space-y-5 mb-8">
           {STEPS.map((step, index) => {
-            const isFirst = index === 0;
+            const isCurrent = index === 0;
             const isLast = index === STEPS.length - 1;
 
             return (
-              <div key={step.id} className="relative flex gap-4">
-                {/* Pastille */}
-                <div className="absolute -left-1 top-2">
-                  <div className="flex items-center justify-center h-6 w-6 rounded-full border border-slate-700 bg-slate-900 text-xs text-slate-200 shadow-[0_0_0_1px_rgba(15,23,42,0.8)]">
+              <div
+                key={step.id}
+                className="grid grid-cols-[32px,1fr] gap-4 items-stretch"
+              >
+                {/* Colonne des pastilles + ligne */}
+                <div className="flex flex-col items-center">
+                  <div
+                    className={[
+                      "flex items-center justify-center h-7 w-7 rounded-full text-xs font-semibold shadow-[0_0_0_1px_rgba(15,23,42,0.9)]",
+                      isCurrent
+                        ? "bg-sky-500 text-slate-950 border border-sky-300"
+                        : "bg-slate-900 text-slate-300 border border-slate-700",
+                    ].join(" ")}
+                  >
                     {step.id}
                   </div>
-                  {/* Effet de coupure de la ligne en haut / bas pour un peu de style */}
-                  {isFirst && (
-                    <div className="absolute left-1/2 -translate-x-1/2 -top-4 h-4 w-[2px] bg-gradient-to-b from-slate-900 to-slate-800" />
-                  )}
-                  {isLast && (
-                    <div className="absolute left-1/2 -translate-x-1/2 bottom-[-18px] h-5 w-[2px] bg-gradient-to-t from-slate-900 to-slate-800" />
+                  {!isLast && (
+                    <div className="flex-1 w-px bg-gradient-to-b from-slate-700/80 via-slate-800/80 to-slate-900 mt-1" />
                   )}
                 </div>
 
-                {/* Carte de contenu */}
-                <div className="flex-1 rounded-2xl border border-slate-800/80 bg-slate-900/40 px-4 py-4 sm:px-5 sm:py-5">
-                  <div className="text-[11px] uppercase tracking-[0.16em] text-slate-500 mb-1">
-                    Step {step.id}
+                {/* Carte de l’étape */}
+                <div
+                  className={[
+                    "rounded-2xl border px-5 py-4 sm:py-5",
+                    "bg-slate-900/40",
+                    isCurrent
+                      ? "border-sky-500/60 shadow-[0_0_40px_rgba(56,189,248,0.15)]"
+                      : "border-slate-800/80",
+                  ].join(" ")}
+                >
+                  <div className="flex items-center justify-between gap-3 mb-1">
+                    <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
+                      Step {step.id}
+                    </div>
+                    {isCurrent && (
+                      <span className="inline-flex items-center rounded-full bg-sky-500/10 border border-sky-400/40 px-2 py-[2px] text-[10px] font-medium text-sky-300">
+                        You&apos;re here
+                      </span>
+                    )}
                   </div>
+
                   <div className="text-sm font-semibold text-slate-50">
                     {step.title}
                   </div>
                   <div className="text-sm text-slate-300 mb-3">
                     {step.subtitle}
                   </div>
+
                   <ul className="text-[11px] text-slate-500 space-y-1.5">
                     {step.bullets.map((b) => (
                       <li key={b}>• {b}</li>
