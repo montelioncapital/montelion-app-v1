@@ -417,39 +417,39 @@ export default function OnboardingClient() {
                 Mobile number
               </label>
 
-              <div className="flex gap-2">
-                {/* Indicatif centré avec flèche custom */}
-                <div className="relative w-24">
-                  <select
-                    className="mc-input w-full pr-7 text-center appearance-none"
-                    value={dialCode}
-                    onChange={(e) => setDialCode(e.target.value)}
-                  >
-                    <option value="+1">+1</option>
-                    <option value="+44">+44</option>
-                    <option value="+33">+33</option>
-                    <option value="+49">+49</option>
-                    <option value="+39">+39</option>
-                    <option value="+34">+34</option>
-                    <option value="+31">+31</option>
-                    <option value="+46">+46</option>
-                    <option value="+41">+41</option>
-                    <option value="+81">+81</option>
-                    <option value="+82">+82</option>
-                    <option value="+86">+86</option>
-                    <option value="+91">+91</option>
-                    <option value="+55">+55</option>
-                    <option value="+52">+52</option>
-                    <option value="+61">+61</option>
-                    <option value="+7">+7</option>
-                    <option value="+27">+27</option>
-                    <option value="+65">+65</option>
-                    <option value="+971">+971</option>
-                  </select>
-                  <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-slate-500 text-xs">
-                    ▾
-                  </span>
-                </div>
+             <div className="relative w-28">
+  <select
+    className="mc-input w-full pl-3 pr-7 text-sm appearance-none"
+    value={dialCode}
+    onChange={(e) => setDialCode(e.target.value)}
+  >
+    <option value="+1">+1</option>
+    <option value="+44">+44</option>
+    <option value="+33">+33</option>
+    <option value="+49">+49</option>
+    <option value="+39">+39</option>
+    <option value="+34">+34</option>
+    <option value="+31">+31</option>
+    <option value="+46">+46</option>
+    <option value="+41">+41</option>
+    <option value="+81">+81</option>
+    <option value="+82">+82</option>
+    <option value="+86">+86</option>
+    <option value="+91">+91</option>
+    <option value="+55">+55</option>
+    <option value="+52">+52</option>
+    <option value="+61">+61</option>
+    <option value="+7">+7</option>
+    <option value="+27">+27</option>
+    <option value="+65">+65</option>
+    <option value="+971">+971</option>
+  </select>
+
+  {/* flèche custom, bien centrée */}
+  <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-500 text-xs">
+    ▾
+  </span>
+</div>
 
                 <input
                   type="tel"
