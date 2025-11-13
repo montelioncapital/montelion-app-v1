@@ -7,35 +7,60 @@ import { supabase } from "../lib/supabaseClient";
 export default function OnboardingClient() {
   const router = useRouter();
 
-  // 1 = profil, 2 = téléphone, 3 = OTP
+  // Step: 1 = profile, 2 = phone, 3 = otp
   const [step, setStep] = useState(1);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [sendingCode, setSendingCode] = useState(false);
-  const [verifying, setVerifying] = useState(false);
-
   const [error, setError] = useState("");
+  const [ok, setOk] = useState("");
 
   const [userId, setUserId] = useState(null);
 
-  // Step 1 — profil
+  // Step 1 — profile
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [dob, setDob] = useState(""); // YYYY-MM-DD
+  const [dob, setDob] = useState("");
 
-  // Step 2 — téléphone
+  // Step 2 — phone
   const [dialCode, setDialCode] = useState("+33");
   const [phoneLocal, setPhoneLocal] = useState("");
   const [phoneE164, setPhoneE164] = useState("");
+  const [sendingCode, setSendingCode] = useState(false);
 
   // Step 3 — OTP
   const [otp, setOtp] = useState("");
-  const [timer, setTimer] = useState(60); // resend timer
+  const [verifying, setVerifying] = useState(false);
 
-  // --------------------------------------------------
-  // Chargement session + profil
-  // --------------------------------------------------
+  // Resend timer
+  const [timer, setTimer] = useState(60);
+
+  const DIAL_CODES = [
+    "+1",
+    "+44",
+    "+33",
+    "+49",
+    "+39",
+    "+34",
+    "+31",
+    "+46",
+    "+41",
+    "+81",
+    "+82",
+    "+86",
+    "+91",
+    "+55",
+    "+52",
+    "+61",
+    "+7",
+    "+27",
+    "+65",
+    "+971",
+  ];
+
+  // -------------------------
+  // Load session + pre-fill profile
+  // -------------------------
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -68,9 +93,9 @@ export default function OnboardingClient() {
     })();
   }, [router]);
 
-  // --------------------------------------------------
-  // Step 1 — Save profile
-  // --------------------------------------------------
+  // -------------------------
+  // Step 1 — Submit profile
+  // -------------------------
   async function handleProfileSubmit(e) {
     e.preventDefault();
     if (saving) return;
@@ -92,6 +117,7 @@ export default function OnboardingClient() {
         },
         { onConflict: "id" }
       );
+
       if (upsertErr) throw upsertErr;
 
       await supabase.from("onboarding_state").upsert(
@@ -105,15 +131,15 @@ export default function OnboardingClient() {
 
       setStep(2);
     } catch (err) {
-      setError(err.message || "Something went wrong.");
+      setError(err.message);
     } finally {
       setSaving(false);
     }
   }
 
-  // --------------------------------------------------
-  // Step 2 — Send SMS code
-  // --------------------------------------------------
+  // -------------------------
+  // Step 2 — Send code SMS
+  // -------------------------
   async function handleSendCode(e) {
     e.preventDefault();
     if (sendingCode) return;
@@ -134,21 +160,21 @@ export default function OnboardingClient() {
         body: JSON.stringify({ phone: full }),
       });
 
-      const data = await res.json().catch(() => ({}));
+      const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to send code.");
 
       setStep(3);
       setTimer(60);
     } catch (err) {
-      setError(err.message || "Something went wrong.");
+      setError(err.message);
     } finally {
       setSendingCode(false);
     }
   }
 
-  // --------------------------------------------------
+  // -------------------------
   // Step 3 — Verify OTP
-  // --------------------------------------------------
+  // -------------------------
   async function handleVerifyCode(e) {
     e.preventDefault();
     if (verifying) return;
@@ -157,9 +183,7 @@ export default function OnboardingClient() {
     setVerifying(true);
 
     try {
-      if (!/^\d{6}$/.test(otp)) {
-        throw new Error("Invalid code.");
-      }
+      if (!/^\d{6}$/.test(otp)) throw new Error("Invalid code.");
 
       const res = await fetch("/api/phone/verify-code", {
         method: "POST",
@@ -167,7 +191,7 @@ export default function OnboardingClient() {
         body: JSON.stringify({ phone: phoneE164, code: otp }),
       });
 
-      const data = await res.json().catch(() => ({}));
+      const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Invalid or expired code.");
 
       await supabase.from("onboarding_state").upsert(
@@ -181,38 +205,34 @@ export default function OnboardingClient() {
 
       router.push("/dashboard");
     } catch (err) {
-      setError(err.message || "Something went wrong.");
+      setError(err.message);
     } finally {
       setVerifying(false);
     }
   }
 
-  // --------------------------------------------------
-  // Timer pour resend code (step 3)
-  // --------------------------------------------------
+  // -------------------------
+  // OTP timer countdown
+  // -------------------------
   useEffect(() => {
     if (step !== 3) return;
     if (timer <= 0) return;
 
-    const t = setTimeout(() => setTimer((prev) => prev - 1), 1000);
+    const t = setTimeout(() => setTimer((t) => t - 1), 1000);
     return () => clearTimeout(t);
   }, [step, timer]);
 
-  // --------------------------------------------------
-  // RENDUS
-  // --------------------------------------------------
-
+  // -------------------------
+  // Step 1 : PROFILE
+  // -------------------------
   if (loading) {
     return (
       <div className="mc-card">
-        <div className="mc-section text-left text-slate-400">
-          Loading…
-        </div>
+        <div className="mc-section text-left">Loading…</div>
       </div>
     );
   }
 
-  // STEP 1 : PROFILE
   if (step === 1) {
     return (
       <div className="mc-card">
@@ -236,7 +256,6 @@ export default function OnboardingClient() {
                 className="mc-input"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                autoComplete="given-name"
                 required
               />
             </div>
@@ -248,7 +267,6 @@ export default function OnboardingClient() {
                 className="mc-input"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                autoComplete="family-name"
                 required
               />
             </div>
@@ -265,12 +283,8 @@ export default function OnboardingClient() {
               />
             </div>
 
-            <button
-              type="submit"
-              className="mc-btn mc-btn-primary mt-4"
-              disabled={saving}
-            >
-              {saving ? "Saving…" : "Continue"}
+            <button type="submit" className="mc-btn mc-btn-primary mt-4">
+              Continue
             </button>
           </form>
         </div>
@@ -278,7 +292,9 @@ export default function OnboardingClient() {
     );
   }
 
-  // STEP 2 : PHONE
+  // -------------------------
+  // Step 2 : PHONE NUMBER
+  // -------------------------
   if (step === 2) {
     return (
       <div className="mc-card">
@@ -299,39 +315,26 @@ export default function OnboardingClient() {
               <label className="block mb-2 text-sm">Mobile number</label>
 
               <div className="flex gap-2">
-                {/* Sélecteur indicatif : centré, flèche propre */}
+                {/* Sélecteur indicatif propre + flèche alignée */}
                 <div className="relative w-24">
+                  {/* Select natif invisible mais cliquable */}
                   <select
-                    className="mc-input w-full pl-3 pr-8 text-sm text-center appearance-none leading-none flex items-center justify-center"
                     value={dialCode}
                     onChange={(e) => setDialCode(e.target.value)}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                   >
-                    <option value="+1">+1</option>
-                    <option value="+44">+44</option>
-                    <option value="+33">+33</option>
-                    <option value="+49">+49</option>
-                    <option value="+39">+39</option>
-                    <option value="+34">+34</option>
-                    <option value="+31">+31</option>
-                    <option value="+46">+46</option>
-                    <option value="+41">+41</option>
-                    <option value="+81">+81</option>
-                    <option value="+82">+82</option>
-                    <option value="+86">+86</option>
-                    <option value="+91">+91</option>
-                    <option value="+55">+55</option>
-                    <option value="+52">+52</option>
-                    <option value="+61">+61</option>
-                    <option value="+7">+7</option>
-                    <option value="+27">+27</option>
-                    <option value="+65">+65</option>
-                    <option value="+971">+971</option>
+                    {DIAL_CODES.map((code) => (
+                      <option key={code} value={code}>
+                        {code}
+                      </option>
+                    ))}
                   </select>
 
-                  {/* petite flèche centrée verticalement */}
-                  <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 text-[10px]">
-                    ▼
-                  </span>
+                  {/* Box visible stylée */}
+                  <div className="mc-input w-full flex items-center justify-center gap-1 text-sm">
+                    <span>{dialCode}</span>
+                    <span className="text-[9px] leading-none">▼</span>
+                  </div>
                 </div>
 
                 <input
@@ -340,7 +343,6 @@ export default function OnboardingClient() {
                   placeholder="Your mobile number"
                   value={phoneLocal}
                   onChange={(e) => setPhoneLocal(e.target.value)}
-                  autoComplete="tel"
                   required
                 />
               </div>
@@ -350,11 +352,7 @@ export default function OnboardingClient() {
               </p>
             </div>
 
-            <button
-              type="submit"
-              className="mc-btn mc-btn-primary mt-4"
-              disabled={sendingCode}
-            >
+            <button type="submit" className="mc-btn mc-btn-primary mt-4">
               {sendingCode ? "Sending…" : "Send OTP"}
             </button>
           </form>
@@ -363,7 +361,9 @@ export default function OnboardingClient() {
     );
   }
 
-  // STEP 3 : OTP
+  // -------------------------
+  // Step 3 : OTP
+  // -------------------------
   return (
     <div className="mc-card">
       <div className="mc-section text-left">
@@ -392,14 +392,12 @@ export default function OnboardingClient() {
               value={otp}
               onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
               maxLength={6}
-              inputMode="numeric"
-              autoComplete="one-time-code"
               required
             />
           </div>
 
-          {/* Boutons côte à côte */}
-          <div className="flex items-center gap-3">
+          {/* Boutons Verify + Resend côte à côte */}
+          <div className="mt-4 flex flex-wrap gap-3">
             <button
               type="submit"
               className="mc-btn mc-btn-primary"
@@ -411,8 +409,11 @@ export default function OnboardingClient() {
             <button
               type="button"
               disabled={timer > 0}
-              onClick={() => setStep(2)}
-              className={`mc-btn px-4 py-2 rounded-lg text-sm border ${
+              onClick={() => {
+                // on revient à l'écran téléphone pour renvoyer un code
+                setStep(2);
+              }}
+              className={`px-4 text-sm rounded-lg border ${
                 timer > 0
                   ? "border-slate-700 text-slate-600 cursor-not-allowed"
                   : "border-slate-500 text-slate-300 hover:bg-slate-800"
