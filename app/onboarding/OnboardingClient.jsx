@@ -15,7 +15,7 @@ export default function OnboardingClient() {
   const [error, setError] = useState("");
   const [ok, setOk] = useState("");
 
-  const [userId, setUserId] = useState<string | null>(null);
+  const [userId, setUserId] = useState(null);
 
   // Step 1 — profile
   const [firstName, setFirstName] = useState("");
@@ -96,7 +96,7 @@ export default function OnboardingClient() {
   // -------------------------
   // Step 1 — Submit profile
   // -------------------------
-  async function handleProfileSubmit(e: React.FormEvent) {
+  async function handleProfileSubmit(e) {
     e.preventDefault();
     if (saving || !userId) return;
 
@@ -130,8 +130,8 @@ export default function OnboardingClient() {
       );
 
       setStep(2);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err.message || "Something went wrong.");
     } finally {
       setSaving(false);
     }
@@ -140,7 +140,7 @@ export default function OnboardingClient() {
   // -------------------------
   // Step 2 — Send code SMS
   // -------------------------
-  async function handleSendCode(e: React.FormEvent) {
+  async function handleSendCode(e) {
     e.preventDefault();
     if (sendingCode) return;
 
@@ -165,8 +165,8 @@ export default function OnboardingClient() {
 
       setStep(3);
       setTimer(60);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err.message || "Something went wrong.");
     } finally {
       setSendingCode(false);
     }
@@ -175,7 +175,7 @@ export default function OnboardingClient() {
   // -------------------------
   // Step 3 — Verify OTP
   // -------------------------
-  async function handleVerifyCode(e: React.FormEvent) {
+  async function handleVerifyCode(e) {
     e.preventDefault();
     if (verifying) return;
 
@@ -206,8 +206,8 @@ export default function OnboardingClient() {
       }
 
       router.push("/dashboard");
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err.message || "Something went wrong.");
     } finally {
       setVerifying(false);
     }
@@ -317,7 +317,7 @@ export default function OnboardingClient() {
               <label className="block mb-2 text-sm">Mobile number</label>
 
               <div className="flex gap-2">
-                {/* Sélecteur indicatif */}
+                {/* Sélecteur indicatif, même hauteur que l'input */}
                 <div className="relative w-24">
                   {/* Select natif invisible mais cliquable */}
                   <select
