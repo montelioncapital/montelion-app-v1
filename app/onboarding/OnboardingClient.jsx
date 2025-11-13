@@ -513,11 +513,12 @@ export default function OnboardingClient() {
           { onConflict: "user_id" }
         );
 
-      if (poaErr) throw poaErr;
+        if (poaErr) throw poaErr;
 
-      // Ici plus tard tu pourras router vers la page du contrat
-      await updateOnboardingStep(6, true);
+      // On passe à l'étape "contrat" et on redirige vers /contract
+      await updateOnboardingStep(7, false);
       setOk("Your proof of address has been submitted.");
+      router.push("/contract");
     } catch (err) {
       setError(
         err.message ||
