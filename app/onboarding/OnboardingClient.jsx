@@ -9,11 +9,11 @@ export default function OnboardingClient() {
 
   // Steps:
   // 1 = profile
-  // 2 = phone number (send code)
-  // 3 = OTP verification
+  // 2 = phone
+  // 3 = otp
   // 4 = address
-  // 5 = KYC identity
-  // 6 = proof of address (last step for now)
+  // 5 = kyc identity
+  // 6 = proof of address
   const [step, setStep] = useState(1);
 
   const [loading, setLoading] = useState(true);
@@ -36,29 +36,28 @@ export default function OnboardingClient() {
 
   // Step 3 — OTP
   const [otp, setOtp] = useState("");
-  const [otpStatus, setOtpStatus] = useState("idle"); // idle | checking | valid | invalid
   const [verifying, setVerifying] = useState(false);
+  const [otpStatus, setOtpStatus] = useState(""); // "", "success", "error"
 
   // Resend timer
   const [timer, setTimer] = useState(60);
 
-  // Step 4 — address
-  const [addressLine1, setAddressLine1] = useState("");
+  // Step 4 — Address
+  const [addressLine, setAddressLine] = useState("");
   const [city, setCity] = useState("");
   const [postalCode, setPostalCode] = useState("");
   const [country, setCountry] = useState("");
-  const [savingAddress, setSavingAddress] = useState(false);
 
-  // Step 5 — KYC identity
+  // Step 5 — KYC Identity
   const [kycDocType, setKycDocType] = useState("passport");
-  const [kycSaving, setKycSaving] = useState(false);
-  const [kycFrontFileName, setKycFrontFileName] = useState("");
-  const [kycBackFileName, setKycBackFileName] = useState("");
+  const [kycFrontFile, setKycFrontFile] = useState(null);
+  const [kycBackFile, setKycBackFile] = useState(null);
+  const [uploadingKyc, setUploadingKyc] = useState(false);
 
   // Step 6 — Proof of address
-  const [proofDocType, setProofDocType] = useState("utility_bill");
-  const [proofSaving, setProofSaving] = useState(false);
-  const [proofFileName, setProofFileName] = useState("");
+  const [poaDocType, setPoaDocType] = useState("utility_bill");
+  const [poaFile, setPoaFile] = useState(null);
+  const [uploadingPoa, setUploadingPoa] = useState(false);
 
   const DIAL_CODES = [
     "+1",
@@ -84,7 +83,7 @@ export default function OnboardingClient() {
   ];
 
   // -------------------------
-  // Load session + pre-fill profile (and basic address if needed)
+  // Load session + pre-fill profile
   // -------------------------
   useEffect(() => {
     (async () => {
@@ -116,64 +115,16 @@ export default function OnboardingClient() {
         .eq("id", uid)
         .maybeSingle();
 
-      if (profErr && profErr.code !== "PGRST116") {
-        setError(profErr.message || "Unable to load profile.");
-        setLoading(false);
-        return;
-      }
-
-      if (profile) {
+      if (!profErr && profile) {
         setFirstName(profile.first_name || "");
         setLastName(profile.last_name || "");
         setDob(profile.date_of_birth || "");
-        if (profile.phone_e164) {
-          setPhoneE164(profile.phone_e164);
-        }
-      }
-
-      // Address (optional prefill if exists)
-      const { data: address } = await supabase
-        .from("addresses")
-        .select("line1, city, postal_code, country")
-        .eq("user_id", uid)
-        .maybeSingle();
-
-      if (address) {
-        setAddressLine1(address.line1 || "");
-        setCity(address.city || "");
-        setPostalCode(address.postal_code || "");
-        setCountry(address.country || "");
-      }
-
-      // Onboarding state (to restore step later if needed)
-      const { data: onboarding } = await supabase
-        .from("onboarding_state")
-        .select("current_step, completed")
-        .eq("user_id", uid)
-        .maybeSingle();
-
-      if (onboarding && !onboarding.completed) {
-        setStep(onboarding.current_step || 1);
+        if (profile.phone_e164) setPhoneE164(profile.phone_e164);
       }
 
       setLoading(false);
     })();
   }, [router]);
-
-  // Helper: update onboarding_state
-  async function updateOnboardingStep(nextStep, completed = false) {
-    if (!userId) return;
-    await supabase
-      .from("onboarding_state")
-      .upsert(
-        {
-          user_id: userId,
-          current_step: nextStep,
-          completed,
-        },
-        { onConflict: "user_id" }
-      );
-  }
 
   // -------------------------
   // Step 1 — Submit profile
@@ -200,10 +151,17 @@ export default function OnboardingClient() {
         },
         { onConflict: "id" }
       );
-
       if (upsertErr) throw upsertErr;
 
-      await updateOnboardingStep(2, false);
+      await supabase.from("onboarding_state").upsert(
+        {
+          user_id: userId,
+          current_step: 2,
+          completed: false,
+        },
+        { onConflict: "user_id" }
+      );
+
       setStep(2);
     } catch (err) {
       setError(err.message || "Something went wrong.");
@@ -233,24 +191,32 @@ export default function OnboardingClient() {
       const res = await fetch("/api/phone/send-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: full, userId }),
+        body: JSON.stringify({ phone: full }),
       });
 
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Failed to send code.");
 
-      // Keep track of verification attempt
+      // Log sending in phone_verifications
       await supabase.from("phone_verifications").insert({
         user_id: userId,
         phone_e164: full,
         status: "code_sent",
       });
 
-      await updateOnboardingStep(3, false);
-      setStep(3);
-      setTimer(60);
+      await supabase.from("onboarding_state").upsert(
+        {
+          user_id: userId,
+          current_step: 3,
+          completed: false,
+        },
+        { onConflict: "user_id" }
+      );
+
       setOtp("");
-      setOtpStatus("idle");
+      setOtpStatus("");
+      setTimer(60);
+      setStep(3);
     } catch (err) {
       setError(err.message || "Something went wrong.");
     } finally {
@@ -259,82 +225,73 @@ export default function OnboardingClient() {
   }
 
   // -------------------------
-  // Step 3 — Verify OTP (auto when 6 digits)
+  // Step 3 — Verify OTP
   // -------------------------
-  useEffect(() => {
-    // Only run on OTP step
-    if (step !== 3) return;
-
-    // Reset status while typing
-    if (otp.length < 6) {
-      setOtpStatus("idle");
-      return;
-    }
-
-    if (otp.length === 6) {
-      verifyOtpCode(otp);
-    }
-  }, [otp, step]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  async function verifyOtpCode(code) {
-    if (verifying || !userId || !phoneE164) return;
+  async function handleVerifyCode(e) {
+    e.preventDefault();
+    if (verifying || !userId) return;
 
     setError("");
     setOk("");
     setVerifying(true);
-    setOtpStatus("checking");
+    setOtpStatus("");
 
     try {
-      if (!/^\d{6}$/.test(code)) {
+      if (!/^\d{6}$/.test(otp)) {
+        setOtpStatus("error");
         throw new Error("Please enter the 6-digit code.");
       }
 
       const res = await fetch("/api/phone/verify-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: phoneE164, code }),
+        body: JSON.stringify({ phone: phoneE164, code: otp }),
       });
 
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setOtpStatus("invalid");
+        setOtpStatus("error");
         throw new Error(data.error || "Invalid or expired code.");
       }
 
-      // Mark as verified in phone_verifications
+      // Mark as verified in DB
+      const nowIso = new Date().toISOString();
+
+      await supabase
+        .from("profiles")
+        .update({
+          phone_e164: phoneE164,
+          phone_verified_at: nowIso,
+        })
+        .eq("id", userId);
+
       await supabase.from("phone_verifications").insert({
         user_id: userId,
         phone_e164: phoneE164,
         status: "verified",
       });
 
-      // Update profile with phone and verified timestamp
-      await supabase
-        .from("profiles")
-        .update({
-          phone_e164: phoneE164,
-          phone_verified_at: new Date().toISOString(),
-        })
-        .eq("id", userId);
+      await supabase.from("onboarding_state").upsert(
+        {
+          user_id: userId,
+          current_step: 4,
+          completed: false,
+        },
+        { onConflict: "user_id" }
+      );
 
-      await updateOnboardingStep(3, false);
-      setOtpStatus("valid");
-      setOk("Phone number verified.");
+      setOtpStatus("success");
+
+      // Petite pause pour voir le vert, puis étape Adresse
+      setTimeout(() => {
+        setStep(4);
+        setOtpStatus("");
+      }, 700);
     } catch (err) {
-      setError(err.message || "Something went wrong while verifying the code.");
+      setError(err.message || "Something went wrong.");
     } finally {
       setVerifying(false);
     }
-  }
-
-  // User clicks "Continue" after OTP is valid
-  async function handleOtpContinue() {
-    if (otpStatus !== "valid" || !userId) return;
-    setError("");
-    setOk("");
-
-    await updateOnboardingStep(4, false);
-    setStep(4);
   }
 
   // -------------------------
@@ -349,121 +306,8 @@ export default function OnboardingClient() {
   }, [step, timer]);
 
   // -------------------------
-  // Step 4 — Address
+  // Step 1 : PROFILE
   // -------------------------
-  async function handleAddressSubmit(e) {
-    e.preventDefault();
-    if (!userId || savingAddress) return;
-
-    setError("");
-    setOk("");
-    setSavingAddress(true);
-
-    try {
-      if (!addressLine1.trim() || !city.trim() || !postalCode.trim() || !country.trim()) {
-        throw new Error("Please fill in all address fields.");
-      }
-
-      const { error: addrErr } = await supabase.from("addresses").upsert(
-        {
-          user_id: userId,
-          line1: addressLine1.trim(),
-          city: city.trim(),
-          postal_code: postalCode.trim(),
-          country: country.trim(),
-        },
-        { onConflict: "user_id" }
-      );
-
-      if (addrErr) throw addrErr;
-
-      await updateOnboardingStep(5, false);
-      setStep(5);
-    } catch (err) {
-      setError(err.message || "Something went wrong while saving address.");
-    } finally {
-      setSavingAddress(false);
-    }
-  }
-
-  // -------------------------
-  // Step 5 — KYC Identity
-  // -------------------------
-  async function handleKycSubmit(e) {
-    e.preventDefault();
-    if (!userId || kycSaving) return;
-
-    setError("");
-    setOk("");
-    setKycSaving(true);
-
-    try {
-      if (!kycDocType) {
-        throw new Error("Please select an identity document.");
-      }
-
-      // For now we only store metadata (document_type, status).
-      const { error: kycErr } = await supabase.from("kyc_identities").upsert(
-        {
-          user_id: userId,
-          document_type: kycDocType,
-          status: "pending",
-        },
-        { onConflict: "user_id" }
-      );
-
-      if (kycErr) throw kycErr;
-
-      await updateOnboardingStep(6, false);
-      setStep(6);
-    } catch (err) {
-      setError(err.message || "Something went wrong while saving identity.");
-    } finally {
-      setKycSaving(false);
-    }
-  }
-
-  // -------------------------
-  // Step 6 — Proof of address
-  // -------------------------
-  async function handleProofSubmit(e) {
-    e.preventDefault();
-    if (!userId || proofSaving) return;
-
-    setError("");
-    setOk("");
-    setProofSaving(true);
-
-    try {
-      if (!proofDocType) {
-        throw new Error("Please select a proof-of-address document.");
-      }
-
-      const { error: proofErr } = await supabase.from("proof_of_address").upsert(
-        {
-          user_id: userId,
-          document_type: proofDocType,
-          status: "pending",
-        },
-        { onConflict: "user_id" }
-      );
-
-      if (proofErr) throw proofErr;
-
-      await updateOnboardingStep(7, true);
-      setOk("Onboarding completed (we'll review your documents).");
-      // No redirect yet: next page will be built later.
-    } catch (err) {
-      setError(err.message || "Something went wrong while saving proof.");
-    } finally {
-      setProofSaving(false);
-    }
-  }
-
-  // =====================================================================================
-  // RENDER
-  // =====================================================================================
-
   if (loading) {
     return (
       <div className="mc-card">
@@ -472,9 +316,6 @@ export default function OnboardingClient() {
     );
   }
 
-  // -------------------------
-  // Step 1 : PROFILE
-  // -------------------------
   if (step === 1) {
     return (
       <div className="mc-card">
@@ -525,11 +366,7 @@ export default function OnboardingClient() {
               />
             </div>
 
-            <button
-              type="submit"
-              className="mc-btn mc-btn-primary mt-4"
-              disabled={saving}
-            >
+            <button type="submit" className="mc-btn mc-btn-primary mt-4">
               {saving ? "Saving…" : "Continue"}
             </button>
           </form>
@@ -561,7 +398,7 @@ export default function OnboardingClient() {
               <label className="block mb-2 text-sm">Mobile number</label>
 
               <div className="flex gap-2">
-                {/* Dial code selector – same height as input */}
+                {/* Dial code selector, same height as input */}
                 <div className="relative w-24">
                   <select
                     value={dialCode}
@@ -613,13 +450,14 @@ export default function OnboardingClient() {
   // Step 3 : OTP
   // -------------------------
   if (step === 3) {
-    const baseOtpClasses = "mc-input tracking-[0.3em] text-center";
-    const otpVariantClasses =
-      otpStatus === "valid"
-        ? " border-emerald-500/70 bg-emerald-500/10"
-        : otpStatus === "invalid"
-        ? " border-rose-500/70 bg-rose-500/10"
-        : "";
+    const canSubmit = otp.length === 6 && !verifying;
+    let otpClass =
+      "mc-input tracking-[0.3em] text-center transition-colors duration-150";
+    if (otpStatus === "success") {
+      otpClass += " border-emerald-500/80 ring-emerald-500/40";
+    } else if (otpStatus === "error") {
+      otpClass += " border-rose-500/80 ring-rose-500/30";
+    }
 
     return (
       <div className="mc-card">
@@ -638,37 +476,34 @@ export default function OnboardingClient() {
               {error}
             </div>
           )}
-          {ok && (
-            <div className="mb-4 text-sm text-emerald-400 bg-emerald-950/40 border border-emerald-900/40 px-3 py-2 rounded-lg">
-              {ok}
-            </div>
-          )}
 
-          <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
+          <form onSubmit={handleVerifyCode} className="space-y-6">
             <div>
               <label className="block mb-2 text-sm">6-digit code</label>
               <input
                 type="text"
-                className={baseOtpClasses + otpVariantClasses}
+                className={otpClass}
                 placeholder="••••••"
                 value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                onChange={(e) => {
+                  setOtp(e.target.value.replace(/\D/g, ""));
+                  setOtpStatus("");
+                  setError("");
+                }}
                 maxLength={6}
                 required
-                autoComplete="one-time-code"
               />
             </div>
 
             <div className="mt-4 flex gap-3">
               <button
-                type="button"
-                className="mc-btn mc-btn-primary"
-                disabled={otpStatus !== "valid"}
-                onClick={handleOtpContinue}
+                type="submit"
+                className={`mc-btn mc-btn-primary ${
+                  !canSubmit ? "opacity-60 cursor-not-allowed" : ""
+                }`}
+                disabled={!canSubmit}
               >
-                {otpStatus === "checking" || verifying
-                  ? "Checking…"
-                  : "Continue"}
+                {verifying ? "Checking…" : "Continue"}
               </button>
 
               <button
@@ -695,6 +530,45 @@ export default function OnboardingClient() {
   // -------------------------
   // Step 4 : ADDRESS
   // -------------------------
+  async function handleAddressSubmit(e) {
+    e.preventDefault();
+    if (!userId || saving) return;
+
+    setError("");
+    setOk("");
+    setSaving(true);
+
+    try {
+      if (!addressLine.trim() || !city.trim() || !postalCode.trim() || !country.trim()) {
+        throw new Error("Please fill in all fields.");
+      }
+
+      // IMPORTANT: colonne = address_line (pas line1)
+      const { error: addrErr } = await supabase.from("addresses").insert({
+        address_line: addressLine.trim(),
+        city: city.trim(),
+        postal_code: postalCode.trim(),
+        country: country.trim(),
+      });
+      if (addrErr) throw addrErr;
+
+      await supabase.from("onboarding_state").upsert(
+        {
+          user_id: userId,
+          current_step: 5,
+          completed: false,
+        },
+        { onConflict: "user_id" }
+      );
+
+      setStep(5);
+    } catch (err) {
+      setError(err.message || "Unable to save address.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   if (step === 4) {
     return (
       <div className="mc-card">
@@ -716,9 +590,8 @@ export default function OnboardingClient() {
               <input
                 type="text"
                 className="mc-input"
-                placeholder="Street and number"
-                value={addressLine1}
-                onChange={(e) => setAddressLine1(e.target.value)}
+                value={addressLine}
+                onChange={(e) => setAddressLine(e.target.value)}
                 required
               />
             </div>
@@ -760,9 +633,9 @@ export default function OnboardingClient() {
             <button
               type="submit"
               className="mc-btn mc-btn-primary mt-4"
-              disabled={savingAddress}
+              disabled={saving}
             >
-              {savingAddress ? "Saving…" : "Continue"}
+              {saving ? "Saving…" : "Continue"}
             </button>
           </form>
         </div>
@@ -773,6 +646,51 @@ export default function OnboardingClient() {
   // -------------------------
   // Step 5 : KYC IDENTITY
   // -------------------------
+  async function handleKycSubmit(e) {
+    e.preventDefault();
+    if (!userId || uploadingKyc) return;
+
+    setError("");
+    setOk("");
+    setUploadingKyc(true);
+
+    try {
+      if (!kycFrontFile) {
+        throw new Error("Please upload at least the front side of your document.");
+      }
+
+      // Ici on se contente d’appeler une API interne.
+      // Cette API fera l’upload vers Supabase Storage + insertion dans kyc_identities.
+      const formData = new FormData();
+      formData.append("docType", kycDocType);
+      formData.append("front", kycFrontFile);
+      if (kycBackFile) formData.append("back", kycBackFile);
+
+      const res = await fetch("/api/kyc/identity", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Failed to upload identity.");
+
+      await supabase.from("onboarding_state").upsert(
+        {
+          user_id: userId,
+          current_step: 6,
+          completed: false,
+        },
+        { onConflict: "user_id" }
+      );
+
+      setStep(6);
+    } catch (err) {
+      setError(err.message || "Something went wrong while uploading identity.");
+    } finally {
+      setUploadingKyc(false);
+    }
+  }
+
   if (step === 5) {
     return (
       <div className="mc-card">
@@ -803,48 +721,35 @@ export default function OnboardingClient() {
             </div>
 
             <div className="space-y-3">
-              <label className="block mb-1 text-sm">
-                Front side (drag &amp; drop)
-              </label>
-              <div
-                className="mc-input flex h-32 items-center justify-center border-dashed border-slate-700 cursor-pointer"
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  const file = e.dataTransfer.files?.[0];
-                  if (file) setKycFrontFileName(file.name);
-                }}
-              >
-                {kycFrontFileName || "Drop front image here or click to select"}
+              <div>
+                <label className="block mb-2 text-sm">Front side</label>
+                <input
+                  type="file"
+                  accept="image/*,application/pdf"
+                  onChange={(e) => setKycFrontFile(e.target.files?.[0] || null)}
+                  className="mc-input cursor-pointer"
+                  required
+                />
               </div>
-
-              <label className="block mb-1 text-sm">
-                Back side (drag &amp; drop)
-              </label>
-              <div
-                className="mc-input flex h-32 items-center justify-center border-dashed border-slate-700 cursor-pointer"
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  const file = e.dataTransfer.files?.[0];
-                  if (file) setKycBackFileName(file.name);
-                }}
-              >
-                {kycBackFileName || "Drop back image here or click to select"}
+              <div>
+                <label className="block mb-2 text-sm">
+                  Back side <span className="text-slate-500">(optional)</span>
+                </label>
+                <input
+                  type="file"
+                  accept="image/*,application/pdf"
+                  onChange={(e) => setKycBackFile(e.target.files?.[0] || null)}
+                  className="mc-input cursor-pointer"
+                />
               </div>
-
-              <p className="mt-2 text-xs text-slate-500">
-                Upload clear photos of your document. We’ll review and confirm
-                your identity.
-              </p>
             </div>
 
             <button
               type="submit"
               className="mc-btn mc-btn-primary mt-4"
-              disabled={kycSaving}
+              disabled={uploadingKyc}
             >
-              {kycSaving ? "Saving…" : "Continue"}
+              {uploadingKyc ? "Uploading…" : "Continue"}
             </button>
           </form>
         </div>
@@ -855,6 +760,50 @@ export default function OnboardingClient() {
   // -------------------------
   // Step 6 : PROOF OF ADDRESS
   // -------------------------
+  async function handlePoaSubmit(e) {
+    e.preventDefault();
+    if (!userId || uploadingPoa) return;
+
+    setError("");
+    setOk("");
+    setUploadingPoa(true);
+
+    try {
+      if (!poaFile) {
+        throw new Error("Please upload a proof of address document.");
+      }
+
+      const formData = new FormData();
+      formData.append("docType", poaDocType);
+      formData.append("file", poaFile);
+
+      const res = await fetch("/api/kyc/proof-of-address", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Failed to upload proof of address.");
+
+      await supabase.from("onboarding_state").upsert(
+        {
+          user_id: userId,
+          current_step: 6,
+          completed: true,
+        },
+        { onConflict: "user_id" }
+      );
+
+      setOk("Your onboarding information has been submitted.");
+      // Pas de redirection vers le dashboard ici, on fera la page suivante plus tard.
+    } catch (err) {
+      setError(err.message || "Something went wrong while uploading the document.");
+    } finally {
+      setUploadingPoa(false);
+    }
+  }
+
+  // Step 6 UI
   return (
     <div className="mc-card">
       <div className="mc-section text-left">
@@ -874,13 +823,13 @@ export default function OnboardingClient() {
           </div>
         )}
 
-        <form onSubmit={handleProofSubmit} className="space-y-6">
+        <form onSubmit={handlePoaSubmit} className="space-y-6">
           <div>
             <label className="block mb-2 text-sm">Document type</label>
             <select
               className="mc-input"
-              value={proofDocType}
-              onChange={(e) => setProofDocType(e.target.value)}
+              value={poaDocType}
+              onChange={(e) => setPoaDocType(e.target.value)}
             >
               <option value="utility_bill">Utility bill (water / electricity)</option>
               <option value="bank_statement">Bank statement</option>
@@ -890,31 +839,23 @@ export default function OnboardingClient() {
             </select>
           </div>
 
-          <div className="space-y-3">
-            <label className="block mb-1 text-sm">Document file</label>
-            <div
-              className="mc-input flex h-32 items-center justify-center border-dashed border-slate-700 cursor-pointer"
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={(e) => {
-                e.preventDefault();
-                const file = e.dataTransfer.files?.[0];
-                if (file) setProofFileName(file.name);
-              }}
-            >
-              {proofFileName || "Drop your document here or click to select"}
-            </div>
-
-            <p className="mt-2 text-xs text-slate-500">
-              The document must clearly show your full name, address, and date.
-            </p>
+          <div>
+            <label className="block mb-2 text-sm">Upload document</label>
+            <input
+              type="file"
+              accept="image/*,application/pdf"
+              onChange={(e) => setPoaFile(e.target.files?.[0] || null)}
+              className="mc-input cursor-pointer"
+              required
+            />
           </div>
 
           <button
             type="submit"
             className="mc-btn mc-btn-primary mt-4"
-            disabled={proofSaving}
+            disabled={uploadingPoa}
           >
-            {proofSaving ? "Saving…" : "Continue"}
+            {uploadingPoa ? "Uploading…" : "Continue"}
           </button>
         </form>
       </div>
