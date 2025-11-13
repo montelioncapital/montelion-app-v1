@@ -362,43 +362,45 @@ export default function OnboardingClient() {
   }
 
   // -------------------------
-  // Step 3 : OTP
-  // -------------------------
-  return (
-    <div className="mc-card">
-      <div className="mc-section text-left">
-        <h1 className="mc-title mb-2">Enter 6-digit verification code</h1>
-        <p className="text-slate-400 mb-8">
-          Please enter the 6-digit code we sent to{" "}
-          <span className="font-medium text-slate-100">
-            {phoneE164 || `${dialCode}${phoneLocal}`}
-          </span>
-          .
-        </p>
+// Step 3 : OTP
+// -------------------------
+return (
+  <div className="mc-card">
+    <div className="mc-section text-left">
+      <h1 className="mc-title mb-2">Enter 6-digit verification code</h1>
+      <p className="text-slate-400 mb-8">
+        Please enter the 6-digit code we sent to{" "}
+        <span className="font-medium text-slate-100">
+          {phoneE164 || `${dialCode}${phoneLocal}`}
+        </span>
+        .
+      </p>
 
-        {error && (
-          <div className="mb-4 text-sm text-rose-400 bg-rose-950/40 border border-rose-900/40 px-3 py-2 rounded-lg">
-            {error}
-          </div>
-        )}
+      {error && (
+        <div className="mb-4 text-sm text-rose-400 bg-rose-950/40 border border-rose-900/40 px-3 py-2 rounded-lg">
+          {error}
+        </div>
+      )}
 
-        <form onSubmit={handleVerifyCode} className="space-y-6">
-          <div>
-            <label className="block mb-2 text-sm">6-digit code</label>
-            <input
-              type="text"
-              className="mc-input tracking-[0.3em] text-center"
-              placeholder="••••••"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-              maxLength={6}
-              required
-            />
-          </div>
+      <form onSubmit={handleVerifyCode} className="space-y-6">
+        <div>
+          <label className="block mb-2 text-sm">6-digit code</label>
+          <input
+            type="text"
+            className="mc-input tracking-[0.3em] text-center"
+            placeholder="••••••"
+            value={otp}
+            onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+            maxLength={6}
+            required
+          />
+        </div>
 
+        {/* 🔥 Buttons side by side */}
+        <div className="flex items-center gap-3">
           <button
             type="submit"
-            className="mc-btn mc-btn-primary mt-4"
+            className="mc-btn mc-btn-primary"
             disabled={verifying}
           >
             {verifying ? "Verifying…" : "Verify"}
@@ -408,20 +410,18 @@ export default function OnboardingClient() {
           <button
             type="button"
             disabled={timer > 0}
-            onClick={() => {
-              // on revient à l'écran téléphone pour renvoyer un code
-              setStep(2);
-            }}
-            className={`w-full mt-3 text-sm py-2 rounded-lg border ${
-              timer > 0
-                ? "border-slate-700 text-slate-600 cursor-not-allowed"
-                : "border-slate-500 text-slate-300 hover:bg-slate-800"
-            }`}
+            onClick={() => setStep(2)}
+            className={`mc-btn px-4 py-2 rounded-lg text-sm border 
+              ${
+                timer > 0
+                  ? "border-slate-700 text-slate-600 cursor-not-allowed"
+                  : "border-slate-500 text-slate-300 hover:bg-slate-800"
+              }`}
           >
             {timer > 0 ? `Resend code in ${timer}s` : "Resend code"}
           </button>
-        </form>
-      </div>
+        </div>
+      </form>
     </div>
-  );
-}
+  </div>
+);
