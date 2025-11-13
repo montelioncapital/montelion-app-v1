@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabaseClient";
 
-const ID_DOC_TYPES = ["Passport", "Driving license", "National ID card"];
+const ID_DOC_TYPES = ["Passport", "Driving license", "National ID card"]e;
 
 // mapping label UI -> valeur ENUM dans Postgres
 const KYC_DOC_ENUM = {
@@ -20,6 +20,15 @@ const POA_DOC_TYPES = [
   "Rental agreement",
   "Tax notice",
 ];
+
+// Mapping UI -> ENUM Supabase
+const POA_DOC_TYPE_DB_MAP = {
+  "Utility bill (water / electricity)": "utility_bill",
+  "Bank statement": "bank_statement",
+  "Phone / Internet bill": "phone_or_internet_bill",
+  "Rental agreement": "rental_agreement",
+  "Tax notice": "tax_notice",
+};
 
 export default function OnboardingClient() {
   const router = useRouter();
@@ -436,61 +445,62 @@ export default function OnboardingClient() {
     }
   }
 
-  // -------------------------
-  // Step 6 — Proof of Address
-  // -------------------------
-  async function handlePoaSubmit(e) {
-    e.preventDefault();
-    if (!userId || saving) return;
+// -------------------------
+// Step 6 — Proof of Address
+// -------------------------
+async function handlePoaSubmit(e) {
+  e.preventDefault();
+  if (!userId || saving) return;
 
-    setError("");
-    setOk("");
-    setSaving(true);
+  setError("");
+  setOk("");
+  setSaving(true);
 
-    try {
-      if (!poaFile) {
-        throw new Error("Please upload a proof of address document.");
-      }
-
-      const bucket = "kyc";
-      const safePoaName = sanitizeFileName(poaFile.name);
-      const poaPath = `proof-of-address/${userId}/${Date.now()}-${safePoaName}`;
-
-      const { error: poaUploadErr } = await supabase.storage
-        .from(bucket)
-        .upload(poaPath, poaFile, {
-          cacheControl: "3600",
-          upsert: false,
-        });
-
-      if (poaUploadErr) throw poaUploadErr;
-
-      const { error: poaErr } = await supabase
-        .from("proof_of_address")
-        .upsert(
-          {
-            user_id: userId,
-            document_type: poaDocType,
-            file_path: poaPath,
-            status: "submitted",
-          },
-          { onConflict: "user_id" }
-        );
-
-      if (poaErr) throw poaErr;
-
-      await updateOnboardingStep(6, true);
-      setOk("Your KYC documents have been submitted.");
-      // plus tard: router.push("/dashboard") par ex
-    } catch (err) {
-      setError(
-        err.message ||
-          "Something went wrong while uploading your proof of address."
-      );
-    } finally {
-      setSaving(false);
+  try {
+    if (!poaFile) {
+      throw new Error("Please upload a proof of address document.");
     }
+
+    // 1) Upload to Supabase storage
+    const bucket = "kyc";
+    const safePoaName = sanitizeFileName(poaFile.name);
+    const poaPath = `proof-of-address/${userId}/${Date.now()}-${safePoaName}`;
+
+    const { error: poaUploadErr } = await supabase.storage
+      .from(bucket)
+      .upload(poaPath, poaFile, {
+        cacheControl: "3600",
+        upsert: false,
+      });
+
+    if (poaUploadErr) throw poaUploadErr;
+
+    // 2) Sauvegarde DB dans proof_of_address
+    const { error: poaErr } = await supabase
+      .from("proof_of_address")
+      .upsert(
+        {
+          user_id: userId,
+          doc_type: POA_DOC_TYPE_DB_MAP[poaDocType], // <-- ENUM CORRECT
+          file_url: poaPath,                         // <-- NOM DE COLONNE CORRECT
+          status: "submitted",                       // <-- ENUM CORRECT
+        },
+        { onConflict: "user_id" }
+      );
+
+    if (poaErr) throw poaErr;
+
+    await updateOnboardingStep(6, true);
+    setOk("Your proof of address has been submitted.");
+  } catch (err) {
+    setError(
+      err.message ||
+        "Something went wrong while uploading your proof of address."
+    );
+  } finally {
+    setSaving(false);
   }
+}
 
   // -------------------------
   // Simple Dropzone component
