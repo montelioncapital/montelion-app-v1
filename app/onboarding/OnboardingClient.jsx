@@ -366,28 +366,28 @@ export default function OnboardingClient() {
       const bucket = "kyc"; // adapte si besoin
 
       // FRONT
-      const frontPath = `identity/${userId}/front-${Date.now()}-${
-        idFrontFile.name
-      }`;
-      const { error: frontUploadErr } = await supabase.storage
-        .from(bucket)
-        .upload(frontPath, idFrontFile, {
-          cacheControl: "3600",
-          upsert: false,
-        });
+      const safeFrontName = sanitizeFileName(idFrontFile.name);
+const frontPath = `identity/${userId}/front-${Date.now()}-${safeFrontName}`;
+
+const { error: frontUploadErr } = await supabase.storage
+  .from(bucket)
+  .upload(frontPath, idFrontFile, {
+    cacheControl: "3600",
+    upsert: false,
+  });
 
       if (frontUploadErr) throw frontUploadErr;
 
       // BACK (si non passeport)
-      let backPath = null;
-      if (!isPassport && idBackFile) {
-        backPath = `identity/${userId}/back-${Date.now()}-${idBackFile.name}`;
-        const { error: backUploadErr } = await supabase.storage
-          .from(bucket)
-          .upload(backPath, idBackFile, {
-            cacheControl: "3600",
-            upsert: false,
-          });
+      const safeBackName = sanitizeFileName(idBackFile.name);
+backPath = `identity/${userId}/back-${Date.now()}-${safeBackName}`;
+
+const { error: backUploadErr } = await supabase.storage
+  .from(bucket)
+  .upload(backPath, idBackFile, {
+    cacheControl: "3600",
+    upsert: false,
+  });
         if (backUploadErr) throw backUploadErr;
       }
 
@@ -433,7 +433,8 @@ export default function OnboardingClient() {
       }
 
       const bucket = "kyc"; // adapte si besoin
-      const poaPath = `proof-of-address/${userId}/${Date.now()}-${poaFile.name}`;
+      const safePoaName = sanitizeFileName(poaFile.name);
+      const poaPath = `proof-of-address/${userId}/${Date.now()}-${safePoaName}`;
 
       const { error: poaUploadErr } = await supabase.storage
         .from(bucket)
@@ -922,4 +923,13 @@ export default function OnboardingClient() {
       </div>
     </div>
   );
+}
+
+function sanitizeFileName(name: string) {
+  return name
+    // enlever les accents
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    // garder uniquement lettres / chiffres / .-_ 
+    .replace(/[^a-zA-Z0-9.\-_]/g, "_");
 }
