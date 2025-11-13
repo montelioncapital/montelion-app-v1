@@ -6,6 +6,11 @@ services:
     ports:
       - "3000:3000"
     restart: unless-stopped
+    environment:
+      # 🔹 Variables Twilio pour l’API /api/phone/send-code
+      TWILIO_ACCOUNT_SID: "AC6a15a10370eab34224606522d346d507"
+      TWILIO_AUTH_TOKEN: "f7f608c55cba4b5181a38776bdefd880"
+      TWILIO_VERIFY_SERVICE_SID: "VAa670edb924c6b27d49a67f9b16964d16"
 
   caddy:
     image: caddy:2
