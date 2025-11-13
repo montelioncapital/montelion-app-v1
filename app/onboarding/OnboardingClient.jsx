@@ -398,29 +398,31 @@ export default function OnboardingClient() {
             />
           </div>
 
-          <button
-            type="submit"
-            className="mc-btn mc-btn-primary mt-4"
-            disabled={verifying}
-          >
-            {verifying ? "Verifying…" : "Verify"}
-          </button>
+          {/* Boutons côte à côte */}
+          <div className="mt-4 flex gap-3">
+            <button
+              type="submit"
+              className="mc-btn mc-btn-primary"
+              disabled={verifying}
+            >
+              {verifying ? "Verifying…" : "Verify"}
+            </button>
 
-          {/* Bouton resend avec timer 60s */}
-          <button
-            type="button"
-            disabled={timer > 0}
-            onClick={() => {
-              setStep(2);
-            }}
-            className={`w-full mt-3 text-sm py-2 rounded-lg border ${
-              timer > 0
-                ? "border-slate-700 text-slate-600 cursor-not-allowed"
-                : "border-slate-500 text-slate-300 hover:bg-slate-800"
-            }`}
-          >
-            {timer > 0 ? `Resend code in ${timer}s` : "Resend code"}
-          </button>
+            <button
+              type="button"
+              disabled={timer > 0}
+              onClick={() => {
+                setStep(2);
+              }}
+              className={`mc-btn border text-sm ${
+                timer > 0
+                  ? "border-slate-700 text-slate-600 cursor-not-allowed bg-transparent"
+                  : "border-slate-500 text-slate-300 hover:bg-slate-800"
+              }`}
+            >
+              {timer > 0 ? `Resend code in ${timer}s` : "Resend code"}
+            </button>
+          </div>
         </form>
       </div>
     </div>
