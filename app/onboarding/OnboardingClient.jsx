@@ -35,6 +35,29 @@ export default function OnboardingClient() {
   // Resend timer
   const [timer, setTimer] = useState(60);
 
+  const DIAL_CODES = [
+    "+1",
+    "+44",
+    "+33",
+    "+49",
+    "+39",
+    "+34",
+    "+31",
+    "+46",
+    "+41",
+    "+81",
+    "+82",
+    "+86",
+    "+91",
+    "+55",
+    "+52",
+    "+61",
+    "+7",
+    "+27",
+    "+65",
+    "+971",
+  ];
+
   // -------------------------
   // Load session + pre-fill profile
   // -------------------------
@@ -292,39 +315,26 @@ export default function OnboardingClient() {
               <label className="block mb-2 text-sm">Mobile number</label>
 
               <div className="flex gap-2">
-                {/* Sélecteur indicatif : plus petit et flèche bien centrée */}
-                <div className="relative">
+                {/* 🔥 Sélecteur indicatif ULTRA propre, parfaitement centré */}
+                <div className="relative w-24">
+                  {/* Select natif invisible mais cliquable */}
                   <select
-                    className="mc-input w-20 pr-7 pl-3 text-sm text-center appearance-none"
                     value={dialCode}
                     onChange={(e) => setDialCode(e.target.value)}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                   >
-                    <option value="+1">+1</option>
-                    <option value="+44">+44</option>
-                    <option value="+33">+33</option>
-                    <option value="+49">+49</option>
-                    <option value="+39">+39</option>
-                    <option value="+34">+34</option>
-                    <option value="+31">+31</option>
-                    <option value="+46">+46</option>
-                    <option value="+41">+41</option>
-                    <option value="+81">+81</option>
-                    <option value="+82">+82</option>
-                    <option value="+86">+86</option>
-                    <option value="+91">+91</option>
-                    <option value="+55">+55</option>
-                    <option value="+52">+52</option>
-                    <option value="+61">+61</option>
-                    <option value="+7">+7</option>
-                    <option value="+27">+27</option>
-                    <option value="+65">+65</option>
-                    <option value="+971">+971</option>
+                    {DIAL_CODES.map((code) => (
+                      <option key={code} value={code}>
+                        {code}
+                      </option>
+                    ))}
                   </select>
 
-                  {/* Flèche fine, centrée dans la case */}
-                  <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 text-[10px]">
-                    ▼
-                  </span>
+                  {/* Box visible stylée */}
+                  <div className="mc-input w-full flex items-center justify-center gap-1 text-sm">
+                    <span>{dialCode}</span>
+                    <span className="text-[9px] leading-none">▼</span>
+                  </div>
                 </div>
 
                 <input
@@ -399,7 +409,8 @@ export default function OnboardingClient() {
             type="button"
             disabled={timer > 0}
             onClick={() => {
-              setStep(2); // on revient à l'écran téléphone pour renvoyer un code
+              // on revient à l'écran téléphone pour renvoyer un code
+              setStep(2);
             }}
             className={`w-full mt-3 text-sm py-2 rounded-lg border ${
               timer > 0
