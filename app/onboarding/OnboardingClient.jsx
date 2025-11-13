@@ -59,7 +59,16 @@ const DIAL_CODES = [
 export default function OnboardingClient() {
   const router = useRouter();
 
-  // 0 = intro, 1 = profile, 2 = phone, 3 = otp, 4 = address, 5 = kyc identity, 6 = kyc proof of address
+  /**
+   * Étapes:
+   * 0 = écran d’intro (Get started)
+   * 1 = profil
+   * 2 = téléphone
+   * 3 = OTP
+   * 4 = adresse
+   * 5 = KYC identité
+   * 6 = KYC proof of address
+   */
   const [step, setStep] = useState(0);
 
   const [loading, setLoading] = useState(true);
@@ -158,11 +167,11 @@ export default function OnboardingClient() {
         .eq("user_id", uid)
         .maybeSingle();
 
-      if (!onboardErr && onboard && onboard.current_step !== null) {
-        // On respecte le step sauvegardé (0,1,2,...)
+      if (!onboardErr && onboard?.current_step != null) {
+        // On garde l’étape déjà enregistrée (1–6)
         setStep(onboard.current_step);
       } else {
-        // Aucun enregistrement → on commence par l’intro
+        // Nouveau client => on commence par l’écran d’intro
         setStep(0);
       }
 
@@ -562,90 +571,90 @@ export default function OnboardingClient() {
     );
   }
 
-  // STEP 0 — INTRO
+  // STEP 0 — INTRO / GET STARTED
   if (step === 0) {
     return (
       <div className="mc-card">
-        <div className="mc-section text-left">
-          <h1 className="mc-title mb-2">Let’s set up your account</h1>
-          <p className="text-slate-400 mb-6">
-            In a few minutes, you&apos;ll be fully ready to invest with
-            Montelion Capital. Here&apos;s what we&apos;ll do together:
+        <div className="mc-section">
+          <div className="mb-3 text-xs uppercase tracking-[0.22em] text-slate-500">
+            ONBOARDING JOURNEY
+          </div>
+          <h1 className="mc-title mb-2">Let’s get you fully set up</h1>
+          <p className="text-slate-400 mb-8 max-w-xl">
+            In a few minutes, you&apos;ll be ready to let Montelion trade on
+            your exchange account while you keep full control of your funds.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            {/* Step A */}
-            <div className="rounded-2xl border border-slate-700/60 bg-slate-900/40 px-4 py-5 flex flex-col gap-2">
-              <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-slate-500">
-                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-600/20 text-[11px] text-blue-400 border border-blue-500/40">
+            {/* Step 1 */}
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4 flex flex-col gap-3">
+              <div className="inline-flex items-center gap-2 text-xs font-medium text-sky-400">
+                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-sky-500/10 border border-sky-500/40 text-[11px]">
                   1
                 </span>
                 Personal onboarding
               </div>
-              <div className="text-sm font-medium text-slate-100">
-                Identity & contact
-              </div>
               <p className="text-xs text-slate-400 leading-relaxed">
-                We collect your basic details, verify your phone number, and
-                confirm your address for KYC and regulatory requirements.
+                We collect your basic details, verify your phone, address and
+                identity to comply with regulations.
               </p>
-              <ul className="mt-2 text-[11px] text-slate-500 space-y-1">
-                <li>• Name & date of birth</li>
-                <li>• Mobile verification (SMS)</li>
-                <li>• Address & proof of residence</li>
+              <ul className="text-[11px] text-slate-500 space-y-1">
+                <li>• Profile &amp; date of birth</li>
+                <li>• Phone verification (SMS)</li>
+                <li>• Address &amp; KYC documents</li>
               </ul>
             </div>
 
-            {/* Step B */}
-            <div className="rounded-2xl border border-slate-700/60 bg-slate-900/40 px-4 py-5 flex flex-col gap-2">
-              <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-slate-500">
-                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-600/20 text-[11px] text-blue-400 border border-blue-500/40">
+            {/* Step 2 */}
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4 flex flex-col gap-3">
+              <div className="inline-flex items-center gap-2 text-xs font-medium text-violet-400">
+                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-violet-500/10 border border-violet-500/40 text-[11px]">
                   2
                 </span>
-                Investment agreement
-              </div>
-              <div className="text-sm font-medium text-slate-100">
-                Signature of the mandate
+                Sign your mandate
               </div>
               <p className="text-xs text-slate-400 leading-relaxed">
-                You review and sign the management agreement defining how we
-                operate your strategy, fees, and risk parameters.
+                You review and e-sign the discretionary management agreement
+                that defines our responsibilities and fees.
               </p>
-              <ul className="mt-2 text-[11px] text-slate-500 space-y-1">
-                <li>• Digital signature</li>
-                <li>• Clear risk & fee schedule</li>
-                <li>• Downloadable PDF contract</li>
+              <ul className="text-[11px] text-slate-500 space-y-1">
+                <li>• Clear terms &amp; risk disclosure</li>
+                <li>• Digital signature in a few clicks</li>
+                <li>• You can download it at any time</li>
               </ul>
             </div>
 
-            {/* Step C */}
-            <div className="rounded-2xl border border-slate-700/60 bg-slate-900/40 px-4 py-5 flex flex-col gap-2">
-              <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-slate-500">
-                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-600/20 text-[11px] text-blue-400 border border-blue-500/40">
+            {/* Step 3 */}
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4 flex flex-col gap-3">
+              <div className="inline-flex items-center gap-2 text-xs font-medium text-emerald-400">
+                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/40 text-[11px]">
                   3
                 </span>
-                Exchange connection
-              </div>
-              <div className="text-sm font-medium text-slate-100">
-                Fund & connect your account
+                Connect your exchange
               </div>
               <p className="text-xs text-slate-400 leading-relaxed">
-                We guide you step-by-step to open your exchange account, deposit
-                funds, and create a secure API key for the bot.
+                We guide you step-by-step to open your account, deposit funds
+                and create a read-only trading API.
               </p>
-              <ul className="mt-2 text-[11px] text-slate-500 space-y-1">
-                <li>• Create your futures account</li>
-                <li>• Deposit USDT / stablecoins</li>
-                <li>• Generate read/trade-only API keys</li>
+              <ul className="text-[11px] text-slate-500 space-y-1">
+                <li>• Tutorial for the chosen exchange</li>
+                <li>• You keep custody of your assets</li>
+                <li>• You can revoke access at any time</li>
               </ul>
             </div>
           </div>
 
           <div className="flex items-center justify-between gap-4">
-            <div className="text-xs text-slate-500">
-              Estimated time: <span className="text-slate-200">5–10 min</span>.
-              You can stop and resume at any time.
+            <div className="text-xs text-slate-500 flex items-center gap-2">
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/60 text-[10px] text-emerald-400">
+                ✓
+              </span>
+              <span>
+                Average time to complete:{" "}
+                <span className="text-slate-300 font-medium">5–10 minutes</span>
+              </span>
             </div>
+
             <button
               type="button"
               className="mc-btn mc-btn-primary"
