@@ -1,71 +1,62 @@
+// app/api/phone/send-code/route.js
 import { NextResponse } from "next/server";
 import twilio from "twilio";
-import { createClient } from "@supabase/supabase-js";
-
-const twilioClient = twilio(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
-);
-
-const verifySid = process.env.TWILIO_VERIFY_SERVICE_SID;
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  }
-);
 
 export async function POST(req) {
   try {
-    const { phone, access_token } = await req.json();
+    const body = await req.json().catch(() => null);
+    const phone = body?.phone;
 
-    if (!phone || !access_token) {
+    if (!phone) {
       return NextResponse.json(
-        { error: "Missing phone or access_token" },
+        { error: "Missing 'phone' in body" },
         { status: 400 }
       );
     }
 
-    // 1) On vérifie le token Supabase → récupère l’utilisateur
-    const {
-      data: { user },
-      error: userErr,
-    } = await supabaseAdmin.auth.getUser(access_token);
+    // On récupère les variables d'environnement côté serveur
+    const accountSid = process.env.TWILIO_ACCOUNT_SID;
+    const authToken = process.env.TWILIO_AUTH_TOKEN;
+    const verifyServiceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
 
-    if (userErr || !user) {
-      console.error("Supabase getUser error:", userErr);
+    if (!accountSid || !authToken || !verifyServiceSid) {
+      console.error("Twilio env missing", {
+        hasAccountSid: !!accountSid,
+        hasAuthToken: !!authToken,
+        hasVerifyServiceSid: !!verifyServiceSid,
+      });
+
       return NextResponse.json(
-        { error: "Invalid session" },
-        { status: 401 }
+        { error: "Twilio configuration missing on server" },
+        { status: 500 }
       );
     }
 
-    // 2) On envoie le code via Twilio Verify
-    const verification = await twilioClient.verify.v2
-      .services(verifySid)
+    // On crée le client *dans* le handler, comme ça si ça throw on le catch
+    const client = twilio(accountSid, authToken);
+
+    // Appel à Twilio Verify
+    const verification = await client.verify.v2
+      .services(verifyServiceSid)
       .verifications.create({
         to: phone,
         channel: "sms",
       });
 
-    // 3) On log l’envoi dans phone_verifications
-    await supabaseAdmin.from("phone_verifications").insert({
-      user_id: user.id,
-      phone_e164: phone,
-      twilio_sid: verification.sid,
-      status: verification.status, // "pending"
+    // On renvoie un JSON propre
+    return NextResponse.json({
+      ok: true,
+      sid: verification.sid,
+      status: verification.status, // "pending" normalement
     });
-
-    return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error("send-code error:", err);
+    console.error("Twilio send-code error:", err);
+
     return NextResponse.json(
-      { error: "Failed to send verification code" },
+      {
+        error: "Twilio error",
+        message: err.message ?? "Unknown error",
+      },
       { status: 500 }
     );
   }
