@@ -412,7 +412,7 @@ export default function OnboardingClient() {
         user_id: userId,
         doc_type: docTypeDb,   // valeur ENUM kyc_doc_type
         front_url: frontPath,
-        status: "submitted",
+        status: "pending",
       };
 
       if (!isPassport && backPath) {
