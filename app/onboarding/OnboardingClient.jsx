@@ -6,7 +6,7 @@ import { createBrowserSupabaseClient } from "../lib/supabaseBrowser";
 
 const supabase = createBrowserSupabaseClient();
 
-// --- UI helpers -------------------------------------------------------------
+// --- Composants UI basiques (card, input, bouton) ---------------------------
 
 function OnboardingCard({ step, totalSteps, title, subtitle, children }) {
   return (
@@ -60,38 +60,21 @@ function PrimaryButton({ children, className = "", ...props }) {
   );
 }
 
-// --- Main component ---------------------------------------------------------
+// --- Composant principal ----------------------------------------------------
 
 export default function OnboardingClient() {
   const router = useRouter();
 
-  const TOTAL_STEPS = 5; // 1: profil, 2: téléphone, 3–5: KYC plus tard
-  const [step, setStep] = useState(1);
+  const TOTAL_STEPS = 5; // on garde 1/5 pour rester cohérent avec ton UI
 
-  // Profile
+  const [loading, setLoading] = useState(true);
+  const [globalError, setGlobalError] = useState("");
+
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [dob, setDob] = useState(""); // yyyy-mm-dd
 
-  // Phone
-  const [phone, setPhone] = useState(""); // numéro sans indicatif, ex: 612345678
-  const [sendingCode, setSendingCode] = useState(false);
-  const [phoneMessage, setPhoneMessage] = useState("");
-  const [phoneError, setPhoneError] = useState("");
-
-  // Code
-  const [code, setCode] = useState("");
-  const [verifyingCode, setVerifyingCode] = useState(false);
-  const [codeError, setCodeError] = useState("");
-
-  // Global
-  const [loading, setLoading] = useState(true);
-  const [globalError, setGlobalError] = useState("");
-
-  // ---------------------------------------------------------------------------
-  // 1. Chargement initial (profil + onboarding_state + téléphone si existant)
-  // ---------------------------------------------------------------------------
-
+  // Chargement initial: user + profil existant
   useEffect(() => {
     let cancelled = false;
 
@@ -106,14 +89,11 @@ export default function OnboardingClient() {
 
       if (userError || !user) {
         console.error(userError);
-        if (!cancelled) {
-          router.replace("/login");
-        }
+        if (!cancelled) router.replace("/login");
         return;
       }
 
       try {
-        // Profil
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("first_name, last_name, date_of_birth")
@@ -125,43 +105,22 @@ export default function OnboardingClient() {
         if (!cancelled && profile) {
           setFirstName(profile.first_name ?? "");
           setLastName(profile.last_name ?? "");
-          if (profile.date_of_birth) {
-            setDob(profile.date_of_birth);
-          }
-        }
-
-        // Onboarding_state (pour savoir si on doit sauter le step 1)
-        const { data: obState, error: obError } = await supabase
-          .from("onboarding_state")
-          .select("current_step")
-          .eq("user_id", user.id)
-          .maybeSingle();
-
-        if (obError) throw obError;
-
-        if (!cancelled && obState?.current_step >= 2) {
-          setStep(2);
+          if (profile.date_of_birth) setDob(profile.date_of_birth);
         }
       } catch (e) {
         console.error(e);
-        if (!cancelled) {
-          setGlobalError("Unexpected error while loading onboarding.");
-        }
+        if (!cancelled)
+          setGlobalError("Unexpected error while loading your profile.");
       } finally {
         if (!cancelled) setLoading(false);
       }
     }
 
     load();
-
     return () => {
       cancelled = true;
     };
   }, [router]);
-
-  // ---------------------------------------------------------------------------
-  // 2. Handlers
-  // ---------------------------------------------------------------------------
 
   async function handleSaveProfile() {
     setGlobalError("");
@@ -191,123 +150,19 @@ export default function OnboardingClient() {
 
       if (upsertError) throw upsertError;
 
+      // On peut garder une trace d'onboarding_state si tu veux
       await supabase.from("onboarding_state").upsert({
         user_id: user.id,
-        current_step: 2,
+        current_step: 1,
       });
 
-      setStep(2);
+      // Pour l’instant, on finit l’onboarding ici
+      router.replace("/");
     } catch (e) {
       console.error(e);
       setGlobalError("Could not save your profile. Please try again.");
     }
   }
-
-  async function handleSendCode() {
-    setPhoneError("");
-    setPhoneMessage("");
-
-    const trimmed = phone.replace(/\s+/g, "");
-    if (!trimmed) {
-      setPhoneError("Please enter your mobile number.");
-      return;
-    }
-
-    // On garde ton format actuel: tu tapes le numéro français sans +33
-    const e164 = "+33" + trimmed.replace(/^0/, ""); // ex: 06.. -> +336..
-
-    setSendingCode(true);
-    try {
-      const res = await fetch("/api/phone/send-code", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: e164 }),
-      });
-
-      const text = await res.text();
-      let json;
-      try {
-        json = JSON.parse(text);
-      } catch {
-        json = null;
-      }
-
-      if (!res.ok) {
-        throw new Error(json?.error || "Failed to send verification code.");
-      }
-
-      setPhoneMessage(`We sent a code to ${e164}.`);
-      setStep(3); // on passe à l’écran “Enter 6-digit code”
-    } catch (e) {
-      console.error(e);
-      setPhoneError(
-        e instanceof Error ? e.message : "Could not send code. Please try again."
-      );
-    } finally {
-      setSendingCode(false);
-    }
-  }
-
-  async function handleVerifyCode() {
-    setCodeError("");
-
-    const trimmed = code.replace(/\D/g, "");
-    if (trimmed.length !== 6) {
-      setCodeError("Please enter the 6-digit code.");
-      return;
-    }
-
-    const e164 = "+33" + phone.replace(/\s+/g, "").replace(/^0/, "");
-
-    setVerifyingCode(true);
-    try {
-      const res = await fetch("/api/phone/verify-code", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: e164, code: trimmed }),
-      });
-
-      const text = await res.text();
-      let json;
-      try {
-        json = JSON.parse(text);
-      } catch {
-        json = null;
-      }
-
-      if (!res.ok) {
-        throw new Error(json?.error || "Verification failed.");
-      }
-
-      // On marque le step 3 comme complété dans onboarding_state
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (user) {
-        await supabase.from("onboarding_state").upsert({
-          user_id: user.id,
-          current_step: 3,
-        });
-      }
-
-      // Pour l’instant, on redirige vers / (plus tard: step 3–5 KYC)
-      router.replace("/");
-    } catch (e) {
-      console.error(e);
-      setCodeError(
-        e instanceof Error
-          ? e.message
-          : "Could not verify the code. Please try again."
-      );
-    } finally {
-      setVerifyingCode(false);
-    }
-  }
-
-  // ---------------------------------------------------------------------------
-  // 3. Rendu des steps
-  // ---------------------------------------------------------------------------
 
   if (loading) {
     return (
@@ -317,127 +172,37 @@ export default function OnboardingClient() {
     );
   }
 
-  if (step === 1) {
-    return (
-      <OnboardingCard
-        step={1}
-        totalSteps={TOTAL_STEPS}
-        title="Welcome"
-        subtitle="Choose how you'd like to be addressed."
-      >
-        <Input
-          label="First name"
-          placeholder="Your first name"
-          value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
-        />
-        <Input
-          label="Last name"
-          placeholder="Your last name"
-          value={lastName}
-          onChange={(e) => setLastName(e.target.value)}
-        />
-        <Input
-          label="Date of birth"
-          type="date"
-          value={dob}
-          onChange={(e) => setDob(e.target.value)}
-        />
-
-        {globalError && (
-          <p className="mt-2 text-xs text-red-400">{globalError}</p>
-        )}
-
-        <PrimaryButton onClick={handleSaveProfile}>Continue</PrimaryButton>
-      </OnboardingCard>
-    );
-  }
-
-  if (step === 2) {
-    return (
-      <OnboardingCard
-        step={2}
-        totalSteps={TOTAL_STEPS}
-        title="Enter your mobile number"
-        subtitle="We'll send you a 6-digit verification code to confirm your account."
-      >
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-slate-200">
-            Mobile number
-          </label>
-          <div className="flex h-11 items-center gap-2">
-            <div className="flex h-full items-center rounded-xl border border-slate-700 bg-slate-900/60 px-3 text-sm text-slate-200">
-              <span className="mr-1">🇫🇷</span>
-              <span className="text-slate-300 text-xs">+33</span>
-            </div>
-            <input
-              className="flex-1 h-full rounded-xl border border-slate-700 bg-slate-900/60 px-3 text-sm text-slate-50 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="6 12 34 56 78"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-            />
-          </div>
-          <p className="text-xs text-slate-500">
-            You can enter your French number without the leading 0. We’ll send
-            the code to +33… using SMS.
-          </p>
-        </div>
-
-        {phoneError && (
-          <p className="mt-2 text-xs text-red-400">{phoneError}</p>
-        )}
-        {phoneMessage && (
-          <p className="mt-2 text-xs text-emerald-400">{phoneMessage}</p>
-        )}
-
-        <PrimaryButton onClick={handleSendCode} disabled={sendingCode}>
-          {sendingCode ? "Sending..." : "Send OTP"}
-        </PrimaryButton>
-      </OnboardingCard>
-    );
-  }
-
-  // step === 3 -> écran de code
   return (
     <OnboardingCard
-      step={3}
+      step={1}
       totalSteps={TOTAL_STEPS}
-      title="Enter 6-digit verification code"
-      subtitle="Please enter the 6-digit code we sent to your mobile number."
+      title="Welcome"
+      subtitle="Choose how you'd like to be addressed."
     >
-      <div className="space-y-3">
-        <label className="text-sm font-medium text-slate-200">
-          Verification code
-        </label>
-        <input
-          className="w-full h-11 rounded-xl border border-slate-700 bg-slate-900/60 px-3 text-center text-lg tracking-[0.6em] text-slate-50 placeholder:text-slate-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="······"
-          maxLength={6}
-          value={code}
-          onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-        />
-        <p className="text-xs text-slate-500">
-          Didn’t receive the code? Wait a few seconds and check your SMS, or try
-          sending it again.
-        </p>
-      </div>
+      <Input
+        label="First name"
+        placeholder="Your first name"
+        value={firstName}
+        onChange={(e) => setFirstName(e.target.value)}
+      />
+      <Input
+        label="Last name"
+        placeholder="Your last name"
+        value={lastName}
+        onChange={(e) => setLastName(e.target.value)}
+      />
+      <Input
+        label="Date of birth"
+        type="date"
+        value={dob}
+        onChange={(e) => setDob(e.target.value)}
+      />
 
-      {codeError && <p className="mt-2 text-xs text-red-400">{codeError}</p>}
+      {globalError && (
+        <p className="mt-2 text-xs text-red-400">{globalError}</p>
+      )}
 
-      <PrimaryButton onClick={handleVerifyCode} disabled={verifyingCode}>
-        {verifyingCode ? "Verifying..." : "Verify"}
-      </PrimaryButton>
-
-      <button
-        type="button"
-        className="mt-4 w-full text-center text-xs text-slate-400 hover:text-slate-300"
-        onClick={() => {
-          setCode("");
-          setStep(2);
-        }}
-      >
-        ← Change phone number
-      </button>
+      <PrimaryButton onClick={handleSaveProfile}>Continue</PrimaryButton>
     </OnboardingCard>
   );
 }
