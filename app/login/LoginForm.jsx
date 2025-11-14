@@ -1,4 +1,4 @@
-// app/login/LoginForm.jsx
+// app/login/LoginForm.jsx (ou où tu l'as déjà)
 "use client";
 
 import { useState } from "react";
@@ -6,28 +6,42 @@ import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabaseClient";
 
 /**
- * Décide vers quelle page envoyer l'utilisateur selon son étape d'onboarding.
+ * Décide vers où envoyer l'utilisateur selon sa step d'onboarding.
  *
- * Convention:
- *  - step 0 : pas encore commencé → /get-started
- *  - 1–6    : onboarding classique → /onboarding
- *  - 7      : onboarding terminé, prêt à signer → /contract-ready
- *  - 8+     : contrat en cours / signé → /contract
- *  - completed = true : onboarding totalement fini → /
+ * - 1 à 6  → /onboarding (le wizard gère les sous-étapes : profil, adresse, KYC, POA…)
+ * - 7      → /contract/ready (écran "get started / contrat prêt")
+ * - 8+     → /contract (page de signature)
+ * - completed = true → home "/"
  */
-function getDestinationForOnboarding(step, completed) {
-  const s = Number.isFinite(step) ? step : 0;
-
-  if (completed) {
-    return "/"; // plus tard: dashboard
+function getRedirectFromOnboarding(onboarding) {
+  if (!onboarding) {
+    // pas de ligne → il commence l'onboarding
+    return "/onboarding";
   }
 
-  if (s <= 0) return "/get-started";
-  if (s >= 1 && s <= 6) return "/onboarding";
-  if (s === 7) return "/contract-ready";
-  if (s >= 8) return "/contract";
+  const step = onboarding.current_step || 1;
+  const completed = !!onboarding.completed;
 
-  return "/";
+  if (completed) {
+    // tout est terminé → home
+    return "/";
+  }
+
+  // Onboarding pas terminé
+  if (step >= 1 && step <= 6) {
+    return "/onboarding";
+  }
+
+  if (step === 7) {
+    return "/contract/ready";
+  }
+
+  if (step >= 8) {
+    return "/contract";
+  }
+
+  // fallback safe
+  return "/onboarding";
 }
 
 export default function LoginForm() {
@@ -45,35 +59,33 @@ export default function LoginForm() {
     setOk("");
     setLoading(true);
 
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password: pwd,
+    });
+
+    if (error) {
+      setLoading(false);
+      if (error.message?.toLowerCase().includes("invalid")) {
+        setErr("Email ou mot de passe incorrect.");
+      } else {
+        setErr(error.message || "Impossible de se connecter.");
+      }
+      return;
+    }
+
+    // connecté ✅
+    if (!data?.user) {
+      setLoading(false);
+      setErr("Impossible de se connecter.");
+      return;
+    }
+
+    const userId = data.user.id;
+
     try {
-      // 1) Auth Supabase
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password: pwd,
-      });
-
-      if (error) {
-        if (error.message?.toLowerCase().includes("invalid")) {
-          setErr("Email ou mot de passe incorrect.");
-        } else {
-          setErr(error.message || "Impossible de se connecter.");
-        }
-        return;
-      }
-
-      if (!data?.user) {
-        setErr("Impossible de se connecter.");
-        return;
-      }
-
-      setOk("Connexion réussie.");
-      const userId = data.user.id;
-
-      // 2) Récupérer l'état d'onboarding
-      const {
-        data: onboarding,
-        error: onboardingErr,
-      } = await supabase
+      // 1) on regarde l'état d'onboarding
+      const { data: onboarding, error: onboardingErr } = await supabase
         .from("onboarding_state")
         .select("current_step, completed")
         .eq("user_id", userId)
@@ -83,15 +95,33 @@ export default function LoginForm() {
         console.error("onboarding_state error:", onboardingErr);
       }
 
-      // Si aucune ligne → on considère step 0 (get-started)
-      const step = onboarding?.current_step ?? 0;
-      const completed = onboarding?.completed ?? false;
+      // 2) si pas de ligne → on en crée une (step 1)
+      let redirectPath;
+      if (!onboarding) {
+        const { error: insertErr } = await supabase
+          .from("onboarding_state")
+          .insert({
+            user_id: userId,
+            current_step: 1,
+            completed: false,
+          });
 
-      const destination = getDestinationForOnboarding(step, completed);
-      router.push(destination);
+        if (insertErr) {
+          console.error("onboarding_state insert error:", insertErr);
+          redirectPath = "/";
+        } else {
+          redirectPath = "/onboarding";
+        }
+      } else {
+        // 3) sinon on décide la route en fonction de la step
+        redirectPath = getRedirectFromOnboarding(onboarding);
+      }
+
+      setOk("Connexion réussie.");
+      router.push(redirectPath);
     } catch (e) {
       console.error(e);
-      setErr("Erreur inattendue lors de la connexion.");
+      router.push("/");
     } finally {
       setLoading(false);
     }
