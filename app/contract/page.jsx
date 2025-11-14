@@ -1,266 +1,371 @@
-// app/api/contracts/sign/route.js
-import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { PDFDocument, StandardFonts } from "pdf-lib";
+// app/contract/page.jsx
+"use client";
 
-export const runtime = "nodejs";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "../lib/supabaseClient";
 
-export async function POST(request) {
-  const supabase = createRouteHandlerClient({ cookies });
+export default function ContractPage() {
+  const router = useRouter();
 
-  // ------------ SESSION ------------
-  const {
-    data: { session },
-    error: sessionErr,
-  } = await supabase.auth.getSession();
+  const [loading, setLoading] = useState(true);
+  const [signing, setSigning] = useState(false);
+  const [error, setError] = useState("");
+  const [ok, setOk] = useState("");
 
-  if (sessionErr) {
-    return NextResponse.json(
-      { error: sessionErr.message || "Unable to get session." },
-      { status: 500 }
+  const [profile, setProfile] = useState(null);
+  const [address, setAddress] = useState(null);
+  const [kyc, setKyc] = useState(null);
+  const [poa, setPoa] = useState(null);
+
+  // Checkbox + signature pad
+  const [hasAccepted, setHasAccepted] = useState(false);
+  const canvasRef = useRef(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [hasSignature, setHasSignature] = useState(false);
+
+  // ----------------- LOAD DATA -----------------
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      setError("");
+      setOk("");
+
+      const { data: sessionData, error: sessionErr } =
+        await supabase.auth.getSession();
+
+      if (sessionErr) {
+        console.error("session error", sessionErr);
+        setError("We couldn't verify your session. Please sign in again.");
+        setLoading(false);
+        return;
+      }
+
+      const session = sessionData?.session;
+      if (!session?.user) {
+        router.replace("/login");
+        return;
+      }
+
+      const userId = session.user.id;
+
+      const [
+        { data: profileData, error: profileErr },
+        { data: addrData, error: addrErr },
+        { data: kycData, error: kycErr },
+        { data: poaData, error: poaErr },
+      ] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("first_name, last_name, date_of_birth, phone_e164")
+          .eq("id", userId)
+          .maybeSingle(),
+        supabase
+          .from("addresses")
+          .select("address_line, city, postal_code, country")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from("kyc_identities")
+          .select("doc_type")
+          .eq("user_id", userId)
+          .maybeSingle(),
+        supabase
+          .from("proof_of_address")
+          .select("doc_type")
+          .eq("user_id", userId)
+          .maybeSingle(),
+      ]);
+
+      if (profileErr || addrErr || kycErr || poaErr) {
+        console.error("contract data errors", {
+          profileErr,
+          addrErr,
+          kycErr,
+          poaErr,
+        });
+        setError(
+          "We couldn't load the data required to generate your contract."
+        );
+        setLoading(false);
+        return;
+      }
+
+      if (!profileData || !addrData || !kycData || !poaData) {
+        console.warn("missing data", {
+          profileData,
+          addrData,
+          kycData,
+          poaData,
+        });
+        setError(
+          "We couldn't load the data required to generate your contract."
+        );
+        setLoading(false);
+        return;
+      }
+
+      setProfile(profileData);
+      setAddress(addrData);
+      setKyc(kycData);
+      setPoa(poaData);
+      setLoading(false);
+    })();
+  }, [router]);
+
+  // ----------------- SIGNATURE PAD HANDLERS -----------------
+  function getCanvasPos(event) {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+
+    const rect = canvas.getBoundingClientRect();
+    const e = event.nativeEvent;
+
+    const clientX = e.touches?.[0]?.clientX ?? e.clientX;
+    const clientY = e.touches?.[0]?.clientY ?? e.clientY;
+
+    return {
+      x: clientX - rect.left,
+      y: clientY - rect.top,
+    };
+  }
+
+  function handlePointerDown(event) {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    event.preventDefault();
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const { x, y } = getCanvasPos(event);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+
+    ctx.strokeStyle = "#0f172a"; // bleu très foncé / quasi noir
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+
+    setIsDrawing(true);
+  }
+
+  function handlePointerMove(event) {
+    if (!isDrawing) return;
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    event.preventDefault();
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const { x, y } = getCanvasPos(event);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    setHasSignature(true);
+  }
+
+  function handlePointerUp(event) {
+    if (!isDrawing) return;
+    event.preventDefault();
+    setIsDrawing(false);
+  }
+
+  function clearSignature() {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    setHasSignature(false);
+  }
+
+  // ----------------- SIGN CONTRACT -----------------
+  async function handleSign() {
+    setError("");
+    setOk("");
+    setSigning(true);
+
+    try {
+      let signatureDataUrl = null;
+      const canvas = canvasRef.current;
+      if (canvas && hasSignature) {
+        signatureDataUrl = canvas.toDataURL("image/png");
+      }
+
+      const res = await fetch("/api/contracts/sign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          signatureDataUrl,
+          acceptedTerms: hasAccepted,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        console.error("sign error", data);
+        throw new Error(data.error || "Unable to sign your contract.");
+      }
+
+      setOk("Your contract has been signed successfully.");
+      // plus tard: router.push("/exchange-setup");
+    } catch (err) {
+      setError(err.message || "Something went wrong while signing.");
+    } finally {
+      setSigning(false);
+    }
+  }
+
+  // ----------------- RENDER -----------------
+  if (loading) {
+    return (
+      <div className="mc-card">
+        <div className="mc-section text-left">
+          <h1 className="mc-title mb-2">Contract</h1>
+          <p className="text-slate-400">Loading your information…</p>
+        </div>
+      </div>
     );
   }
 
-  if (!session?.user) {
-    return NextResponse.json(
-      { error: "Not authenticated." },
-      { status: 401 }
+  if (error && !profile) {
+    return (
+      <div className="mc-card">
+        <div className="mc-section text-left">
+          <h1 className="mc-title mb-2">Contract</h1>
+          <p className="text-rose-400 text-sm">{error}</p>
+        </div>
+      </div>
     );
   }
-
-  const userId = session.user.id;
-
-  // ------------ BODY (signature) ------------
-  let body = {};
-  try {
-    body = (await request.json()) || {};
-  } catch (_e) {
-    body = {};
-  }
-
-  const { signatureDataUrl } = body;
-
-  // ------------ LOAD DATA ------------
-  const [
-    { data: profile, error: profileErr },
-    { data: address, error: addrErr },
-    { data: kyc, error: kycErr },
-    { data: poa, error: poaErr },
-  ] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("first_name, last_name, date_of_birth")
-      .eq("id", userId)
-      .maybeSingle(),
-    supabase
-      .from("addresses")
-      .select("address_line, city, postal_code, country")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    supabase.from("kyc_identities").select("doc_type").eq("user_id", userId).maybeSingle(),
-    supabase.from("proof_of_address").select("doc_type").eq("user_id", userId).maybeSingle(),
-  ]);
-
-  if (profileErr || addrErr || kycErr || poaErr) {
-    console.error("contract sign data errors", {
-      profileErr,
-      addrErr,
-      kycErr,
-      poaErr,
-    });
-    return NextResponse.json(
-      { error: "Unable to load all required data for the contract." },
-      { status: 400 }
-    );
-  }
-
-  if (!profile || !address || !kyc || !poa) {
-    return NextResponse.json(
-      { error: "Missing data required to generate the contract." },
-      { status: 400 }
-    );
-  }
-
-  // ------------ GENERATE PDF ------------
-  const pdfDoc = await PDFDocument.create();
-  const page = pdfDoc.addPage([595, 842]); // A4
-  const { height } = page.getSize();
-
-  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-
-  let y = height - 80;
 
   const fullName = `${profile.first_name || ""} ${
     profile.last_name || ""
   }`.trim();
-  const signedAt = new Date().toISOString();
 
-  page.drawText("Montelion Capital", {
-    x: 60,
-    y,
-    size: 16,
-    font: fontBold,
-  });
-  y -= 28;
-  page.drawText("Discretionary Management Agreement (summary)", {
-    x: 60,
-    y,
-    size: 13,
-    font: fontBold,
-  });
+  const signDisabled = signing || !hasAccepted || !hasSignature;
 
-  y -= 40;
-  page.drawText(`Client: ${fullName}`, {
-    x: 60,
-    y,
-    size: 11,
-    font,
-  });
-  y -= 18;
-  page.drawText(`Date of birth: ${profile.date_of_birth}`, {
-    x: 60,
-    y,
-    size: 11,
-    font,
-  });
-  y -= 18;
-  page.drawText(
-    `Address: ${address.address_line}, ${address.postal_code} ${address.city}, ${address.country}`,
-    {
-      x: 60,
-      y,
-      size: 11,
-      font,
-    }
+  return (
+    <div className="mc-card">
+      <div className="mc-section text-left max-w-2xl mx-auto">
+        <h1 className="mc-title mb-3">Contract</h1>
+        <p className="text-slate-400 mb-6">
+          Please review the summary of your information below, then sign the
+          discretionary management agreement.
+        </p>
+
+        {ok && (
+          <div className="mb-4 text-sm text-emerald-400 bg-emerald-950/40 border border-emerald-900/40 px-3 py-2 rounded-lg">
+            {ok}
+          </div>
+        )}
+        {error && profile && (
+          <div className="mb-4 text-sm text-rose-400 bg-rose-950/40 border border-rose-900/40 px-3 py-2 rounded-lg">
+            {error}
+          </div>
+        )}
+
+        {/* Résumé client */}
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/40 px-5 py-4 mb-6 space-y-2 text-sm text-slate-200">
+          <div className="font-semibold text-slate-50">Client details</div>
+          <div>
+            <span className="text-slate-500 mr-2">Name:</span>
+            {fullName}
+          </div>
+          <div>
+            <span className="text-slate-500 mr-2">Date of birth:</span>
+            {profile.date_of_birth}
+          </div>
+          <div>
+            <span className="text-slate-500 mr-2">Address:</span>
+            {address.address_line}, {address.postal_code} {address.city},{" "}
+            {address.country}
+          </div>
+        </div>
+
+        {/* Texte contrat factice */}
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 px-5 py-4 mb-6 text-sm text-slate-300 space-y-3">
+          <p className="font-semibold text-slate-100">
+            Discretionary Management Agreement (summary)
+          </p>
+          <p className="text-slate-400 text-xs leading-relaxed">
+            By signing this agreement, you authorise Montelion Capital to manage
+            your exchange account on a discretionary basis, within the
+            investment mandate and risk limits defined in the full contract. You
+            retain full custody of your assets at all times and can revoke API
+            access whenever you wish.
+          </p>
+          <p className="text-slate-500 text-xs">
+            The full legal text will be generated as a PDF and stored securely
+            once you sign. You will be able to download a copy for your records.
+          </p>
+        </div>
+
+        {/* Checkbox acceptation */}
+        <label className="flex items-start gap-3 mb-4 text-xs text-slate-300 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            className="mt-[2px] h-4 w-4 rounded border-slate-600 bg-slate-900 text-blue-500 focus:ring-0"
+            checked={hasAccepted}
+            onChange={(e) => setHasAccepted(e.target.checked)}
+          />
+          <span>
+            I confirm that I have read and accept the terms of the discretionary
+            management agreement and the related risk disclosures.
+          </span>
+        </label>
+
+        {/* Signature pad */}
+        <div className="mb-5">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-slate-300 font-medium">
+              Draw your signature
+            </span>
+            <button
+              type="button"
+              onClick={clearSignature}
+              className="text-[11px] text-slate-400 hover:text-slate-200 transition"
+            >
+              Clear
+            </button>
+          </div>
+          <div className="rounded-xl border border-slate-700 bg-slate-950/80 px-3 py-3">
+            <canvas
+              ref={canvasRef}
+              width={640}
+              height={160}
+              className="w-full h-40 bg-slate-50 rounded-lg cursor-crosshair"
+              onMouseDown={handlePointerDown}
+              onMouseMove={handlePointerMove}
+              onMouseUp={handlePointerUp}
+              onMouseLeave={handlePointerUp}
+              onTouchStart={handlePointerDown}
+              onTouchMove={handlePointerMove}
+              onTouchEnd={handlePointerUp}
+            />
+            <p className="mt-2 text-[11px] text-slate-500">
+              Sign here using your mouse or your finger (on mobile).
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleSign}
+          disabled={signDisabled}
+          className={`mc-btn mc-btn-primary ${
+            signDisabled ? "opacity-60 cursor-not-allowed" : ""
+          }`}
+        >
+          {signing ? "Signing…" : "Sign contract"}
+        </button>
+      </div>
+    </div>
   );
-
-  y -= 40;
-  page.drawText(
-    "By signing this agreement, the Client authorises Montelion Capital to",
-    {
-      x: 60,
-      y,
-      size: 10,
-      font,
-    }
-  );
-  y -= 14;
-  page.drawText(
-    "manage the Client's exchange account on a discretionary basis, within the",
-    { x: 60, y, size: 10, font }
-  );
-  y -= 14;
-  page.drawText(
-    "limits and risk parameters defined in the full mandate and fee schedule.",
-    { x: 60, y, size: 10, font }
-  );
-
-  // Zone de signature en bas de page
-  const signatureBlockY = 140;
-
-  page.drawText(`Signed electronically on: ${signedAt.slice(0, 10)}`, {
-    x: 60,
-    y: signatureBlockY + 50,
-    size: 10,
-    font,
-  });
-  page.drawText(`Client: ${fullName}`, {
-    x: 60,
-    y: signatureBlockY + 35,
-    size: 10,
-    font,
-  });
-
-  // Cadre de signature
-  page.drawRectangle({
-    x: 60,
-    y: signatureBlockY,
-    width: 200,
-    height: 50,
-    borderColor: undefined,
-    borderWidth: 0.5,
-  });
-
-  // Intégrer l'image de signature si fournie
-  if (signatureDataUrl && signatureDataUrl.startsWith("data:image")) {
-    try {
-      const base64 = signatureDataUrl.split(",")[1];
-      const signatureBytes = Buffer.from(base64, "base64");
-      const signaturePng = await pdfDoc.embedPng(signatureBytes);
-
-      const sigWidth = 180;
-      const sigHeight =
-        (signaturePng.height / signaturePng.width) * sigWidth;
-
-      page.drawImage(signaturePng, {
-        x: 70,
-        y: signatureBlockY + 5,
-        width: sigWidth,
-        height: Math.min(sigHeight, 40),
-      });
-    } catch (e) {
-      console.error("Error embedding signature image", e);
-    }
-  }
-
-  const pdfBytes = await pdfDoc.save();
-  const pdfUint8 = new Uint8Array(pdfBytes);
-
-  // ------------ UPLOAD TO STORAGE ------------
-  const fileName = `contract-${userId}-${Date.now()}.pdf`;
-  const { data: uploadData, error: uploadErr } = await supabase.storage
-    .from("contracts")
-    .upload(fileName, pdfUint8, {
-      contentType: "application/pdf",
-      upsert: false,
-    });
-
-  if (uploadErr) {
-    console.error("upload error", uploadErr);
-    return NextResponse.json(
-      { error: "Failed to upload contract PDF." },
-      { status: 500 }
-    );
-  }
-
-  const pdfPath = uploadData?.path || fileName;
-
-  // ------------ UPSERT CONTRACT ROW ------------
-  const { data: contractRow, error: upsertErr } = await supabase
-    .from("contracts")
-    .upsert(
-      {
-        user_id: userId,
-        status: "signed",
-        pdf_url: pdfPath,
-        signed_at: signedAt,
-      },
-      { onConflict: "user_id" }
-    )
-    .select()
-    .maybeSingle();
-
-  if (upsertErr) {
-    console.error("contracts upsert error", upsertErr);
-    return NextResponse.json(
-      { error: "Failed to save contract in database." },
-      { status: 500 }
-    );
-  }
-
-  // ------------ UPDATE ONBOARDING STATE ------------
-  await supabase.from("onboarding_state").upsert(
-    {
-      user_id: userId,
-      current_step: 7,
-      completed: true,
-    },
-    { onConflict: "user_id" }
-  );
-
-  return NextResponse.json({ ok: true, contract: contractRow });
 }
