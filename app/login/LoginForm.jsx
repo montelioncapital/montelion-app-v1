@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "../lib/supabaseClient";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 export default function LoginForm() {
   const router = useRouter();
+  const supabase = createClientComponentClient();
+
   const [show, setShow] = useState(false);
   const [email, setEmail] = useState("");
   const [pwd, setPwd] = useState("");
@@ -19,75 +21,84 @@ export default function LoginForm() {
     setOk("");
     setLoading(true);
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password: pwd,
-    });
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password: pwd,
+      });
 
-    if (error) {
-      setLoading(false);
-      if (error.message?.toLowerCase().includes("invalid")) {
-        setErr("Email ou mot de passe incorrect.");
-      } else {
-        setErr(error.message || "Impossible de se connecter.");
+      if (error) {
+        if (error.message?.toLowerCase().includes("invalid")) {
+          setErr("Email ou mot de passe incorrect.");
+        } else {
+          setErr(error.message || "Impossible de se connecter.");
+        }
+        return;
       }
-      return;
-    }
 
-    // connecté ✅
-    if (data?.user) {
+      // connecté ✅
+      const user = data?.user;
+      if (!user) {
+        setErr("Impossible de récupérer votre session.");
+        return;
+      }
+
       setOk("Connexion réussie.");
+      const userId = user.id;
 
-      const userId = data.user.id;
+      // Récupère l'état d'onboarding
+      const { data: onboarding, error: onboardingErr } = await supabase
+        .from("onboarding_state")
+        .select("current_step, completed")
+        .eq("user_id", userId)
+        .maybeSingle();
 
-      try {
-        // 1) On regarde l'état d'onboarding pour cet utilisateur
-        const { data: onboarding, error: onboardingErr } = await supabase
-          .from("onboarding_state")
-          .select("current_step, completed")
-          .eq("user_id", userId)
-          .maybeSingle();
-
-        if (onboardingErr && onboardingErr.code !== "PGRST116") {
-          console.error("onboarding_state error:", onboardingErr);
-        }
-
-        // 2) Si pas de ligne → on en crée une (step 1)
-        if (!onboarding) {
-          const { error: insertErr } = await supabase
-            .from("onboarding_state")
-            .insert({
-              user_id: userId,
-              current_step: 1,
-              completed: false,
-            });
-
-          if (insertErr) {
-            console.error("onboarding_state insert error:", insertErr);
-            // on ne bloque pas la connexion, on envoie juste sur la home
-            router.push("/");
-            return;
-          }
-
-          router.push("/onboarding");
-          return;
-        }
-
-        // 3) Si onboarding non terminé → on renvoie sur /onboarding
-        if (!onboarding.completed) {
-          router.push("/onboarding");
-          return;
-        }
-
-        // 4) Sinon onboarding terminé → home
-        router.push("/");
-      } catch (e) {
-        console.error(e);
-        router.push("/"); // fallback
-      } finally {
-        setLoading(false);
+      if (onboardingErr && onboardingErr.code !== "PGRST116") {
+        console.error("onboarding_state error:", onboardingErr);
       }
-    } else {
+
+      // Cas où aucune ligne n'existe (sécurité, normalement ton trigger en crée une)
+      if (!onboarding) {
+        const { error: insertErr } = await supabase
+          .from("onboarding_state")
+          .insert({
+            user_id: userId,
+            current_step: 0, // on commence par get-started
+            completed: false,
+          });
+
+        if (insertErr) {
+          console.error("onboarding_state insert error:", insertErr);
+          router.push("/");
+          return;
+        }
+
+        router.push("/get-started");
+        return;
+      }
+
+      // Onboarding non terminé → on redirige selon current_step
+      if (!onboarding.completed) {
+        const step = onboarding.current_step ?? 0;
+
+        if (step === 0) {
+          router.push("/get-started");
+        } else if (step >= 7) {
+          // Étape contrat
+          router.push("/contract");
+        } else {
+          // Étapes profil / téléphone / adresse / KYC / proof of address
+          router.push("/onboarding");
+        }
+        return;
+      }
+
+      // Onboarding terminé → page d'accueil (ou dashboard plus tard)
+      router.push("/");
+    } catch (e) {
+      console.error(e);
+      setErr("Une erreur est survenue lors de la connexion.");
+    } finally {
       setLoading(false);
     }
   }
@@ -100,10 +111,16 @@ export default function LoginForm() {
       </div>
 
       {/* Messages */}
-      {err ? <div className="mb-4 text-sm text-red-400">{err}</div> : null}
-      {ok ? (
-        <div className="mb-4 text-sm text-emerald-400">{ok}</div>
-      ) : null}
+      {err && (
+        <div className="mb-4 text-sm text-rose-400 bg-rose-950/40 border border-rose-900/40 px-3 py-2 rounded-lg">
+          {err}
+        </div>
+      )}
+      {ok && (
+        <div className="mb-4 text-sm text-emerald-400 bg-emerald-950/40 border border-emerald-900/40 px-3 py-2 rounded-lg">
+          {ok}
+        </div>
+      )}
 
       {/* Formulaire */}
       <form className="space-y-4" onSubmit={onSubmit}>
