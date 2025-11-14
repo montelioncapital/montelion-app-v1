@@ -518,7 +518,8 @@ export default function OnboardingClient() {
       // On passe à l'étape "contrat" et on redirige vers /contract
       await updateOnboardingStep(7, false);
       setOk("Your proof of address has been submitted.");
-      router.push("/contract");
+      router.push("/contract/ready");
+      
     } catch (err) {
       setError(
         err.message ||
