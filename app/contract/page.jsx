@@ -214,17 +214,6 @@ export default function ContractPage() {
           <p className="font-semibold text-slate-100">
             Discretionary Management Agreement (summary)
           </p>
-          <p className="text-slate-400 text-xs leading-relaxed">
-            By signing this agreement, you authorise Montelion Capital to manage
-            your exchange account on a discretionary basis, within the
-            investment mandate and risk limits defined in the full contract. You
-            retain full custody of your assets at all times and can revoke API
-            access whenever you wish.
-          </p>
-          <p className="text-slate-500 text-xs">
-            The full legal text will be generated as a PDF and stored securely
-            once you sign. You will be able to download a copy for your records.
-          </p>
           <p className="text-slate-500 text-xs mt-1">
             You can read the full management mandate{" "}
             <a
@@ -236,6 +225,17 @@ export default function ContractPage() {
               here (PDF)
             </a>
             .
+          </p>
+          <p className="text-slate-400 text-xs leading-relaxed">
+            By signing this agreement, you authorise Montelion Capital to manage
+            your exchange account on a discretionary basis, within the
+            investment mandate and risk limits defined in the full contract. You
+            retain full custody of your assets at all times and can revoke API
+            access whenever you wish.
+          </p>
+          <p className="text-slate-500 text-xs">
+            The full legal text will be generated as a PDF and stored securely
+            once you sign. You will be able to download a copy for your records.
           </p>
         </div>
 
