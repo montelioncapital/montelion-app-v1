@@ -5,7 +5,6 @@ import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import fs from "node:fs/promises";
 import path from "node:path";
 
-// On réutilise les mêmes env que côté client (anon key)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -40,18 +39,24 @@ export async function POST(req) {
       );
     }
 
-    // 3) Client Supabase côté serveur (sans persistance)
+    // 3) Client Supabase avec le token dans les headers (IMPORTANT pour RLS)
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         persistSession: false,
         autoRefreshToken: false,
       },
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
     });
 
+    // On récupère l'utilisateur à partir du token (utilise le header Authorization)
     const {
       data: { user },
       error: userError,
-    } = await supabase.auth.getUser(token);
+    } = await supabase.auth.getUser();
 
     if (userError || !user) {
       console.error("auth error", userError);
@@ -63,7 +68,7 @@ export async function POST(req) {
 
     const userId = user.id;
 
-    // 4) Charger les infos pour le PDF
+    // 4) Charger les infos pour le PDF (maintenant sous le bon user RLS)
     const [{ data: profile }, { data: address }] = await Promise.all([
       supabase
         .from("profiles")
@@ -80,6 +85,7 @@ export async function POST(req) {
     ]);
 
     if (!profile || !address) {
+      console.error("profile or address missing:", { profile, address });
       return NextResponse.json(
         { error: "Missing profile or address data." },
         { status: 400 }
@@ -174,7 +180,7 @@ export async function POST(req) {
 
     const publicUrl = publicUrlData?.publicUrl || null;
 
-    // 7) Enregistrer la ligne dans la table contracts
+    // 7) Enregistrer dans la table contracts
     const { error: insertError } = await supabase.from("contracts").insert({
       user_id: userId,
       status: "signed",
@@ -184,7 +190,6 @@ export async function POST(req) {
 
     if (insertError) {
       console.error("contracts insert error:", insertError);
-      // on ne bloque pas la réponse pour autant
     }
 
     // 8) Réponse OK
