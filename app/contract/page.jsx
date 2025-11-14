@@ -118,15 +118,13 @@ export default function ContractPage() {
     setSigning(true);
 
     try {
-      // Récupérer la session courante pour avoir le access_token
+      // récupérer la session courante pour avoir le access_token
       const { data: sessionData, error: sessionErr } =
         await supabase.auth.getSession();
 
       if (sessionErr || !sessionData?.session) {
         console.error("session error in handleSign", sessionErr);
-        setError("Not authenticated.");
-        setSigning(false);
-        return;
+        throw new Error("Not authenticated.");
       }
 
       const accessToken = sessionData.session.access_token;
@@ -149,8 +147,12 @@ export default function ContractPage() {
         throw new Error(data.error || "Unable to sign your contract.");
       }
 
-      router.push(`/contract/signed?file=${encodeURIComponent(data.pdfUrl)}`);
-      // si tu veux : router.push("/contract/signed") plus tard
+      // on redirige vers la page de confirmation avec le lien du PDF
+      if (data.pdfUrl) {
+        router.push(`/contract/signed?file=${encodeURIComponent(data.pdfUrl)}`);
+      } else {
+        router.push("/contract/signed");
+      }
     } catch (err) {
       setError(err.message || "Something went wrong while signing.");
     } finally {
@@ -202,8 +204,8 @@ export default function ContractPage() {
           </div>
         )}
 
-        {/* On affiche maintenant TOUTES les erreurs, même "Not authenticated." */}
-        {error && profile && (
+        {/* On n'affiche pas "Not authenticated." dans la bannière */}
+        {error && profile && error !== "Not authenticated." && (
           <div className="mb-4 text-sm text-rose-400 bg-rose-950/40 border border-rose-900/40 px-3 py-2 rounded-lg">
             {error}
           </div>
