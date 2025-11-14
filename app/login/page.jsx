@@ -1,17 +1,13 @@
-// app/login/page.jsx
+export const metadata = { title: "Sign in • Montelion Capital" };
 
 import LoginForm from "./LoginForm";
 
-export const metadata = {
-  title: "Sign in | Montelion Capital",
-};
-
-export default function LoginPage() {
+export default function Page() {
   return (
-    <main className="min-h-screen bg-slate-950 flex items-center justify-center">
-      <div className="w-full max-w-md px-6">
+    <div className="mc-card">
+      <div className="mc-section">
         <LoginForm />
       </div>
-    </main>
+    </div>
   );
 }
