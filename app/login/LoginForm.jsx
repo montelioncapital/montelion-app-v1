@@ -4,26 +4,21 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabaseClient";
 
-// --------------------------------------
-// Helper de redirection
-// --------------------------------------
+// Helper pour savoir où envoyer l'utilisateur selon l'onboarding
 function getRedirectForStep(step, completed) {
   if (!step || step <= 0) return "/get-started";
 
   if (!completed) {
     if (step >= 1 && step <= 5) return "/onboarding";
-    if (step === 6) return "/onboarding";        // Proof of address est dans onboarding
-    if (step === 7) return "/contract/ready";    // Bridge avant signature
-    if (step === 8) return "/contract";          // Page de signature
+    if (step === 6) return "/onboarding";       // proof of address est dans l'onboarding
+    if (step === 7) return "/contract/ready";   // page "bridge"
+    if (step === 8) return "/contract";         // page de signature
   }
 
-  // Si terminé ou step inconnu → dashboard/home
+  // si tout est terminé ou step inconnu → dashboard / home
   return "/";
 }
 
-// --------------------------------------
-// Component LoginForm
-// --------------------------------------
 export default function LoginForm() {
   const router = useRouter();
   const [show, setShow] = useState(false);
@@ -54,66 +49,63 @@ export default function LoginForm() {
       return;
     }
 
-    if (!data?.user) {
-      setLoading(false);
-      setErr("Impossible de récupérer l'utilisateur.");
-      return;
-    }
+    // connecté ✅
+    if (data?.user) {
+      setOk("Connexion réussie.");
 
-    setOk("Connexion réussie.");
-
-    try {
       const userId = data.user.id;
 
-      // On récupère l'état onboarding
-      const { data: onboarding, error: onboardingErr } = await supabase
-        .from("onboarding_state")
-        .select("current_step, completed")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (onboardingErr && onboardingErr.code !== "PGRST116") {
-        console.error("onboarding_state error:", onboardingErr);
-      }
-
-      // Pas de ligne → création step 1
-      if (!onboarding) {
-        const { error: insertErr } = await supabase
+      try {
+        // 1) On regarde l'état d'onboarding pour cet utilisateur
+        const { data: onboarding, error: onboardingErr } = await supabase
           .from("onboarding_state")
-          .insert({
-            user_id: userId,
-            current_step: 1,
-            completed: false,
-          });
+          .select("current_step, completed")
+          .eq("user_id", userId)
+          .maybeSingle();
 
-        if (insertErr) {
-          console.error("onboarding_state insert error:", insertErr);
-          router.push("/");
+        if (onboardingErr && onboardingErr.code !== "PGRST116") {
+          console.error("onboarding_state error:", onboardingErr);
+        }
+
+        // 2) Si pas de ligne → on en crée une (step 1) et on envoie vers /onboarding
+        if (!onboarding) {
+          const { error: insertErr } = await supabase
+            .from("onboarding_state")
+            .insert({
+              user_id: userId,
+              current_step: 1,
+              completed: false,
+            });
+
+          if (insertErr) {
+            console.error("onboarding_state insert error:", insertErr);
+            // on ne bloque pas la connexion, on envoie juste sur la home
+            router.push("/");
+            return;
+          }
+
+          router.push("/onboarding");
           return;
         }
 
-        router.push("/onboarding");
-        return;
+        // 3) Sinon, on calcule la bonne route en fonction du step + completed
+        const redirectTo = getRedirectForStep(
+          onboarding.current_step,
+          onboarding.completed
+        );
+
+        router.push(redirectTo);
+      } catch (e) {
+        console.error(e);
+        router.push("/"); // fallback
+      } finally {
+        setLoading(false);
       }
-
-      // On calcule la route correcte
-      const redirectTo = getRedirectForStep(
-        onboarding.current_step,
-        onboarding.completed
-      );
-
-      router.push(redirectTo);
-    } catch (e) {
-      console.error(e);
-      router.push("/");
-    } finally {
+    } else {
       setLoading(false);
     }
   }
 
-  // --------------------------------------
-  // UI (IDENTIQUE À TON DESIGN)
-  // --------------------------------------
   return (
     <>
       {/* Titre */}
