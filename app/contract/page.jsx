@@ -128,13 +128,6 @@ export default function ContractPage() {
 
       const data = await res.json().catch(() => ({}));
 
-      // Si jamais le serveur renvoie un 401, on renvoie vers /login
-      if (res.status === 401) {
-        console.error("sign 401 error", data);
-        router.replace("/login");
-        return;
-      }
-
       if (!res.ok) {
         console.error("sign error", data);
         throw new Error(data.error || "Unable to sign your contract.");
@@ -192,7 +185,7 @@ export default function ContractPage() {
             {ok}
           </div>
         )}
-        {/* On n’affiche PAS l’alerte si le message est exactement "Not authenticated." */}
+        {/* On n’affiche pas "Not authenticated." dans la bannière */}
         {error && profile && error !== "Not authenticated." && (
           <div className="mb-4 text-sm text-rose-400 bg-rose-950/40 border border-rose-900/40 px-3 py-2 rounded-lg">
             {error}
