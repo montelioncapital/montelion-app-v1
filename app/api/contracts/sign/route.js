@@ -1,22 +1,14 @@
 // app/api/contracts/sign/route.js
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { cookies } from "next/headers";
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import fs from "node:fs/promises";
 import path from "node:path";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY"
-  );
-}
-
 export async function POST(req) {
   try {
-    // 1) Body
+    // 1) Lire le body
     const { acceptedTerms } = await req.json().catch(() => ({}));
 
     if (!acceptedTerms) {
@@ -26,33 +18,9 @@ export async function POST(req) {
       );
     }
 
-    // 2) Récupérer le token envoyé par le client
-    const authHeader = req.headers.get("authorization") || "";
-    const token = authHeader.startsWith("Bearer ")
-      ? authHeader.slice(7)
-      : authHeader.split(" ")[1];
+    // 2) Récupérer l'utilisateur Supabase à partir des cookies
+    const supabase = createRouteHandlerClient({ cookies });
 
-    if (!token) {
-      return NextResponse.json(
-        { error: "Not authenticated." },
-        { status: 401 }
-      );
-    }
-
-    // 3) Client Supabase avec le token dans les headers (IMPORTANT pour RLS)
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-      },
-      global: {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    });
-
-    // On récupère l'utilisateur à partir du token (utilise le header Authorization)
     const {
       data: { user },
       error: userError,
@@ -68,7 +36,7 @@ export async function POST(req) {
 
     const userId = user.id;
 
-    // 4) Charger les infos pour le PDF (maintenant sous le bon user RLS)
+    // 3) Charger les infos pour le PDF
     const [{ data: profile }, { data: address }] = await Promise.all([
       supabase
         .from("profiles")
@@ -85,7 +53,6 @@ export async function POST(req) {
     ]);
 
     if (!profile || !address) {
-      console.error("profile or address missing:", { profile, address });
       return NextResponse.json(
         { error: "Missing profile or address data." },
         { status: 400 }
@@ -97,7 +64,7 @@ export async function POST(req) {
     }`.trim();
     const lastName = profile.last_name || "";
 
-    // 5) Charger le template PDF depuis /public/legal
+    // 4) Charger le template PDF public/legal/montelion-discretionary-mandate.pdf
     const templatePath = path.join(
       process.cwd(),
       "public",
@@ -116,7 +83,7 @@ export async function POST(req) {
     const dd = String(now.getDate()).padStart(2, "0");
     const dateStr = `${yyyy}-${mm}-${dd}`;
 
-    // Infos dans le PDF
+    // 5) Écrire quelques infos dans le PDF
     page.drawText(`Client: ${fullName}`, {
       x: 72,
       y: 700,
@@ -155,32 +122,32 @@ export async function POST(req) {
 
     const pdfBytes = await pdfDoc.save();
 
-    // 6) Upload dans le bucket Storage "contracts"
+    // 6) Sauvegarder le PDF dans le bucket Supabase Storage "contracts"
     const fileName = `contract-${userId}-${Date.now()}.pdf`;
-    const storagePath = `${userId}/${fileName}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from("contracts")
-      .upload(storagePath, pdfBytes, {
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from("contracts") // 👈 nom du bucket
+      .upload(`${userId}/${fileName}`, pdfBytes, {
         contentType: "application/pdf",
         upsert: false,
       });
 
-    if (uploadError) {
+    if (uploadError || !uploadData) {
       console.error("storage upload error:", uploadError);
       return NextResponse.json(
-        { error: "Failed to upload contract PDF." },
+        { error: "Unable to store signed contract." },
         { status: 500 }
       );
     }
 
-    const { data: publicUrlData } = supabase.storage
+    // URL publique (ou signée) du fichier
+    const {
+      data: { publicUrl },
+    } = supabase.storage
       .from("contracts")
-      .getPublicUrl(storagePath);
+      .getPublicUrl(uploadData.path, { download: true });
 
-    const publicUrl = publicUrlData?.publicUrl || null;
-
-    // 7) Enregistrer dans la table contracts
+    // Enregistrer dans la table contracts
     const { error: insertError } = await supabase.from("contracts").insert({
       user_id: userId,
       status: "signed",
@@ -190,9 +157,28 @@ export async function POST(req) {
 
     if (insertError) {
       console.error("contracts insert error:", insertError);
+      // on ne bloque pas pour autant
     }
 
-    // 8) Réponse OK
+    // 7) Mettre l’onboarding à l’étape 9
+    // ⚠️ adapte le nom de la table / colonne si besoin
+    const { error: onboardingError } = await supabase
+      .from("onboarding_state")
+      .upsert(
+        {
+          user_id: userId,
+          current_step: 9,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id" }
+      );
+
+    if (onboardingError) {
+      console.error("onboarding update error:", onboardingError);
+      // pareil, on ne bloque pas la réponse
+    }
+
+    // 8) OK → renvoyer l’URL du PDF
     return NextResponse.json({ ok: true, pdfUrl: publicUrl });
   } catch (err) {
     console.error("/api/contracts/sign error:", err);
