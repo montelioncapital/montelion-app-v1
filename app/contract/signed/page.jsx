@@ -1,29 +1,31 @@
+// app/contract/signed/page.jsx
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
-export default function ContractSignedPage() {
+function SignedContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  // URL du PDF depuis ?file=...
+  // URL du PDF dans ?file=...
   const fileUrl = searchParams.get("file");
 
   return (
     <div className="mc-card">
       <div className="mc-section text-left max-w-xl mx-auto">
-
         <h1 className="mc-title mb-3">Contract signed</h1>
 
         <p className="text-slate-400 mb-4">
-          Thank you for your trust. Your management mandate has been signed successfully.
+          Thank you for your trust. Your management mandate has been signed
+          successfully.
         </p>
 
         <div className="rounded-xl border border-slate-800 bg-slate-900/40 px-4 py-3 mb-6 text-sm text-slate-300">
           Your signed contract is now securely stored.
         </div>
 
-        {/* --- Bouton Download --- */}
+        {/* Bouton download "non bleu" */}
         {fileUrl && (
           <a
             href={fileUrl}
@@ -35,7 +37,6 @@ export default function ContractSignedPage() {
           </a>
         )}
 
-        {/* --- Bouton Continue --- */}
         <button
           onClick={() => router.push("/get-started")}
           className="mc-btn mc-btn-primary w-full"
@@ -44,5 +45,22 @@ export default function ContractSignedPage() {
         </button>
       </div>
     </div>
+  );
+}
+
+export default function ContractSignedPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="mc-card">
+          <div className="mc-section text-left max-w-xl mx-auto">
+            <h1 className="mc-title mb-3">Contract signed</h1>
+            <p className="text-slate-400">Loading your contract…</p>
+          </div>
+        </div>
+      }
+    >
+      <SignedContent />
+    </Suspense>
   );
 }
