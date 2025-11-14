@@ -1,13 +1,12 @@
+// app/login/LoginForm.jsx (ou l’endroit où il est défini)
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { supabase } from "../lib/supabaseClient";
 
 export default function LoginForm() {
   const router = useRouter();
-  const supabase = createClientComponentClient();
-
   const [show, setShow] = useState(false);
   const [email, setEmail] = useState("");
   const [pwd, setPwd] = useState("");
@@ -21,84 +20,81 @@ export default function LoginForm() {
     setOk("");
     setLoading(true);
 
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password: pwd,
-      });
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password: pwd,
+    });
 
-      if (error) {
-        if (error.message?.toLowerCase().includes("invalid")) {
-          setErr("Email ou mot de passe incorrect.");
-        } else {
-          setErr(error.message || "Impossible de se connecter.");
-        }
-        return;
+    if (error) {
+      setLoading(false);
+      if (error.message?.toLowerCase().includes("invalid")) {
+        setErr("Email ou mot de passe incorrect.");
+      } else {
+        setErr(error.message || "Impossible de se connecter.");
       }
+      return;
+    }
 
-      // connecté ✅
-      const user = data?.user;
-      if (!user) {
-        setErr("Impossible de récupérer votre session.");
-        return;
-      }
-
+    if (data?.user) {
       setOk("Connexion réussie.");
-      const userId = user.id;
+      const userId = data.user.id;
 
-      // Récupère l'état d'onboarding
-      const { data: onboarding, error: onboardingErr } = await supabase
-        .from("onboarding_state")
-        .select("current_step, completed")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (onboardingErr && onboardingErr.code !== "PGRST116") {
-        console.error("onboarding_state error:", onboardingErr);
-      }
-
-      // Cas où aucune ligne n'existe (sécurité, normalement ton trigger en crée une)
-      if (!onboarding) {
-        const { error: insertErr } = await supabase
+      try {
+        // 1) Récupérer l'état d'onboarding
+        const { data: onboarding, error: onboardingErr } = await supabase
           .from("onboarding_state")
-          .insert({
-            user_id: userId,
-            current_step: 0, // on commence par get-started
-            completed: false,
-          });
+          .select("current_step, completed")
+          .eq("user_id", userId)
+          .maybeSingle();
 
-        if (insertErr) {
-          console.error("onboarding_state insert error:", insertErr);
-          router.push("/");
+        if (onboardingErr && onboardingErr.code !== "PGRST116") {
+          console.error("onboarding_state error:", onboardingErr);
+        }
+
+        // 2) Si aucune ligne → en créer une en step 1
+        if (!onboarding) {
+          const { error: insertErr } = await supabase
+            .from("onboarding_state")
+            .insert({
+              user_id: userId,
+              current_step: 1,
+              completed: false,
+            });
+
+          if (insertErr) {
+            console.error("onboarding_state insert error:", insertErr);
+            router.push("/");
+            return;
+          }
+
+          router.push("/onboarding");
           return;
         }
 
-        router.push("/get-started");
-        return;
-      }
+        const currentStep = onboarding.current_step ?? 1;
+        const completed = !!onboarding.completed;
 
-      // Onboarding non terminé → on redirige selon current_step
-      if (!onboarding.completed) {
-        const step = onboarding.current_step ?? 0;
-
-        if (step === 0) {
-          router.push("/get-started");
-        } else if (step >= 7) {
-          // Étape contrat
-          router.push("/contract");
-        } else {
-          // Étapes profil / téléphone / adresse / KYC / proof of address
-          router.push("/onboarding");
+        // 3) Si onboarding PAS terminé → route selon la step
+        if (!completed) {
+          if (currentStep >= 7) {
+            // 👉 Étape contrat
+            router.push("/onboarding/contract-ready");
+          } else {
+            // 👉 Étapes 1 à 6 : flow classique
+            router.push("/onboarding");
+          }
+          return;
         }
-        return;
-      }
 
-      // Onboarding terminé → page d'accueil (ou dashboard plus tard)
-      router.push("/");
-    } catch (e) {
-      console.error(e);
-      setErr("Une erreur est survenue lors de la connexion.");
-    } finally {
+        // 4) Onboarding terminé (ex. step 8+) → home (ou dashboard plus tard)
+        router.push("/");
+      } catch (e) {
+        console.error(e);
+        router.push("/");
+      } finally {
+        setLoading(false);
+      }
+    } else {
       setLoading(false);
     }
   }
@@ -111,16 +107,10 @@ export default function LoginForm() {
       </div>
 
       {/* Messages */}
-      {err && (
-        <div className="mb-4 text-sm text-rose-400 bg-rose-950/40 border border-rose-900/40 px-3 py-2 rounded-lg">
-          {err}
-        </div>
-      )}
-      {ok && (
-        <div className="mb-4 text-sm text-emerald-400 bg-emerald-950/40 border border-emerald-900/40 px-3 py-2 rounded-lg">
-          {ok}
-        </div>
-      )}
+      {err ? <div className="mb-4 text-sm text-red-400">{err}</div> : null}
+      {ok ? (
+        <div className="mb-4 text-sm text-emerald-400">{ok}</div>
+      ) : null}
 
       {/* Formulaire */}
       <form className="space-y-4" onSubmit={onSubmit}>
@@ -149,7 +139,6 @@ export default function LoginForm() {
             </a>
           </div>
 
-          {/* Champ mot de passe + œil */}
           <div className="relative mt-2">
             <input
               type={show ? "text" : "password"}
@@ -168,7 +157,6 @@ export default function LoginForm() {
               aria-label={show ? "Hide password" : "Show password"}
             >
               {show ? (
-                // eye-off
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                   <path
                     d="M3 3l18 18"
@@ -185,7 +173,6 @@ export default function LoginForm() {
                   />
                 </svg>
               ) : (
-                // eye
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                   <path
                     d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"
