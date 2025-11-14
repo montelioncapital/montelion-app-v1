@@ -1,4 +1,4 @@
-// app/login/LoginForm.jsx (ou l’endroit où il est défini)
+// app/login/LoginForm.jsx (ou équivalent)
 "use client";
 
 import { useState } from "react";
@@ -35,84 +35,105 @@ export default function LoginForm() {
       return;
     }
 
-    if (data?.user) {
-      setOk("Connexion réussie.");
-      const userId = data.user.id;
+    if (!data?.user) {
+      setLoading(false);
+      setErr("Impossible de récupérer l'utilisateur.");
+      return;
+    }
 
-      try {
-        // 1) Récupérer l'état d'onboarding
-        const { data: onboarding, error: onboardingErr } = await supabase
+    setOk("Connexion réussie.");
+    const userId = data.user.id;
+
+    try {
+      // 1) On récupère l'état d'onboarding
+      const { data: onboarding, error: onboardingErr } = await supabase
+        .from("onboarding_state")
+        .select("current_step, completed")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (onboardingErr && onboardingErr.code !== "PGRST116") {
+        console.error("onboarding_state select error:", onboardingErr);
+      }
+
+      // 2) Si aucune ligne → on en crée une en step 1
+      if (!onboarding) {
+        console.log("[LOGIN] no onboarding_state row, creating one…");
+
+        const { error: insertErr } = await supabase
           .from("onboarding_state")
-          .select("current_step, completed")
-          .eq("user_id", userId)
-          .maybeSingle();
+          .insert({
+            user_id: userId,
+            current_step: 1,
+            completed: false,
+          });
 
-        if (onboardingErr && onboardingErr.code !== "PGRST116") {
-          console.error("onboarding_state error:", onboardingErr);
+        if (insertErr) {
+          console.error("onboarding_state insert error:", insertErr);
+          // impossible de créer la ligne → on tombe sur / par fallback
+          router.push("/");
+          return;
         }
 
-        // 2) Si aucune ligne → en créer une en step 1
-        if (!onboarding) {
-          const { error: insertErr } = await supabase
-            .from("onboarding_state")
-            .insert({
-              user_id: userId,
-              current_step: 1,
-              completed: false,
-            });
+        // nouvelle personne → début d'onboarding
+        router.push("/onboarding");
+        return;
+      }
 
-          if (insertErr) {
-            console.error("onboarding_state insert error:", insertErr);
-            router.push("/");
-            return;
-          }
+      // 3) Routing en fonction de la step
+      const step = Number(onboarding.current_step ?? 1);
+      const completed = Boolean(onboarding.completed);
 
+      console.log("[LOGIN] onboarding_state =", { step, completed });
+
+      // 🧠 Cas 1 : onboarding PAS terminé
+      if (!completed) {
+        if (step <= 0) {
+          // au cas où tu mettes 0 pour "get started"
+          router.push("/get-started");
+          return;
+        }
+
+        if (step >= 1 && step <= 6) {
+          // toutes les étapes KYC classiques
           router.push("/onboarding");
           return;
         }
 
-        const currentStep = onboarding.current_step ?? 1;
-        const completed = !!onboarding.completed;
-
-        // 3) Si onboarding PAS terminé → route selon la step
-        if (!completed) {
-          if (currentStep >= 7) {
-            // 👉 Étape contrat
-            router.push("/onboarding/contract-ready");
-          } else {
-            // 👉 Étapes 1 à 6 : flow classique
-            router.push("/onboarding");
-          }
+        if (step === 7) {
+          // ✅ ton nouveau écran "onboarding terminé → contrat"
+          router.push("/onboarding/contract-ready");
           return;
         }
 
-        // 4) Onboarding terminé (ex. step 8+) → home (ou dashboard plus tard)
-        router.push("/");
-      } catch (e) {
-        console.error(e);
-        router.push("/");
-      } finally {
-        setLoading(false);
+        if (step >= 8) {
+          // safety : step chelou mais considéré comme fini
+          router.push("/");
+          return;
+        }
       }
-    } else {
+
+      // 🧠 Cas 2 : onboarding déjà terminé
+      router.push("/");
+    } catch (e) {
+      console.error("[LOGIN] unexpected error", e);
+      router.push("/"); // fallback ultime
+    } finally {
       setLoading(false);
     }
   }
 
   return (
     <>
-      {/* Titre */}
       <div className="mb-8 text-left">
         <h1 className="mc-title">Sign in</h1>
       </div>
 
-      {/* Messages */}
       {err ? <div className="mb-4 text-sm text-red-400">{err}</div> : null}
       {ok ? (
         <div className="mb-4 text-sm text-emerald-400">{ok}</div>
       ) : null}
 
-      {/* Formulaire */}
       <form className="space-y-4" onSubmit={onSubmit}>
         <label className="block text-sm text-slate-300">
           Email
