@@ -149,7 +149,7 @@ export default function ContractPage() {
         throw new Error(data.error || "Unable to sign your contract.");
       }
 
-      setOk("Your contract has been signed successfully.");
+      router.push(`/contract/signed?file=${encodeURIComponent(data.pdfUrl)}`);
       // si tu veux : router.push("/contract/signed") plus tard
     } catch (err) {
       setError(err.message || "Something went wrong while signing.");
