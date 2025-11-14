@@ -58,7 +58,7 @@ const STEPS = [
   },
 ];
 
-const CURRENT_STEP_ID = 3; // on est sur la partie "Contract"
+const CURRENT_STEP_ID = 3; // we are on “Contract ready”
 
 export default function ContractReadyPage() {
   const router = useRouter();
@@ -66,7 +66,7 @@ export default function ContractReadyPage() {
   const [currentStep, setCurrentStep] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Charger la session + état d'onboarding
+  // Load session + onboarding
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -88,13 +88,11 @@ export default function ContractReadyPage() {
         .eq("user_id", uid)
         .maybeSingle();
 
-      // pas de ligne → l’utilisateur n’a pas fait le début du process
       if (!onboard) {
         router.replace("/get-started");
         return;
       }
 
-      // si déjà terminé → on renvoie sur la home
       if (onboard.completed) {
         router.replace("/");
         return;
@@ -102,13 +100,11 @@ export default function ContractReadyPage() {
 
       const step = onboard.current_step ?? 0;
 
-      // Pas encore arrivé à la partie KYC / proof of address
       if (step < 6) {
         router.replace("/onboarding");
         return;
       }
 
-      // Déjà à la page de contrat ou après
       if (step >= 8) {
         router.replace("/contract");
         return;
@@ -119,13 +115,13 @@ export default function ContractReadyPage() {
     })();
   }, [router]);
 
-  async function handleContinueToContract() {
+  async function handleContinue() {
     if (!userId) {
       router.push("/login");
       return;
     }
 
-    // On passe l'utilisateur à l'étape 8 (signature du contrat)
+    // move user to step 8: contract signing page
     await supabase.from("onboarding_state").upsert(
       {
         user_id: userId,
@@ -154,12 +150,11 @@ export default function ContractReadyPage() {
       <div className="mc-section text-left max-w-2xl mx-auto">
         <h1 className="mc-title mb-3">Your contract is almost ready</h1>
         <p className="text-slate-400 mb-10">
-          You’ve completed your personal information and KYC checks. The next
-          step is to review and sign your discretionary management agreement.
+          Review the timeline below before continuing.
         </p>
 
-        {/* Timeline verticale avec progression */}
-        <div className="space-y-5 mb-8">
+        {/* Timeline */}
+        <div className="space-y-5 mb-10">
           {STEPS.map((step, index) => {
             const isCurrent = step.id === CURRENT_STEP_ID;
             const isCompleted = step.id < CURRENT_STEP_ID;
@@ -170,7 +165,7 @@ export default function ContractReadyPage() {
                 key={step.id}
                 className="grid grid-cols-[32px,1fr] gap-4 items-stretch"
               >
-                {/* Colonne pastille + ligne */}
+                {/* Left column */}
                 <div className="flex flex-col items-center">
                   <div
                     className={[
@@ -184,12 +179,13 @@ export default function ContractReadyPage() {
                   >
                     {isCompleted ? "✓" : step.id}
                   </div>
+
                   {!isLast && (
                     <div className="flex-1 w-px bg-gradient-to-b from-slate-700/80 via-slate-800/80 to-slate-900 mt-1" />
                   )}
                 </div>
 
-                {/* Carte étape */}
+                {/* Right card */}
                 <div
                   className={[
                     "rounded-2xl border px-5 py-4 sm:py-5 bg-slate-900/40",
@@ -204,12 +200,14 @@ export default function ContractReadyPage() {
                     <div className="text-sm font-semibold text-slate-50">
                       {step.title}
                     </div>
+
                     {isCurrent && (
                       <span className="inline-flex items-center rounded-full bg-[#2564ec]/10 border border-[#2564ec]/60 px-2.5 py-[3px] text-[10px] font-medium text-[#7ea3ff]">
-                        Next step
+                        You're here
                       </span>
                     )}
-                    {isCompleted && !isCurrent && (
+
+                    {isCompleted && (
                       <span className="inline-flex items-center rounded-full bg-emerald-500/10 border border-emerald-500/60 px-2.5 py-[3px] text-[10px] font-medium text-emerald-300">
                         Completed
                       </span>
@@ -231,26 +229,14 @@ export default function ContractReadyPage() {
           })}
         </div>
 
-        {/* Bas de page : message + bouton */}
+        {/* Bottom button ONLY */}
         <div className="space-y-4">
-          <div className="text-xs text-slate-500 flex items-center gap-2">
-            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/60 text-[10px] text-emerald-400">
-              ✓
-            </span>
-            <span>
-              Your identity and address have been submitted.{" "}
-              <span className="text-slate-300 font-medium">
-                You just need to sign your contract.
-              </span>
-            </span>
-          </div>
-
           <button
             type="button"
-            onClick={handleContinueToContract}
+            onClick={handleContinue}
             className="mc-btn mc-btn-primary inline-flex items-center justify-center"
           >
-            Review & sign contract
+            Continue
           </button>
         </div>
       </div>
