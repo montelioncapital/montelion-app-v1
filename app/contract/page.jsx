@@ -18,7 +18,7 @@ export default function ContractPage() {
   const [kyc, setKyc] = useState(null);
   const [poa, setPoa] = useState(null);
 
-  // Checkbox (plus de signature pad)
+  // Checkbox
   const [hasAccepted, setHasAccepted] = useState(false);
 
   // ----------------- LOAD DATA -----------------
@@ -119,10 +119,22 @@ export default function ContractPage() {
     setSigning(true);
 
     try {
+      // Récupérer la session + access_token pour le passer à l’API
+      const { data: sessionData, error: sessionErr } =
+        await supabase.auth.getSession();
+
+      if (sessionErr || !sessionData?.session) {
+        throw new Error("Not authenticated.");
+      }
+
+      const accessToken = sessionData.session.access_token;
+
       const res = await fetch("/api/contracts/sign", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        // plus de signatureDataUrl, juste l’acceptation
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
         body: JSON.stringify({
           acceptedTerms: hasAccepted,
         }),
@@ -136,7 +148,8 @@ export default function ContractPage() {
       }
 
       setOk("Your contract has been signed successfully.");
-      // plus tard: router.push("/exchange-setup");
+      // Tu pourras rediriger ici si tu veux :
+      // router.push("/contract/signed");
     } catch (err) {
       setError(err.message || "Something went wrong while signing.");
     } finally {
@@ -171,7 +184,6 @@ export default function ContractPage() {
     profile.last_name || ""
   }`.trim();
 
-  // on ne bloque plus sur une signature dessinée
   const signDisabled = signing || !hasAccepted;
 
   return (
@@ -231,7 +243,7 @@ export default function ContractPage() {
         </div>
 
         {/* Checkbox acceptation */}
-        <label className="flex items-start gap-3 mb-4 text-xs text-slate-300 cursor-pointer select-none">
+        <label className="flex items-start gap-3 mb-3 text-xs text-slate-300 cursor-pointer select-none">
           <input
             type="checkbox"
             className="mt-[2px] h-4 w-4 rounded border-slate-600 bg-slate-900 text-blue-500 focus:ring-0"
@@ -244,9 +256,8 @@ export default function ContractPage() {
           </span>
         </label>
 
-        {/* Petit texte pour expliquer la signature électronique */}
         <p className="mb-5 text-[11px] text-slate-500">
-          By clicking <span className="text-slate-300 font-medium">
+          By clicking <span className="font-semibold text-slate-300">
             “Sign contract”
           </span>
           , you electronically sign the agreement. Your name will appear as the
