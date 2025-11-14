@@ -5,11 +5,14 @@ import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { PDFDocument, StandardFonts } from "pdf-lib";
 
 export const runtime = "nodejs";
+// pour être sûr que Next ne mette jamais cette route en cache
+export const dynamic = "force-dynamic";
 
 export async function POST(request) {
+  // --- Supabase côté serveur, lié aux cookies du navigateur ---
   const supabase = createRouteHandlerClient({ cookies });
 
-  // ------------ SESSION ------------
+  // 1) Récupérer la session depuis les cookies
   const {
     data: { session },
     error: sessionErr,
@@ -31,17 +34,17 @@ export async function POST(request) {
 
   const userId = session.user.id;
 
-  // ------------ BODY (signature) ------------
+  // 2) Récupérer le body (signature canvas)
   let body = {};
   try {
     body = (await request.json()) || {};
-  } catch (_e) {
+  } catch {
     body = {};
   }
 
   const { signatureDataUrl } = body;
 
-  // ------------ LOAD DATA ------------
+  // 3) Charger les données nécessaires au contrat
   const [
     { data: profile, error: profileErr },
     { data: address, error: addrErr },
@@ -60,8 +63,16 @@ export async function POST(request) {
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
-    supabase.from("kyc_identities").select("doc_type").eq("user_id", userId).maybeSingle(),
-    supabase.from("proof_of_address").select("doc_type").eq("user_id", userId).maybeSingle(),
+    supabase
+      .from("kyc_identities")
+      .select("doc_type")
+      .eq("user_id", userId)
+      .maybeSingle(),
+    supabase
+      .from("proof_of_address")
+      .select("doc_type")
+      .eq("user_id", userId)
+      .maybeSingle(),
   ]);
 
   if (profileErr || addrErr || kycErr || poaErr) {
@@ -84,7 +95,7 @@ export async function POST(request) {
     );
   }
 
-  // ------------ GENERATE PDF ------------
+  // 4) Générer le PDF
   const pdfDoc = await PDFDocument.create();
   const page = pdfDoc.addPage([595, 842]); // A4
   const { height } = page.getSize();
@@ -114,12 +125,7 @@ export async function POST(request) {
   });
 
   y -= 40;
-  page.drawText(`Client: ${fullName}`, {
-    x: 60,
-    y,
-    size: 11,
-    font,
-  });
+  page.drawText(`Client: ${fullName}`, { x: 60, y, size: 11, font });
   y -= 18;
   page.drawText(`Date of birth: ${profile.date_of_birth}`, {
     x: 60,
@@ -130,23 +136,13 @@ export async function POST(request) {
   y -= 18;
   page.drawText(
     `Address: ${address.address_line}, ${address.postal_code} ${address.city}, ${address.country}`,
-    {
-      x: 60,
-      y,
-      size: 11,
-      font,
-    }
+    { x: 60, y, size: 11, font }
   );
 
   y -= 40;
   page.drawText(
     "By signing this agreement, the Client authorises Montelion Capital to",
-    {
-      x: 60,
-      y,
-      size: 10,
-      font,
-    }
+    { x: 60, y, size: 10, font }
   );
   y -= 14;
   page.drawText(
@@ -181,11 +177,10 @@ export async function POST(request) {
     y: signatureBlockY,
     width: 200,
     height: 50,
-    borderColor: undefined,
     borderWidth: 0.5,
   });
 
-  // Intégrer l'image de signature si fournie
+  // Image de signature depuis le canvas (dataURL)
   if (signatureDataUrl && signatureDataUrl.startsWith("data:image")) {
     try {
       const base64 = signatureDataUrl.split(",")[1];
@@ -210,7 +205,7 @@ export async function POST(request) {
   const pdfBytes = await pdfDoc.save();
   const pdfUint8 = new Uint8Array(pdfBytes);
 
-  // ------------ UPLOAD TO STORAGE ------------
+  // 5) Upload du PDF dans le bucket "contracts"
   const fileName = `contract-${userId}-${Date.now()}.pdf`;
   const { data: uploadData, error: uploadErr } = await supabase.storage
     .from("contracts")
@@ -229,7 +224,7 @@ export async function POST(request) {
 
   const pdfPath = uploadData?.path || fileName;
 
-  // ------------ UPSERT CONTRACT ROW ------------
+  // 6) Upsert de la ligne dans "contracts"
   const { data: contractRow, error: upsertErr } = await supabase
     .from("contracts")
     .upsert(
@@ -252,7 +247,7 @@ export async function POST(request) {
     );
   }
 
-  // ------------ UPDATE ONBOARDING STATE ------------
+  // 7) Mettre à jour l'onboarding (step 7, terminé)
   await supabase.from("onboarding_state").upsert(
     {
       user_id: userId,
