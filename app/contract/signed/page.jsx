@@ -1,8 +1,10 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
-export default function ContractSignedPage() {
+// Petit composant qui utilise les hooks
+function SignedContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const fileUrl = searchParams.get("file");
@@ -40,5 +42,23 @@ export default function ContractSignedPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Page = Suspense + SignedContent
+export default function ContractSignedPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="mc-card">
+          <div className="mc-section text-left">
+            <h1 className="mc-title mb-2">Contract</h1>
+            <p className="text-slate-400">Loading your signed contract…</p>
+          </div>
+        </div>
+      }
+    >
+      <SignedContent />
+    </Suspense>
   );
 }
