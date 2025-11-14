@@ -1,112 +1,229 @@
+// app/contract/page.jsx
 "use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "../../lib/supabaseClient";
+import { supabase } from "../lib/supabaseClient";
 
-export default function ContractSignedPage() {
+export default function ContractPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [downloadUrl, setDownloadUrl] = useState("");
-  const [error, setError] = useState("");
 
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [acceptTerms, setAcceptTerms] = useState(false);
+
+  const [clientData, setClientData] = useState(null);
+
+  // Charger les infos client (profil + adresse) pour affichage
   useEffect(() => {
     (async () => {
       setLoading(true);
       setError("");
+      setSuccess("");
 
-      const { data: sessionData, error: sessionErr } =
-        await supabase.auth.getSession();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const session = sessionData?.session;
 
-      if (sessionErr || !sessionData?.session?.user) {
-        router.replace("/login");
-        return;
-      }
-
-      const userId = sessionData.session.user.id;
-
-      // Récupérer le contrat
-      const { data: contract, error: contractErr } = await supabase
-        .from("contracts")
-        .select("pdf_url")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (contractErr || !contract?.pdf_url) {
-        setError("We couldn’t find your signed contract.");
+      if (!session?.user) {
+        setError("Not authenticated.");
         setLoading(false);
         return;
       }
 
-      // Créer une URL signée pour téléchargement (si bucket privé)
-      const { data: signedUrlData, error: urlErr } = await supabase.storage
-        .from("contracts")
-        .createSignedUrl(contract.pdf_url, 60 * 60); // 1h
+      const userId = session.user.id;
 
-      if (urlErr || !signedUrlData?.signedUrl) {
-        setError("Unable to generate a download link for your contract.");
+      const [
+        { data: profile, error: profileErr },
+        { data: address, error: addrErr },
+      ] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("first_name, last_name, date_of_birth")
+          .eq("id", userId)
+          .maybeSingle(),
+        supabase
+          .from("addresses")
+          .select("address_line, city, postal_code, country")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
+
+      if (profileErr || addrErr || !profile || !address) {
+        console.error("contract page data error", {
+          profileErr,
+          addrErr,
+          profile,
+          address,
+        });
+        setError(
+          "We couldn't load the data required to generate your contract."
+        );
         setLoading(false);
         return;
       }
 
-      setDownloadUrl(signedUrlData.signedUrl);
+      setClientData({ profile, address });
       setLoading(false);
     })();
-  }, [router]);
+  }, []);
+
+  async function handleSign() {
+    setError("");
+    setSuccess("");
+
+    if (!acceptTerms) {
+      setError("Please confirm you accept the terms before signing.");
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const res = await fetch("/api/contracts/sign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}), // plus de signature manuelle
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        console.error("sign contract error", json);
+        setError(json.error || "Failed to sign contract.");
+        setSubmitting(false);
+        return;
+      }
+
+      setSuccess("Your contract has been signed successfully.");
+      setError("");
+
+      // On peut rediriger ensuite si tu veux
+      // router.push("/contract/signed");
+    } catch (e) {
+      console.error(e);
+      setError("Unexpected error while signing the contract.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="mc-card">
+        <div className="mc-section text-left">
+          <h1 className="mc-title mb-2">Contract</h1>
+          <p className="text-slate-400">Loading your information…</p>
+        </div>
+      </div>
+    );
+  }
+
+  const profile = clientData?.profile;
+  const address = clientData?.address;
 
   return (
     <div className="mc-card">
-      <div className="mc-section max-w-xl mx-auto text-left">
-        <h1 className="mc-title mb-3">Thank you for your trust</h1>
+      <div className="mc-section text-left max-w-2xl mx-auto">
+        <h1 className="mc-title mb-4">Contract</h1>
         <p className="text-slate-400 mb-6">
-          Your management mandate has been signed electronically and added to
-          your Montelion file.
+          Please review the summary of your information below, then sign
+          the discretionary management agreement.
         </p>
 
-        {loading && (
-          <p className="text-slate-400 text-sm">Preparing your contract…</p>
-        )}
-
+        {/* Messages */}
         {error && (
-          <div className="mb-4 text-sm text-rose-400 bg-rose-950/40 border border-rose-900/40 px-3 py-2 rounded-lg">
+          <div className="mb-4 rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm text-red-200">
             {error}
           </div>
         )}
-
-        {!loading && !error && (
-          <>
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4 mb-6 text-sm text-slate-300">
-              <p className="mb-2">
-                A PDF copy of your signed contract is stored securely in our
-                systems.
-              </p>
-              <p className="text-xs text-slate-500">
-                You can download it at any time for your personal records.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-3">
-              {downloadUrl && (
-                <a
-                  href={downloadUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mc-btn mc-btn-primary"
-                >
-                  Download contract (PDF)
-                </a>
-              )}
-
-              <button
-                type="button"
-                onClick={() => router.push("/")}
-                className="mc-btn border border-slate-700 text-slate-300 text-sm hover:bg-slate-900"
-              >
-                Go to dashboard
-              </button>
-            </div>
-          </>
+        {success && (
+          <div className="mb-4 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-200">
+            {success}
+          </div>
         )}
+
+        {/* Client details */}
+        <div className="mb-4 rounded-2xl border border-slate-800 bg-slate-900/40 px-5 py-4">
+          <div className="mb-3 text-sm font-semibold text-slate-200">
+            Client details
+          </div>
+          <div className="space-y-1.5 text-sm text-slate-300">
+            <div>
+              <span className="text-slate-500">Name:&nbsp;</span>
+              <span>
+                {profile?.first_name} {profile?.last_name}
+              </span>
+            </div>
+            <div>
+              <span className="text-slate-500">Date of birth:&nbsp;</span>
+              <span>{profile?.date_of_birth}</span>
+            </div>
+            <div>
+              <span className="text-slate-500">Address:&nbsp;</span>
+              <span>
+                {address?.address_line}, {address?.postal_code}{" "}
+                {address?.city}, {address?.country}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Summary */}
+        <div className="mb-6 rounded-2xl border border-slate-800 bg-slate-900/40 px-5 py-4">
+          <div className="mb-3 text-sm font-semibold text-slate-200">
+            Discretionary Management Agreement (summary)
+          </div>
+          <p className="text-sm text-slate-300 mb-2">
+            By signing this agreement, you authorise Montelion Capital to manage
+            your exchange account on a discretionary basis, within the
+            investment mandate and risk limits defined in the full contract. You
+            retain full custody of your assets at all times and can revoke API
+            access whenever you wish.
+          </p>
+          <p className="text-xs text-slate-500">
+            The full legal text will be generated as a PDF and stored securely
+            once you sign. You will be able to download a copy for your records.
+          </p>
+        </div>
+
+        {/* Accept terms */}
+        <div className="mb-6 space-y-3">
+          <label className="flex items-start gap-2 text-sm text-slate-300">
+            <input
+              type="checkbox"
+              className="mt-[3px] h-4 w-4 rounded border-slate-600 bg-slate-900 text-[#2564ec] focus:ring-[#2564ec]"
+              checked={acceptTerms}
+              onChange={(e) => setAcceptTerms(e.target.checked)}
+            />
+            <span>
+              I confirm that I have read and accept the terms of the
+              discretionary management agreement and the related risk
+              disclosures.
+            </span>
+          </label>
+
+          {/* On ne montre plus le canvas de signature */}
+          <div className="text-xs text-slate-500">
+            By clicking{" "}
+            <span className="text-slate-300 font-medium">Sign contract</span>,
+            you electronically sign the agreement with your legal name.
+          </div>
+        </div>
+
+        {/* Bouton */}
+        <button
+          type="button"
+          onClick={handleSign}
+          disabled={submitting}
+          className="mc-btn mc-btn-primary inline-flex items-center justify-center disabled:opacity-60"
+        >
+          {submitting ? "Signing…" : "Sign contract"}
+        </button>
       </div>
     </div>
   );
