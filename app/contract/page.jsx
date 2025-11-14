@@ -1,3 +1,4 @@
+// app/contract/page.jsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -10,61 +11,108 @@ export default function ContractPage() {
   const [loading, setLoading] = useState(true);
   const [signing, setSigning] = useState(false);
   const [error, setError] = useState("");
+  const [ok, setOk] = useState("");
+
   const [profile, setProfile] = useState(null);
   const [address, setAddress] = useState(null);
+  const [kyc, setKyc] = useState(null);
+  const [poa, setPoa] = useState(null);
 
   useEffect(() => {
     (async () => {
       setLoading(true);
       setError("");
+      setOk("");
 
       const { data: sessionData, error: sessionErr } =
         await supabase.auth.getSession();
 
-      if (sessionErr || !sessionData?.session?.user) {
+      if (sessionErr) {
+        console.error("session error", sessionErr);
+        setError("We couldn't verify your session. Please sign in again.");
+        setLoading(false);
+        return;
+      }
+
+      const session = sessionData?.session;
+      if (!session?.user) {
         router.replace("/login");
         return;
       }
 
-      const userId = sessionData.session.user.id;
+      const userId = session.user.id;
 
-      // Charger profil
-      const { data: prof, error: profErr } = await supabase
-        .from("profiles")
-        .select("first_name, last_name, date_of_birth, country")
-        .eq("id", userId)
-        .maybeSingle();
+      const [
+        { data: profileData, error: profileErr },
+        { data: addrData, error: addrErr },
+        { data: kycData, error: kycErr },
+        { data: poaData, error: poaErr },
+      ] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("first_name, last_name, date_of_birth, phone_e164")
+          .eq("id", userId)
+          .maybeSingle(),
+        supabase
+          .from("addresses")
+          .select("address_line, city, postal_code, country")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from("kyc_identities")
+          .select("doc_type")
+          .eq("user_id", userId)
+          .maybeSingle(),
+        supabase
+          .from("proof_of_address")
+          .select("doc_type")
+          .eq("user_id", userId)
+          .maybeSingle(),
+      ]);
 
-      if (profErr || !prof) {
-        setError("Unable to load your profile for the contract.");
+      if (profileErr || addrErr || kycErr || poaErr) {
+        console.error("contract data errors", {
+          profileErr,
+          addrErr,
+          kycErr,
+          poaErr,
+        });
+        setError(
+          "We couldn't load the data required to generate your contract."
+        );
         setLoading(false);
         return;
       }
 
-      // Charger adresse la plus récente
-      const { data: addr, error: addrErr } = await supabase
-        .from("addresses")
-        .select("address_line, postal_code, city, country")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (addrErr || !addr) {
-        setError("Unable to load your address for the contract.");
+      if (!profileData || !addrData || !kycData || !poaData) {
+        console.warn("missing data", {
+          profileData,
+          addrData,
+          kycData,
+          poaData,
+        });
+        setError(
+          "We couldn't load the data required to generate your contract."
+        );
         setLoading(false);
         return;
       }
 
-      setProfile(prof);
-      setAddress(addr);
+      setProfile(profileData);
+      setAddress(addrData);
+      setKyc(kycData);
+      setPoa(poaData);
       setLoading(false);
     })();
   }, [router]);
 
   async function handleSign() {
     setError("");
+    setOk("");
     setSigning(true);
+
     try {
       const res = await fetch("/api/contracts/sign", {
         method: "POST",
@@ -73,11 +121,13 @@ export default function ContractPage() {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(data.error || "Failed to sign contract.");
+        console.error("sign error", data);
+        throw new Error(data.error || "Unable to sign your contract.");
       }
 
-      // Redirection vers page de remerciement
-      router.push("/contract/signed");
+      setOk("Your contract has been signed successfully.");
+      // ici on pourra plus tard rediriger vers la page “merci / exchange setup”
+      // router.push("/exchange-setup");
     } catch (err) {
       setError(err.message || "Something went wrong while signing.");
     } finally {
@@ -88,21 +138,21 @@ export default function ContractPage() {
   if (loading) {
     return (
       <div className="mc-card">
-        <div className="mc-section">
+        <div className="mc-section text-left">
           <h1 className="mc-title mb-2">Contract</h1>
-          <p className="text-slate-400">Preparing your contract…</p>
+          <p className="text-slate-400">Loading your information…</p>
         </div>
       </div>
     );
   }
 
-  if (!profile || !address) {
+  if (error) {
     return (
       <div className="mc-card">
-        <div className="mc-section">
+        <div className="mc-section text-left">
           <h1 className="mc-title mb-2">Contract</h1>
           <p className="text-rose-400 text-sm">
-            We couldn&apos;t load the data required to generate your contract.
+            {error}
           </p>
         </div>
       </div>
@@ -115,91 +165,69 @@ export default function ContractPage() {
 
   return (
     <div className="mc-card">
-      <div className="mc-section max-w-2xl mx-auto text-left">
-        <h1 className="mc-title mb-3">Management agreement</h1>
+      <div className="mc-section text-left max-w-2xl mx-auto">
+        <h1 className="mc-title mb-3">Contract</h1>
         <p className="text-slate-400 mb-6">
-          Please review the information below and sign electronically to
-          activate the next step of your onboarding.
+          Please review the summary of your information below, then sign the
+          discretionary management agreement.
         </p>
 
+        {ok && (
+          <div className="mb-4 text-sm text-emerald-400 bg-emerald-950/40 border border-emerald-900/40 px-3 py-2 rounded-lg">
+            {ok}
+          </div>
+        )}
         {error && (
           <div className="mb-4 text-sm text-rose-400 bg-rose-950/40 border border-rose-900/40 px-3 py-2 rounded-lg">
             {error}
           </div>
         )}
 
-        {/* Aperçu "HTML" du contrat */}
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 mb-6 text-sm leading-relaxed text-slate-100">
-          <div className="mb-4">
-            <p className="text-xs uppercase tracking-[0.18em] text-slate-500 mb-2">
-              Client information
-            </p>
-            <p>
-              <span className="font-semibold">Name: </span>
-              {fullName || "—"}
-            </p>
-            <p>
-              <span className="font-semibold">Date of birth: </span>
-              {profile.date_of_birth || "—"}
-            </p>
-            <p>
-              <span className="font-semibold">Country: </span>
-              {address.country || profile.country || "—"}
-            </p>
-            <p className="mt-1">
-              <span className="font-semibold">Address: </span>
-              {address.address_line || "—"},{" "}
-              {address.postal_code} {address.city}
-            </p>
+        {/* Résumé client */}
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/40 px-5 py-4 mb-6 space-y-2 text-sm text-slate-200">
+          <div className="font-semibold text-slate-50">Client details</div>
+          <div>
+            <span className="text-slate-500 mr-2">Name:</span>
+            {fullName}
           </div>
+          <div>
+            <span className="text-slate-500 mr-2">Date of birth:</span>
+            {profile.date_of_birth}
+          </div>
+          <div>
+            <span className="text-slate-500 mr-2">Address:</span>
+            {address.address_line}, {address.postal_code} {address.city},{" "}
+            {address.country}
+          </div>
+        </div>
 
-          <div className="h-px bg-slate-800 my-4" />
-
-          <h2 className="text-base font-semibold mb-2 text-slate-50">
-            Discretionary management mandate (demo)
-          </h2>
-          <p className="mb-3 text-slate-300">
-            This is a fictive template to demonstrate how your final contract
-            will be displayed and signed within Montelion. The production
-            version will include detailed terms, fees and risk disclosures.
+        {/* Mini texte de contrat factice */}
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 px-5 py-4 mb-6 text-sm text-slate-300 space-y-3">
+          <p className="font-semibold text-slate-100">
+            Discretionary Management Agreement (summary)
           </p>
-
-          <ul className="list-disc list-inside text-slate-300 space-y-1 mb-4">
-            <li>
-              Montelion executes a trading strategy on your exchange account via
-              a read-only API key (no withdrawals).
-            </li>
-            <li>
-              You remain the sole owner and custodian of your assets at all
-              times.
-            </li>
-            <li>
-              You can revoke access whenever you wish by disabling the API key
-              on your exchange.
-            </li>
-          </ul>
-
-          <p className="text-xs text-slate-500 mt-4">
-            By signing electronically, you confirm that the information above is
-            accurate and that you agree to the terms of this mandate.
+          <p className="text-slate-400 text-xs leading-relaxed">
+            By signing this agreement, you authorise Montelion Capital to manage
+            your exchange account on a discretionary basis, within the
+            investment mandate and risk limits defined in the full contract.
+            You retain full custody of your assets at all times and can revoke
+            API access whenever you wish.
+          </p>
+          <p className="text-slate-500 text-xs">
+            The full legal text will be generated as a PDF and stored securely
+            once you sign. You will be able to download a copy for your
+            records.
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <p className="text-xs text-slate-500">
-            Your signature will generate a PDF copy of this contract, stored
-            securely in your Montelion file.
-          </p>
-
-          <button
-            type="button"
-            className="mc-btn mc-btn-primary"
-            onClick={handleSign}
-            disabled={signing}
-          >
-            {signing ? "Signing…" : "Sign contract"}
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={handleSign}
+          disabled={signing}
+          className="mc-btn mc-btn-primary"
+        >
+          {signing ? "Signing…" : "Sign contract"}
+        </button>
       </div>
     </div>
   );
