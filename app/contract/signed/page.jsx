@@ -1,16 +1,25 @@
 // app/contract/signed/page.jsx
 "use client";
 
-import { useSearchParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabaseClient";
 
 export default function ContractSignedPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const fileUrl = searchParams.get("file") || "";
 
+  const [fileUrl, setFileUrl] = useState("");
   const [isContinuing, setIsContinuing] = useState(false);
+
+  // Récupérer ?file=... côté client sans useSearchParams
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const file = params.get("file");
+    if (file) {
+      setFileUrl(file);
+    }
+  }, []);
 
   function handleDownload() {
     if (!fileUrl) return;
@@ -21,7 +30,6 @@ export default function ContractSignedPage() {
     setIsContinuing(true);
 
     try {
-      // Récupérer la session pour connaître l'user_id
       const { data: sessionData } = await supabase.auth.getSession();
       const session = sessionData?.session;
 
@@ -29,7 +37,7 @@ export default function ContractSignedPage() {
         await supabase.from("onboarding_state").upsert(
           {
             user_id: session.user.id,
-            current_step: 10, // ✅ étape après signature de contrat
+            current_step: 10, // ✅ étape après signature
             completed: false,
           },
           { onConflict: "user_id" }
@@ -37,10 +45,10 @@ export default function ContractSignedPage() {
       }
     } catch (err) {
       console.error("Failed to update onboarding_state to 10:", err);
-      // on ne bloque pas, on redirige quand même
+      // on ne bloque pas la redirection
     } finally {
       setIsContinuing(false);
-      router.push("/get-started/advanced"); // ✅ redirection quoi qu'il arrive
+      router.push("/get-started/advanced"); // ✅ redirection vers l’étape suivante
     }
   }
 
@@ -57,7 +65,7 @@ export default function ContractSignedPage() {
           Your signed contract is now securely stored.
         </div>
 
-        {/* Bouton download style “bouton neutre” */}
+        {/* Bouton de téléchargement style bouton neutre */}
         <button
           type="button"
           onClick={handleDownload}
@@ -70,7 +78,7 @@ export default function ContractSignedPage() {
           <span>Download signed contract (PDF)</span>
         </button>
 
-        {/* Bouton Continue bleu, même style que le reste de l’app */}
+        {/* Bouton Continue bleu */}
         <button
           type="button"
           onClick={handleContinue}
