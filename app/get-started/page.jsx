@@ -3,7 +3,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { supabase } from "../lib/supabaseClient";
 
 const STEPS = [
@@ -141,7 +140,8 @@ export default function GetStartedPage() {
         {/* Timeline verticale */}
         <div className="space-y-5 mb-8">
           {STEPS.map((step, index) => {
-            const isCurrent = index === 0;
+            const isCompleted = step.id === 1; // Start = déjà fait
+            const isNext = step.id === 2;      // Onboarding = Next step
             const isLast = index === STEPS.length - 1;
 
             return (
@@ -154,12 +154,14 @@ export default function GetStartedPage() {
                   <div
                     className={[
                       "flex items-center justify-center h-7 w-7 rounded-full text-xs font-semibold shadow-[0_0_0_1px_rgba(15,23,42,0.9)]",
-                      isCurrent
+                      isNext
                         ? "bg-[#2564ec] text-white border border-[#2564ec]"
+                        : isCompleted
+                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/70"
                         : "bg-slate-900 text-slate-300 border border-slate-700",
                     ].join(" ")}
                   >
-                    {step.id}
+                    {isCompleted ? "✓" : step.id}
                   </div>
                   {!isLast && (
                     <div className="flex-1 w-px bg-gradient-to-b from-slate-700/80 via-slate-800/80 to-slate-900 mt-1" />
@@ -170,8 +172,10 @@ export default function GetStartedPage() {
                 <div
                   className={[
                     "rounded-2xl border px-5 py-4 sm:py-5 bg-slate-900/40",
-                    isCurrent
+                    isNext
                       ? "border-[#2564ec]/80 shadow-[0_0_40px_rgba(37,100,236,0.2)]"
+                      : isCompleted
+                      ? "border-emerald-600/70"
                       : "border-slate-800/80",
                   ].join(" ")}
                 >
@@ -179,9 +183,16 @@ export default function GetStartedPage() {
                     <div className="text-sm font-semibold text-slate-50">
                       {step.title}
                     </div>
-                    {isCurrent && (
+
+                    {isNext && (
                       <span className="inline-flex items-center rounded-full bg-[#2564ec]/10 border border-[#2564ec]/60 px-2.5 py-[3px] text-[10px] font-medium text-[#7ea3ff]">
-                        You&apos;re here
+                        Next step
+                      </span>
+                    )}
+
+                    {isCompleted && (
+                      <span className="inline-flex items-center rounded-full bg-emerald-500/10 border border-emerald-500/60 px-2.5 py-[3px] text-[10px] font-medium text-emerald-300">
+                        Completed
                       </span>
                     )}
                   </div>
