@@ -18,7 +18,6 @@ export default function ContractPage() {
   const [kyc, setKyc] = useState(null);
   const [poa, setPoa] = useState(null);
 
-  // Checkbox
   const [hasAccepted, setHasAccepted] = useState(false);
 
   // ----------------- LOAD DATA -----------------
@@ -119,22 +118,9 @@ export default function ContractPage() {
     setSigning(true);
 
     try {
-      // Récupérer la session + access_token pour le passer à l’API
-      const { data: sessionData, error: sessionErr } =
-        await supabase.auth.getSession();
-
-      if (sessionErr || !sessionData?.session) {
-        throw new Error("Not authenticated.");
-      }
-
-      const accessToken = sessionData.session.access_token;
-
       const res = await fetch("/api/contracts/sign", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           acceptedTerms: hasAccepted,
         }),
@@ -148,8 +134,7 @@ export default function ContractPage() {
       }
 
       setOk("Your contract has been signed successfully.");
-      // Tu pourras rediriger ici si tu veux :
-      // router.push("/contract/signed");
+      // plus tard: router.push("/exchange-setup");
     } catch (err) {
       setError(err.message || "Something went wrong while signing.");
     } finally {
@@ -240,10 +225,22 @@ export default function ContractPage() {
             The full legal text will be generated as a PDF and stored securely
             once you sign. You will be able to download a copy for your records.
           </p>
+          <p className="text-slate-500 text-xs mt-1">
+            You can read the full management mandate{" "}
+            <a
+              href="/legal/montelion-discretionary-mandate.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-slate-200 underline underline-offset-2 hover:text-white"
+            >
+              here (PDF)
+            </a>
+            .
+          </p>
         </div>
 
         {/* Checkbox acceptation */}
-        <label className="flex items-start gap-3 mb-3 text-xs text-slate-300 cursor-pointer select-none">
+        <label className="flex items-start gap-3 mb-2 text-xs text-slate-300 cursor-pointer select-none">
           <input
             type="checkbox"
             className="mt-[2px] h-4 w-4 rounded border-slate-600 bg-slate-900 text-blue-500 focus:ring-0"
@@ -256,11 +253,9 @@ export default function ContractPage() {
           </span>
         </label>
 
-        <p className="mb-5 text-[11px] text-slate-500">
-          By clicking <span className="font-semibold text-slate-300">
-            “Sign contract”
-          </span>
-          , you electronically sign the agreement. Your name will appear as the
+        <p className="mb-6 text-[11px] text-slate-500">
+          By clicking <span className="font-semibold">“Sign contract”</span>,
+          you electronically sign the agreement. Your name will appear as the
           signature in the generated PDF.
         </p>
 
