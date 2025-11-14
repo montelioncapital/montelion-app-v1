@@ -10,12 +10,19 @@ function getRedirectForStep(step, completed) {
 
   if (!completed) {
     if (step >= 1 && step <= 5) return "/onboarding";
-    if (step === 6) return "/onboarding";       // proof of address est dans l'onboarding
-    if (step === 7) return "/contract/ready";   // page "bridge"
-    if (step === 8) return "/contract";         // page de signature
+    if (step === 6) return "/onboarding";        // proof of address est dans l'onboarding
+    if (step === 7) return "/contract/ready";    // page "bridge"
+    if (step === 8) return "/contract";          // page de signature
+    if (step === 9) return "/contract/signed";   // page de confirmation
+    if (step >= 10) return "/get-started/advanced"; // étape avancée une fois le contrat signé
   }
 
-  // si tout est terminé ou step inconnu → dashboard / home
+  // Si tout est terminé OU step inconnu mais élevé → on envoie vers la partie avancée
+  if (step >= 10) {
+    return "/get-started/advanced";
+  }
+
+  // fallback : home
   return "/";
 }
 
