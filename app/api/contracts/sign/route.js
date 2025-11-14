@@ -1,43 +1,66 @@
 // app/api/contracts/sign/route.js
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@supabase/supabase-js";
 import { PDFDocument, StandardFonts } from "pdf-lib";
 
 export const runtime = "nodejs";
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+function createRouteSupabase(accessToken) {
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: false,
+    },
+    global: accessToken
+      ? {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      : {},
+  });
+}
+
 export async function POST(request) {
-  const supabase = createRouteHandlerClient({ cookies });
+  // ------------- AUTH VIA ACCESS TOKEN -------------
+  const authHeader = request.headers.get("authorization") || "";
+  const accessToken = authHeader.startsWith("Bearer ")
+    ? authHeader.slice(7)
+    : null;
 
-  // ------------ SESSION ------------
+  const supabase = createRouteSupabase(accessToken);
+
   const {
-    data: { session },
-    error: sessionErr,
-  } = await supabase.auth.getSession();
+    data: { user },
+    error: userErr,
+  } = await supabase.auth.getUser();
 
-  if (sessionErr) {
-    return NextResponse.json(
-      { error: sessionErr.message || "Unable to get session." },
-      { status: 500 }
-    );
-  }
-
-  if (!session?.user) {
+  if (userErr || !user) {
+    console.error("contracts/sign auth error", userErr);
     return NextResponse.json(
       { error: "Not authenticated." },
       { status: 401 }
     );
   }
 
-  const userId = session.user.id;
+  const userId = user.id;
 
-  // ------------ BODY (facultatif) ------------
-  // On garde la possibilité de recevoir un body, mais on ne lit plus de signatureDataUrl
+  // ------------ BODY (juste l’acceptation) ------------
+  let body = {};
   try {
-    // eslint-disable-next-line no-unused-vars
-    const _body = await request.json();
-  } catch {
-    // pas grave si pas de JSON
+    body = (await request.json()) || {};
+  } catch (_e) {
+    body = {};
+  }
+
+  const { acceptedTerms } = body || {};
+  if (!acceptedTerms) {
+    return NextResponse.json(
+      { error: "You must accept the terms to sign the contract." },
+      { status: 400 }
+    );
   }
 
   // ------------ LOAD DATA ------------
@@ -98,7 +121,7 @@ export async function POST(request) {
 
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-  const fontItalic = await pdfDoc.embedFont(StandardFonts.HelveticaOblique);
+  const fontScript = await pdfDoc.embedFont(StandardFonts.HelveticaOblique); // effet "stylo"
 
   let y = height - 80;
 
@@ -167,7 +190,7 @@ export async function POST(request) {
     { x: 60, y, size: 10, font }
   );
 
-  // ------------ BLOC SIGNATURE TEXTE ------------
+  // Zone de signature en bas de page
   const signatureBlockY = 140;
 
   page.drawText(`Signed electronically on: ${signedAt.slice(0, 10)}`, {
@@ -176,28 +199,29 @@ export async function POST(request) {
     size: 10,
     font,
   });
-
-  page.drawText(`Client:`, {
+  page.drawText(`Client: ${fullName}`, {
     x: 60,
     y: signatureBlockY + 35,
     size: 10,
     font,
   });
 
-  // "Signature" en mode écriture manuscrite (italic + plus gros)
-  page.drawText(fullName || session.user.email, {
-    x: 120,
-    y: signatureBlockY + 30,
-    size: 14,
-    font: fontItalic,
+  // Cadre de signature
+  page.drawRectangle({
+    x: 60,
+    y: signatureBlockY,
+    width: 200,
+    height: 50,
+    borderWidth: 0.5,
   });
 
-  // Petite ligne pour matérialiser la zone de signature
-  page.drawText("__________________________", {
-    x: 60,
-    y: signatureBlockY + 28,
-    size: 10,
-    font,
+  // "Signature" = nom en police script
+  const signatureName = profile.last_name || fullName || "Client";
+  page.drawText(signatureName, {
+    x: 70,
+    y: signatureBlockY + 18,
+    size: 18,
+    font: fontScript,
   });
 
   const pdfBytes = await pdfDoc.save();
@@ -249,7 +273,7 @@ export async function POST(request) {
   await supabase.from("onboarding_state").upsert(
     {
       user_id: userId,
-      current_step: 8, // étape "contract" terminée
+      current_step: 8,
       completed: true,
     },
     { onConflict: "user_id" }
