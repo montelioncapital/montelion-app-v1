@@ -1,10 +1,8 @@
-// app/login/LoginForm.jsx
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabaseClient";
-import { getOnboardingDestination } from "../lib/onboardingRouting";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -15,6 +13,31 @@ export default function LoginForm() {
   const [err, setErr] = useState("");
   const [ok, setOk] = useState("");
 
+  // -----------------------
+  // Helper de routing basé sur current_step
+  // -----------------------
+  function getOnboardingDestination(stepRaw, completedRaw) {
+    const step = Number(stepRaw ?? 0);
+    const completed = Boolean(completedRaw);
+
+    console.log("[ROUTER] step=", step, "completed=", completed);
+
+    if (completed) return "/"; // tout terminé → dashboard
+
+    if (!Number.isFinite(step) || step <= 0) return "/get-started";
+
+    if (step >= 1 && step <= 6) return "/onboarding";
+
+    if (step === 7) return "/onboarding/contract-ready";
+
+    if (step === 8) return "/contract";
+
+    return "/";
+  }
+
+  // -----------------------
+  // SUBMIT
+  // -----------------------
   async function onSubmit(e) {
     e.preventDefault();
     setErr("");
@@ -28,11 +51,11 @@ export default function LoginForm() {
       });
 
       if (error) {
-        if (error.message?.toLowerCase().includes("invalid")) {
-          setErr("Email ou mot de passe incorrect.");
-        } else {
-          setErr(error.message || "Impossible de se connecter.");
-        }
+        setErr(
+          error.message?.toLowerCase().includes("invalid")
+            ? "Email ou mot de passe incorrect."
+            : error.message || "Impossible de se connecter."
+        );
         return;
       }
 
@@ -44,23 +67,24 @@ export default function LoginForm() {
       setOk("Connexion réussie.");
       const userId = data.user.id;
 
-      // 1) Récupère l'état d'onboarding
+      // -----------------------
+      // Onboarding state
+      // -----------------------
       const { data: onboarding, error: onboardingErr } = await supabase
         .from("onboarding_state")
         .select("current_step, completed")
         .eq("user_id", userId)
         .maybeSingle();
 
-      if (onboardingErr && onboardingErr.code !== "PGRST116") {
-        console.error("onboarding_state select error:", onboardingErr);
-        // on log mais on laisse quand même passer
-      }
-
-      // 2) Si pas de ligne → on crée current_step = 0 (pour get-started)
       let step = 0;
       let completed = false;
 
+      if (onboardingErr && onboardingErr.code !== "PGRST116") {
+        console.error("onboarding_state select error:", onboardingErr);
+      }
+
       if (!onboarding) {
+        // Créer une ligne avec step = 0 → va sur /get-started
         const { error: insertErr } = await supabase
           .from("onboarding_state")
           .insert({
@@ -71,7 +95,6 @@ export default function LoginForm() {
 
         if (insertErr) {
           console.error("onboarding_state insert error:", insertErr);
-          // si ça foire, on envoie au / comme fallback
           router.push("/");
           return;
         }
@@ -80,31 +103,32 @@ export default function LoginForm() {
         completed = onboarding.completed ?? false;
       }
 
-      console.log("[LOGIN] step/completed =", { step, completed });
-
-      // 3) Calcule la destination à partir du step
+      // -----------------------
+      // Redirect selon le step
+      // -----------------------
       const destination = getOnboardingDestination(step, completed);
-      console.log("[LOGIN] redirecting to", destination);
+      console.log("[LOGIN] Redirecting →", destination);
 
       router.push(destination);
     } catch (e) {
-      console.error("[LOGIN] unexpected error", e);
+      console.error("[LOGIN ERROR]", e);
       setErr("Erreur inattendue lors de la connexion.");
     } finally {
       setLoading(false);
     }
   }
 
+  // -----------------------
+  // UI
+  // -----------------------
   return (
     <>
       <div className="mb-8 text-left">
         <h1 className="mc-title">Sign in</h1>
       </div>
 
-      {err ? <div className="mb-4 text-sm text-red-400">{err}</div> : null}
-      {ok ? (
-        <div className="mb-4 text-sm text-emerald-400">{ok}</div>
-      ) : null}
+      {err && <div className="mb-4 text-sm text-red-400">{err}</div>}
+      {ok && <div className="mb-4 text-sm text-emerald-400">{ok}</div>}
 
       <form className="space-y-4" onSubmit={onSubmit}>
         <label className="block text-sm text-slate-300">
@@ -132,6 +156,7 @@ export default function LoginForm() {
             </a>
           </div>
 
+          {/* Champ PW + œil */}
           <div className="relative mt-2">
             <input
               type={show ? "text" : "password"}
@@ -143,14 +168,14 @@ export default function LoginForm() {
               required
               minLength={6}
             />
+
             <button
               type="button"
-              onClick={() => setShow((s) => !s)}
+              onClick={() => setShow(!show)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300"
-              aria-label={show ? "Hide password" : "Show password"}
             >
               {show ? (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <svg width="20" height="20" viewBox="0 0 24 24">
                   <path
                     d="M3 3l18 18"
                     stroke="currentColor"
@@ -166,21 +191,13 @@ export default function LoginForm() {
                   />
                 </svg>
               ) : (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <svg width="20" height="20" viewBox="0 0 24 24">
                   <path
                     d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"
                     stroke="currentColor"
                     strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
                   />
-                  <circle
-                    cx="12"
-                    cy="12"
-                    r="3"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  />
+                  <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
                 </svg>
               )}
             </button>
