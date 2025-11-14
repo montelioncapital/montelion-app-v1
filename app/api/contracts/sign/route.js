@@ -251,7 +251,7 @@ export async function POST(request) {
   await supabase.from("onboarding_state").upsert(
     {
       user_id: userId,
-      current_step: 7,
+      current_step: 8,
       completed: true,
     },
     { onConflict: "user_id" }
