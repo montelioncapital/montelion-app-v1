@@ -47,7 +47,7 @@ export async function POST(request) {
 
   const userId = user.id;
 
-  // ------------ BODY (juste l’acceptation) ------------
+  // ------------ BODY ------------
   let body = {};
   try {
     body = (await request.json()) || {};
@@ -206,16 +206,18 @@ export async function POST(request) {
     font,
   });
 
-  // Cadre de signature
+  // Cadre de signature (bordure uniquement, PAS de remplissage noir)
   page.drawRectangle({
     x: 60,
     y: signatureBlockY,
     width: 200,
     height: 50,
+    borderColor: undefined,
     borderWidth: 0.5,
+    // pas de propriété "color" => pas de fill
   });
 
-  // "Signature" = nom en police script
+  // "Signature" = nom en police script, centré dans la zone
   const signatureName = profile.last_name || fullName || "Client";
   page.drawText(signatureName, {
     x: 70,
