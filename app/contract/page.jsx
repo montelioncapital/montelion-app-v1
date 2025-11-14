@@ -10,24 +10,35 @@ export default function ContractPage() {
 
   const [loading, setLoading] = useState(true);
   const [signing, setSigning] = useState(false);
+  const [error, setError] = useState("");
+  const [ok, setOk] = useState("");
 
   const [profile, setProfile] = useState(null);
   const [address, setAddress] = useState(null);
+  const [kyc, setKyc] = useState(null);
+  const [poa, setPoa] = useState(null);
 
-  const [acceptTerms, setAcceptTerms] = useState(false);
+  // Checkbox (plus de signature pad)
+  const [hasAccepted, setHasAccepted] = useState(false);
 
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-
-  // Charger les infos + vérifier l'auth
+  // ----------------- LOAD DATA -----------------
   useEffect(() => {
     (async () => {
       setLoading(true);
       setError("");
+      setOk("");
 
-      const { data: sessionData } = await supabase.auth.getSession();
+      const { data: sessionData, error: sessionErr } =
+        await supabase.auth.getSession();
+
+      if (sessionErr) {
+        console.error("session error", sessionErr);
+        setError("We couldn't verify your session. Please sign in again.");
+        setLoading(false);
+        return;
+      }
+
       const session = sessionData?.session;
-
       if (!session?.user) {
         router.replace("/login");
         return;
@@ -37,11 +48,13 @@ export default function ContractPage() {
 
       const [
         { data: profileData, error: profileErr },
-        { data: addressData, error: addrErr },
+        { data: addrData, error: addrErr },
+        { data: kycData, error: kycErr },
+        { data: poaData, error: poaErr },
       ] = await Promise.all([
         supabase
           .from("profiles")
-          .select("first_name, last_name, date_of_birth")
+          .select("first_name, last_name, date_of_birth, phone_e164")
           .eq("id", userId)
           .maybeSingle(),
         supabase
@@ -51,63 +64,87 @@ export default function ContractPage() {
           .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle(),
+        supabase
+          .from("kyc_identities")
+          .select("doc_type")
+          .eq("user_id", userId)
+          .maybeSingle(),
+        supabase
+          .from("proof_of_address")
+          .select("doc_type")
+          .eq("user_id", userId)
+          .maybeSingle(),
       ]);
 
-      if (profileErr || addrErr) {
-        console.error("contract load error", { profileErr, addrErr });
-        setError("Unable to load your information.");
+      if (profileErr || addrErr || kycErr || poaErr) {
+        console.error("contract data errors", {
+          profileErr,
+          addrErr,
+          kycErr,
+          poaErr,
+        });
+        setError(
+          "We couldn't load the data required to generate your contract."
+        );
+        setLoading(false);
+        return;
+      }
+
+      if (!profileData || !addrData || !kycData || !poaData) {
+        console.warn("missing data", {
+          profileData,
+          addrData,
+          kycData,
+          poaData,
+        });
+        setError(
+          "We couldn't load the data required to generate your contract."
+        );
         setLoading(false);
         return;
       }
 
       setProfile(profileData);
-      setAddress(addressData);
+      setAddress(addrData);
+      setKyc(kycData);
+      setPoa(poaData);
       setLoading(false);
     })();
   }, [router]);
 
+  // ----------------- SIGN CONTRACT -----------------
   async function handleSign() {
     setError("");
-    setSuccess("");
-
-    if (!acceptTerms) {
-      setError(
-        "Please confirm that you have read and accept the terms of the agreement."
-      );
-      return;
-    }
-
+    setOk("");
     setSigning(true);
+
     try {
       const res = await fetch("/api/contracts/sign", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({}), // plus de signatureDataUrl
+        headers: { "Content-Type": "application/json" },
+        // plus de signatureDataUrl, juste l’acceptation
+        body: JSON.stringify({
+          acceptedTerms: hasAccepted,
+        }),
       });
 
-      const json = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        console.error("sign error:", json);
-        setError(json.error || "Failed to sign contract.");
-        return;
+        console.error("sign error", data);
+        throw new Error(data.error || "Unable to sign your contract.");
       }
 
-      setSuccess("Your contract has been signed successfully.");
-      // petite pause pour que le message soit visible
-      setTimeout(() => {
-        router.push("/contract/signed");
-      }, 800);
-    } catch (e) {
-      console.error(e);
-      setError("Unexpected error while signing the contract.");
+      setOk("Your contract has been signed successfully.");
+      // plus tard: router.push("/exchange-setup");
+    } catch (err) {
+      setError(err.message || "Something went wrong while signing.");
     } finally {
       setSigning(false);
     }
   }
 
+  // ----------------- RENDER -----------------
   if (loading) {
     return (
       <div className="mc-card">
@@ -119,106 +156,110 @@ export default function ContractPage() {
     );
   }
 
+  if (error && !profile) {
+    return (
+      <div className="mc-card">
+        <div className="mc-section text-left">
+          <h1 className="mc-title mb-2">Contract</h1>
+          <p className="text-rose-400 text-sm">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const fullName = `${profile.first_name || ""} ${
+    profile.last_name || ""
+  }`.trim();
+
+  // on ne bloque plus sur une signature dessinée
+  const signDisabled = signing || !hasAccepted;
+
   return (
     <div className="mc-card">
       <div className="mc-section text-left max-w-2xl mx-auto">
-        <h1 className="mc-title mb-4">Contract</h1>
+        <h1 className="mc-title mb-3">Contract</h1>
         <p className="text-slate-400 mb-6">
           Please review the summary of your information below, then sign the
           discretionary management agreement.
         </p>
 
-        {/* Messages */}
-        {error && (
-          <div className="mb-4 rounded-md border border-red-700/70 bg-red-950/30 px-4 py-2 text-sm text-red-200">
+        {ok && (
+          <div className="mb-4 text-sm text-emerald-400 bg-emerald-950/40 border border-emerald-900/40 px-3 py-2 rounded-lg">
+            {ok}
+          </div>
+        )}
+        {error && profile && (
+          <div className="mb-4 text-sm text-rose-400 bg-rose-950/40 border border-rose-900/40 px-3 py-2 rounded-lg">
             {error}
           </div>
         )}
-        {success && (
-          <div className="mb-4 rounded-md border border-emerald-700/70 bg-emerald-950/30 px-4 py-2 text-sm text-emerald-200">
-            {success}
-          </div>
-        )}
 
-        {/* Client details */}
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/40 px-5 py-4 mb-5">
-          <h2 className="text-sm font-semibold text-slate-100 mb-3">
-            Client details
-          </h2>
-          <dl className="space-y-1.5 text-sm text-slate-300">
-            <div className="flex gap-2">
-              <dt className="w-32 text-slate-500">Name:</dt>
-              <dd>
-                {profile
-                  ? `${profile.first_name} ${profile.last_name}`.trim()
-                  : "—"}
-              </dd>
-            </div>
-            <div className="flex gap-2">
-              <dt className="w-32 text-slate-500">Date of birth:</dt>
-              <dd>{profile?.date_of_birth || "—"}</dd>
-            </div>
-            <div className="flex gap-2">
-              <dt className="w-32 text-slate-500">Address:</dt>
-              <dd>
-                {address
-                  ? `${address.address_line}, ${address.postal_code} ${address.city}, ${address.country}`
-                  : "—"}
-              </dd>
-            </div>
-          </dl>
+        {/* Résumé client */}
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/40 px-5 py-4 mb-6 space-y-2 text-sm text-slate-200">
+          <div className="font-semibold text-slate-50">Client details</div>
+          <div>
+            <span className="text-slate-500 mr-2">Name:</span>
+            {fullName}
+          </div>
+          <div>
+            <span className="text-slate-500 mr-2">Date of birth:</span>
+            {profile.date_of_birth}
+          </div>
+          <div>
+            <span className="text-slate-500 mr-2">Address:</span>
+            {address.address_line}, {address.postal_code} {address.city},{" "}
+            {address.country}
+          </div>
         </div>
 
-        {/* Summary block */}
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/40 px-5 py-4 mb-6">
-          <h2 className="text-sm font-semibold text-slate-100 mb-3">
+        {/* Texte contrat */}
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 px-5 py-4 mb-6 text-sm text-slate-300 space-y-3">
+          <p className="font-semibold text-slate-100">
             Discretionary Management Agreement (summary)
-          </h2>
-          <p className="text-sm text-slate-300 mb-2">
+          </p>
+          <p className="text-slate-400 text-xs leading-relaxed">
             By signing this agreement, you authorise Montelion Capital to manage
             your exchange account on a discretionary basis, within the
             investment mandate and risk limits defined in the full contract. You
             retain full custody of your assets at all times and can revoke API
             access whenever you wish.
           </p>
-          <p className="text-sm text-slate-300">
+          <p className="text-slate-500 text-xs">
             The full legal text will be generated as a PDF and stored securely
             once you sign. You will be able to download a copy for your records.
           </p>
         </div>
 
-        {/* Accept terms */}
-        <div className="mb-6">
-          <label className="flex items-start gap-2 text-sm text-slate-300 cursor-pointer">
-            <input
-              type="checkbox"
-              className="mt-[3px] h-4 w-4 rounded border-slate-600 bg-slate-900 text-[#2564ec] focus:ring-[#2564ec]"
-              checked={acceptTerms}
-              onChange={(e) => setAcceptTerms(e.target.checked)}
-            />
-            <span>
-              I confirm that I have read and accept the terms of the
-              discretionary management agreement and the related risk
-              disclosures.
-            </span>
-          </label>
+        {/* Checkbox acceptation */}
+        <label className="flex items-start gap-3 mb-4 text-xs text-slate-300 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            className="mt-[2px] h-4 w-4 rounded border-slate-600 bg-slate-900 text-blue-500 focus:ring-0"
+            checked={hasAccepted}
+            onChange={(e) => setHasAccepted(e.target.checked)}
+          />
+          <span>
+            I confirm that I have read and accept the terms of the discretionary
+            management agreement and the related risk disclosures.
+          </span>
+        </label>
 
-          <p className="mt-2 text-xs text-slate-500">
-            By clicking{" "}
-            <span className="font-medium text-slate-300">
-              “Sign contract”
-            </span>
-            , you electronically sign the agreement. Your full name will appear
-            as the signature in the generated PDF.
-          </p>
-        </div>
+        {/* Petit texte pour expliquer la signature électronique */}
+        <p className="mb-5 text-[11px] text-slate-500">
+          By clicking <span className="text-slate-300 font-medium">
+            “Sign contract”
+          </span>
+          , you electronically sign the agreement. Your name will appear as the
+          signature in the generated PDF.
+        </p>
 
-        {/* Bouton */}
         <button
           type="button"
           onClick={handleSign}
-          disabled={signing}
-          className="mc-btn mc-btn-primary inline-flex items-center justify-center disabled:opacity-60"
+          disabled={signDisabled}
+          className={`mc-btn mc-btn-primary ${
+            signDisabled ? "opacity-60 cursor-not-allowed" : ""
+          }`}
         >
           {signing ? "Signing…" : "Sign contract"}
         </button>
