@@ -5,14 +5,11 @@ import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { PDFDocument, StandardFonts } from "pdf-lib";
 
 export const runtime = "nodejs";
-// pour être sûr que Next ne mette jamais cette route en cache
-export const dynamic = "force-dynamic";
 
 export async function POST(request) {
-  // --- Supabase côté serveur, lié aux cookies du navigateur ---
   const supabase = createRouteHandlerClient({ cookies });
 
-  // 1) Récupérer la session depuis les cookies
+  // ------------ SESSION ------------
   const {
     data: { session },
     error: sessionErr,
@@ -34,17 +31,15 @@ export async function POST(request) {
 
   const userId = session.user.id;
 
-  // 2) Récupérer le body (signature canvas)
+  // ------------ BODY (on ignore la signature à main levée maintenant) ------------
   let body = {};
   try {
     body = (await request.json()) || {};
-  } catch {
+  } catch (_e) {
     body = {};
   }
 
-  const { signatureDataUrl } = body;
-
-  // 3) Charger les données nécessaires au contrat
+  // ------------ LOAD DATA ------------
   const [
     { data: profile, error: profileErr },
     { data: address, error: addrErr },
@@ -95,19 +90,21 @@ export async function POST(request) {
     );
   }
 
-  // 4) Générer le PDF
+  // ------------ GENERATE PDF ------------
   const pdfDoc = await PDFDocument.create();
   const page = pdfDoc.addPage([595, 842]); // A4
   const { height } = page.getSize();
 
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  const scriptFont = await pdfDoc.embedFont(StandardFonts.HelveticaOblique); // style "stylo"
 
   let y = height - 80;
 
   const fullName = `${profile.first_name || ""} ${
     profile.last_name || ""
   }`.trim();
+  const lastName = profile.last_name || fullName || "Signature";
   const signedAt = new Date().toISOString();
 
   page.drawText("Montelion Capital", {
@@ -125,7 +122,12 @@ export async function POST(request) {
   });
 
   y -= 40;
-  page.drawText(`Client: ${fullName}`, { x: 60, y, size: 11, font });
+  page.drawText(`Client: ${fullName}`, {
+    x: 60,
+    y,
+    size: 11,
+    font,
+  });
   y -= 18;
   page.drawText(`Date of birth: ${profile.date_of_birth}`, {
     x: 60,
@@ -136,13 +138,23 @@ export async function POST(request) {
   y -= 18;
   page.drawText(
     `Address: ${address.address_line}, ${address.postal_code} ${address.city}, ${address.country}`,
-    { x: 60, y, size: 11, font }
+    {
+      x: 60,
+      y,
+      size: 11,
+      font,
+    }
   );
 
   y -= 40;
   page.drawText(
     "By signing this agreement, the Client authorises Montelion Capital to",
-    { x: 60, y, size: 10, font }
+    {
+      x: 60,
+      y,
+      size: 10,
+      font,
+    }
   );
   y -= 14;
   page.drawText(
@@ -180,32 +192,18 @@ export async function POST(request) {
     borderWidth: 0.5,
   });
 
-  // Image de signature depuis le canvas (dataURL)
-  if (signatureDataUrl && signatureDataUrl.startsWith("data:image")) {
-    try {
-      const base64 = signatureDataUrl.split(",")[1];
-      const signatureBytes = Buffer.from(base64, "base64");
-      const signaturePng = await pdfDoc.embedPng(signatureBytes);
-
-      const sigWidth = 180;
-      const sigHeight =
-        (signaturePng.height / signaturePng.width) * sigWidth;
-
-      page.drawImage(signaturePng, {
-        x: 70,
-        y: signatureBlockY + 5,
-        width: sigWidth,
-        height: Math.min(sigHeight, 40),
-      });
-    } catch (e) {
-      console.error("Error embedding signature image", e);
-    }
-  }
+  // "Signature" en texte – nom de famille en police cursive
+  page.drawText(lastName, {
+    x: 70,
+    y: signatureBlockY + 18,
+    size: 18,
+    font: scriptFont,
+  });
 
   const pdfBytes = await pdfDoc.save();
   const pdfUint8 = new Uint8Array(pdfBytes);
 
-  // 5) Upload du PDF dans le bucket "contracts"
+  // ------------ UPLOAD TO STORAGE ------------
   const fileName = `contract-${userId}-${Date.now()}.pdf`;
   const { data: uploadData, error: uploadErr } = await supabase.storage
     .from("contracts")
@@ -224,7 +222,7 @@ export async function POST(request) {
 
   const pdfPath = uploadData?.path || fileName;
 
-  // 6) Upsert de la ligne dans "contracts"
+  // ------------ UPSERT CONTRACT ROW ------------
   const { data: contractRow, error: upsertErr } = await supabase
     .from("contracts")
     .upsert(
@@ -232,30 +230,3 @@ export async function POST(request) {
         user_id: userId,
         status: "signed",
         pdf_url: pdfPath,
-        signed_at: signedAt,
-      },
-      { onConflict: "user_id" }
-    )
-    .select()
-    .maybeSingle();
-
-  if (upsertErr) {
-    console.error("contracts upsert error", upsertErr);
-    return NextResponse.json(
-      { error: "Failed to save contract in database." },
-      { status: 500 }
-    );
-  }
-
-  // 7) Mettre à jour l'onboarding (step 7, terminé)
-  await supabase.from("onboarding_state").upsert(
-    {
-      user_id: userId,
-      current_step: 8,
-      completed: true,
-    },
-    { onConflict: "user_id" }
-  );
-
-  return NextResponse.json({ ok: true, contract: contractRow });
-}
