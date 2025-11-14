@@ -64,7 +64,6 @@ export default function GetStartedAdvancedPage() {
   const [currentStep, setCurrentStep] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Charger la session + current_step
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -97,20 +96,20 @@ export default function GetStartedAdvancedPage() {
       return;
     }
 
-    const targetStep = 10;
+    const targetStep = 11;
 
-    if (currentStep == null || currentStep < targetStep) {
-      await supabase.from("onboarding_state").upsert(
-        {
-          user_id: userId,
-          current_step: targetStep,
-          completed: false,
-        },
-        { onConflict: "user_id" }
-      );
-    }
+    // On met à jour l'étape à 11
+    await supabase.from("onboarding_state").upsert(
+      {
+        user_id: userId,
+        current_step: targetStep,
+        completed: false,
+      },
+      { onConflict: "user_id" }
+    );
 
-    router.push("/onboarding");
+    // 🚀 REDIRECTION VERS TA NOUVELLE PAGE
+    router.push("/exchange/setup"); 
   }
 
   if (loading) {
@@ -127,14 +126,13 @@ export default function GetStartedAdvancedPage() {
   return (
     <div className="mc-card">
       <div className="mc-section text-left max-w-2xl mx-auto">
-
         <h1 className="mc-title mb-3">Let&apos;s continue your setup</h1>
         <p className="text-slate-400 mb-10">
           Your contract is now signed. Next, you&apos;ll connect your exchange
           account so Montelion can trade while you keep full control of your funds.
         </p>
 
-        {/* Timeline verticale */}
+        {/* Timeline */}
         <div className="space-y-5 mb-8">
           {STEPS.map((step, index) => {
             const isCompleted = step.id <= 3;
@@ -146,7 +144,6 @@ export default function GetStartedAdvancedPage() {
                 key={step.id}
                 className="grid grid-cols-[32px,1fr] gap-4 items-stretch"
               >
-                {/* Colonne pastille + ligne */}
                 <div className="flex flex-col items-center">
                   <div
                     className={[
@@ -166,7 +163,6 @@ export default function GetStartedAdvancedPage() {
                   )}
                 </div>
 
-                {/* Carte étape */}
                 <div
                   className={[
                     "rounded-2xl border px-5 py-4 sm:py-5 bg-slate-900/40",
@@ -210,17 +206,13 @@ export default function GetStartedAdvancedPage() {
           })}
         </div>
 
-        {/* Bas de page : uniquement le bouton */}
-        <div className="space-y-4">
-          <button
-            type="button"
-            onClick={handleContinue}
-            className="mc-btn mc-btn-primary inline-flex items-center justify-center"
-          >
-            Continue
-          </button>
-        </div>
-
+        <button
+          type="button"
+          onClick={handleContinue}
+          className="mc-btn mc-btn-primary inline-flex items-center justify-center"
+        >
+          Continue
+        </button>
       </div>
     </div>
   );
