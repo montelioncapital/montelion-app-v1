@@ -31,12 +31,13 @@ export async function POST(request) {
 
   const userId = session.user.id;
 
-  // ------------ BODY (on ignore la signature à main levée maintenant) ------------
-  let body = {};
+  // ------------ BODY (facultatif) ------------
+  // On garde la possibilité de recevoir un body, mais on ne lit plus de signatureDataUrl
   try {
-    body = (await request.json()) || {};
-  } catch (_e) {
-    body = {};
+    // eslint-disable-next-line no-unused-vars
+    const _body = await request.json();
+  } catch {
+    // pas grave si pas de JSON
   }
 
   // ------------ LOAD DATA ------------
@@ -97,14 +98,13 @@ export async function POST(request) {
 
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-  const scriptFont = await pdfDoc.embedFont(StandardFonts.HelveticaOblique); // style "stylo"
+  const fontItalic = await pdfDoc.embedFont(StandardFonts.HelveticaOblique);
 
   let y = height - 80;
 
   const fullName = `${profile.first_name || ""} ${
     profile.last_name || ""
   }`.trim();
-  const lastName = profile.last_name || fullName || "Signature";
   const signedAt = new Date().toISOString();
 
   page.drawText("Montelion Capital", {
@@ -167,7 +167,7 @@ export async function POST(request) {
     { x: 60, y, size: 10, font }
   );
 
-  // Zone de signature en bas de page
+  // ------------ BLOC SIGNATURE TEXTE ------------
   const signatureBlockY = 140;
 
   page.drawText(`Signed electronically on: ${signedAt.slice(0, 10)}`, {
@@ -176,28 +176,28 @@ export async function POST(request) {
     size: 10,
     font,
   });
-  page.drawText(`Client: ${fullName}`, {
+
+  page.drawText(`Client:`, {
     x: 60,
     y: signatureBlockY + 35,
     size: 10,
     font,
   });
 
-  // Cadre de signature
-  page.drawRectangle({
-    x: 60,
-    y: signatureBlockY,
-    width: 200,
-    height: 50,
-    borderWidth: 0.5,
+  // "Signature" en mode écriture manuscrite (italic + plus gros)
+  page.drawText(fullName || session.user.email, {
+    x: 120,
+    y: signatureBlockY + 30,
+    size: 14,
+    font: fontItalic,
   });
 
-  // "Signature" en texte – nom de famille en police cursive
-  page.drawText(lastName, {
-    x: 70,
-    y: signatureBlockY + 18,
-    size: 18,
-    font: scriptFont,
+  // Petite ligne pour matérialiser la zone de signature
+  page.drawText("__________________________", {
+    x: 60,
+    y: signatureBlockY + 28,
+    size: 10,
+    font,
   });
 
   const pdfBytes = await pdfDoc.save();
@@ -230,3 +230,30 @@ export async function POST(request) {
         user_id: userId,
         status: "signed",
         pdf_url: pdfPath,
+        signed_at: signedAt,
+      },
+      { onConflict: "user_id" }
+    )
+    .select()
+    .maybeSingle();
+
+  if (upsertErr) {
+    console.error("contracts upsert error", upsertErr);
+    return NextResponse.json(
+      { error: "Failed to save contract in database." },
+      { status: 500 }
+    );
+  }
+
+  // ------------ UPDATE ONBOARDING STATE ------------
+  await supabase.from("onboarding_state").upsert(
+    {
+      user_id: userId,
+      current_step: 8, // étape "contract" terminée
+      completed: true,
+    },
+    { onConflict: "user_id" }
+  );
+
+  return NextResponse.json({ ok: true, contract: contractRow });
+}
