@@ -209,43 +209,42 @@ export default function ContractPage() {
           </div>
         </div>
 
-      {/* Texte contrat factice */}
-<div className="rounded-2xl border border-slate-800 bg-slate-900/60 px-5 py-4 mb-6 text-sm text-slate-300 space-y-3">
+        {/* Texte contrat */}
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 px-5 py-4 mb-6 text-sm text-slate-300 space-y-3">
+          {/* Titre */}
+          <p className="font-semibold text-slate-100">
+            Discretionary Management Agreement
+          </p>
 
-  {/* Titre */}
-  <p className="font-semibold text-slate-100">
-    Discretionary Management Agreement
-  </p>
+          {/* Texte principal */}
+          <p className="text-slate-400 text-xs leading-relaxed">
+            By signing this agreement, you authorise Montelion Capital to manage
+            your exchange account on a discretionary basis, within the
+            investment mandate and risk limits defined in the full contract. You
+            retain full custody of your assets at all times and can revoke API
+            access whenever you wish.
+          </p>
 
-  {/* Texte principal */}
-  <p className="text-slate-400 text-xs leading-relaxed">
-    By signing this agreement, you authorise Montelion Capital to manage
-    your exchange account on a discretionary basis, within the investment
-    mandate and risk limits defined in the full contract. You retain full
-    custody of your assets at all times and can revoke API access whenever
-    you wish.
-  </p>
+          {/* Lien vers le mandat complet */}
+          <p className="text-slate-500 text-xs mt-1">
+            You can read the full management mandate{" "}
+            <a
+              href="/legal/montelion-discretionary-mandate.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-slate-200 underline underline-offset-2 hover:text-white"
+            >
+              here (PDF)
+            </a>
+            .
+          </p>
 
-  {/* Lien vers le PDF vierge */}
-  <p className="text-xs text-slate-300">
-    You can read the full management mandate{" "}
-    <a
-      href="/legal/montelion-discretionary-mandate.pdf"
-      target="_blank"
-      rel="noopener noreferrer"
-      className="text-blue-400 hover:text-blue-300 underline"
-    >
-      here (PDF)
-    </a>.
-  </p>
-
-  {/* Texte final */}
-  <p className="text-slate-500 text-xs">
-    The full legal text will be generated as a PDF and stored securely once
-    you sign. You will be able to download a copy for your records.
-  </p>
-
-</div>
+          {/* Texte final */}
+          <p className="text-slate-500 text-xs">
+            The full legal text will be generated as a PDF and stored securely
+            once you sign. You will be able to download a copy for your records.
+          </p>
+        </div>
 
         {/* Checkbox acceptation */}
         <label className="flex items-start gap-3 mb-2 text-xs text-slate-300 cursor-pointer select-none">
