@@ -1,91 +1,168 @@
-"use client";
+// app/api/contracts/sign/route.js
+import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import fs from "node:fs/promises";
+import path from "node:path";
 
-import { Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+export async function POST(req) {
+  try {
+    // 1) Lire le body
+    const { acceptedTerms } = await req.json().catch(() => ({}));
 
-// Petit icône de téléchargement en SVG (pas de lib externe)
-function DownloadIcon({ className = "" }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 3v12" />
-      <polyline points="7 11 12 16 17 11" />
-      <rect x="4" y="18" width="16" height="3" rx="1" />
-    </svg>
-  );
-}
+    if (!acceptedTerms) {
+      return NextResponse.json(
+        { error: "You must accept the agreement before signing." },
+        { status: 400 }
+      );
+    }
 
-function SignedContent() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
+    // 2) Récupérer l'utilisateur Supabase à partir des cookies
+    const supabase = createRouteHandlerClient({ cookies });
 
-  const fileUrl = searchParams.get("file");
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-  return (
-    <div className="mc-card">
-      <div className="mc-section text-left max-w-xl mx-auto">
-        <h1 className="mc-title mb-3">Contract signed</h1>
+    if (userError || !user) {
+      console.error("auth error", userError);
+      return NextResponse.json(
+        { error: "Not authenticated." },
+        { status: 401 }
+      );
+    }
 
-        <p className="text-slate-400 mb-4">
-          Thank you for your trust. Your management mandate has been signed
-          successfully.
-        </p>
+    const userId = user.id;
 
-        <div className="rounded-xl border border-slate-800 bg-slate-900/40 px-4 py-3 mb-6 text-sm text-slate-300">
-          Your signed contract is now securely stored.
-        </div>
+    // 3) Charger les infos pour le PDF
+    const [{ data: profile }, { data: address }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("first_name, last_name, date_of_birth")
+        .eq("id", userId)
+        .maybeSingle(),
+      supabase
+        .from("addresses")
+        .select("address_line, city, postal_code, country")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
 
-        {/* Bouton "Download" même style que Continue mais en gris */}
-        {fileUrl && (
-          <a
-            href={fileUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="
-              mc-btn w-full mb-4
-              flex items-center justify-center gap-2
-              bg-slate-700 text-white hover:bg-slate-600
-              transition
-            "
-          >
-            <DownloadIcon className="h-5 w-5" />
-            <span>Download signed contract (PDF)</span>
-          </a>
-        )}
+    if (!profile || !address) {
+      return NextResponse.json(
+        { error: "Missing profile or address data." },
+        { status: 400 }
+      );
+    }
 
-        {/* Bouton Continue bleu */}
-        <button
-          type="button"
-          onClick={() => router.push("/get-started")}
-          className="mc-btn mc-btn-primary w-full"
-        >
-          Continue
-        </button>
-      </div>
-    </div>
-  );
-}
+    const fullName = `${profile.first_name || ""} ${
+      profile.last_name || ""
+    }`.trim();
+    const lastName = profile.last_name || "";
 
-export default function ContractSignedPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="mc-card">
-          <div className="mc-section text-left max-w-xl mx-auto">
-            <h1 className="mc-title mb-3">Contract signed</h1>
-            <p className="text-slate-400">Loading your contract…</p>
-          </div>
-        </div>
+    // 4) Charger le template PDF public/legal/montelion-discretionary-mandate.pdf
+    const templatePath = path.join(
+      process.cwd(),
+      "public",
+      "legal",
+      "montelion-discretionary-mandate.pdf"
+    );
+    const templateBytes = await fs.readFile(templatePath);
+    const pdfDoc = await PDFDocument.load(templateBytes);
+
+    const page = pdfDoc.getPages()[0];
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const dd = String(now.getDate()).padStart(2, "0");
+    const dateStr = `${yyyy}-${mm}-${dd}`;
+
+    // 5) Écrire les infos dans le PDF
+    page.drawText(`Client: ${fullName}`, {
+      x: 72,
+      y: 700,
+      size: 10,
+      font,
+      color: rgb(0, 0, 0),
+    });
+
+    page.drawText(
+      `Address: ${address.address_line}, ${address.postal_code} ${address.city}, ${address.country}`,
+      {
+        x: 72,
+        y: 685,
+        size: 9,
+        font,
+        color: rgb(0, 0, 0),
       }
-    >
-      <SignedContent />
-    </Suspense>
-  );
+    );
+
+    page.drawText(`Signed electronically on: ${dateStr}`, {
+      x: 72,
+      y: 140,
+      size: 9,
+      font,
+      color: rgb(0, 0, 0),
+    });
+
+    // Signature = nom de famille en “style stylo”
+    page.drawText(lastName.toUpperCase(), {
+      x: 300,
+      y: 120,
+      size: 14,
+      font,
+      color: rgb(0, 0, 0),
+    });
+
+    const pdfBytes = await pdfDoc.save();
+
+    // 6) Sauvegarder le PDF en local (public/contracts)
+    const contractsDir = path.join(process.cwd(), "public", "contracts");
+    await fs.mkdir(contractsDir, { recursive: true });
+
+    const fileName = `contract-${userId}-${Date.now()}.pdf`;
+    const filePath = path.join(contractsDir, fileName);
+    await fs.writeFile(filePath, pdfBytes);
+
+    const publicUrl = `/contracts/${fileName}`;
+
+    // 7) Enregistrer dans la table contracts
+    const { error: insertError } = await supabase.from("contracts").insert({
+      user_id: userId,
+      status: "signed",
+      pdf_url: publicUrl,
+      signed_at: new Date().toISOString(),
+    });
+
+    if (insertError) {
+      console.error("contracts insert error:", insertError);
+      // on ne bloque pas pour autant
+    }
+
+    // 8) Mettre à jour l’onboarding → étape 9
+    const { error: stepError } = await supabase
+      .from("profiles")
+      .update({ current_step: 9 })
+      .eq("id", userId);
+
+    if (stepError) {
+      console.error("profiles current_step update error:", stepError);
+      // pareil, on ne bloque pas la réponse au client
+    }
+
+    // 9) OK
+    return NextResponse.json({ ok: true, pdfUrl: publicUrl });
+  } catch (err) {
+    console.error("/api/contracts/sign error:", err);
+    return NextResponse.json(
+      { error: "Unexpected error while signing the contract." },
+      { status: 500 }
+    );
+  }
 }
