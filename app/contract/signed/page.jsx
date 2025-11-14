@@ -2,7 +2,25 @@
 
 import { Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
+
+// Petit icône de téléchargement en SVG (pas de lib externe)
+function DownloadIcon({ className = "" }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 3v12" />
+      <polyline points="7 11 12 16 17 11" />
+      <rect x="4" y="18" width="16" height="3" rx="1" />
+    </svg>
+  );
+}
 
 function SignedContent() {
   const searchParams = useSearchParams();
@@ -24,28 +42,27 @@ function SignedContent() {
           Your signed contract is now securely stored.
         </div>
 
-        {/* BOUTON DOWNLOAD STYLE "MC-BTN" MAIS EN GRIS */}
+        {/* Bouton "Download" même style que Continue mais en gris */}
         {fileUrl && (
           <a
             href={fileUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="
-              mc-btn 
-              w-full 
-              flex items-center justify-center gap-2 
-              bg-slate-700 text-white 
-              hover:bg-slate-600 
-              transition mb-6
+              mc-btn w-full mb-4
+              flex items-center justify-center gap-2
+              bg-slate-700 text-white hover:bg-slate-600
+              transition
             "
           >
-            <ArrowDownTrayIcon className="h-5 w-5" />
-            Download signed contract (PDF)
+            <DownloadIcon className="h-5 w-5" />
+            <span>Download signed contract (PDF)</span>
           </a>
         )}
 
-        {/* BTN CONTINUE */}
+        {/* Bouton Continue bleu */}
         <button
+          type="button"
           onClick={() => router.push("/get-started")}
           className="mc-btn mc-btn-primary w-full"
         >
