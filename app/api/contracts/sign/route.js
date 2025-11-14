@@ -2,220 +2,221 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { PDFDocument, StandardFonts } from "pdf-lib";
+
+export const runtime = "nodejs";
 
 export async function POST() {
   const supabase = createRouteHandlerClient({ cookies });
 
-  // 1) Auth user
   const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
+    data: { session },
+    error: sessionErr,
+  } = await supabase.auth.getSession();
 
-  if (authError || !user) {
+  if (sessionErr) {
     return NextResponse.json(
-      { error: "Not authenticated" },
+      { error: sessionErr.message || "Unable to get session." },
+      { status: 500 }
+    );
+  }
+
+  if (!session?.user) {
+    return NextResponse.json(
+      { error: "Not authenticated." },
       { status: 401 }
     );
   }
 
-  const userId = user.id;
+  const userId = session.user.id;
 
-  // 2) Charger profil
-  const { data: profile, error: profileErr } = await supabase
-    .from("profiles")
-    .select("first_name, last_name, date_of_birth, country")
-    .eq("id", userId)
-    .maybeSingle();
+  // 1) Récupérer les données nécessaires (sans filtrer sur status)
+  const [
+    { data: profile, error: profileErr },
+    { data: address, error: addrErr },
+    { data: kyc, error: kycErr },
+    { data: poa, error: poaErr },
+  ] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("first_name, last_name, date_of_birth")
+      .eq("id", userId)
+      .maybeSingle(),
+    supabase
+      .from("addresses")
+      .select("address_line, city, postal_code, country")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase.from("kyc_identities").select("doc_type").eq("user_id", userId).maybeSingle(),
+    supabase.from("proof_of_address").select("doc_type").eq("user_id", userId).maybeSingle(),
+  ]);
 
-  if (profileErr || !profile) {
+  if (profileErr || addrErr || kycErr || poaErr) {
+    console.error("contract sign data errors", {
+      profileErr,
+      addrErr,
+      kycErr,
+      poaErr,
+    });
     return NextResponse.json(
-      { error: "Profile not found" },
+      { error: "Unable to load all required data for the contract." },
       { status: 400 }
     );
   }
 
-  // 3) Charger adresse (la plus récente)
-  const { data: address, error: addrErr } = await supabase
-    .from("addresses")
-    .select("address_line, postal_code, city, country")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (addrErr || !address) {
+  if (!profile || !address || !kyc || !poa) {
     return NextResponse.json(
-      { error: "Address not found" },
+      { error: "Missing data required to generate the contract." },
       { status: 400 }
     );
   }
 
-  // Infos du client
-  const fullName = `${profile.first_name || ""} ${profile.last_name || ""}`.trim();
-  const dob = profile.date_of_birth || "";
-  const country = address.country || profile.country || "";
-  const fullAddress = `${address.address_line || ""}\n${address.postal_code || ""} ${
-    address.city || ""
-  }`.trim();
-
-  const signedAt = new Date();
-
-  // 4) Génération du PDF (template factice)
+  // 2) Générer un PDF simple avec pdf-lib
   const pdfDoc = await PDFDocument.create();
-  const page = pdfDoc.addPage([595.28, 841.89]); // A4
-  const { width, height } = page.getSize();
+  const page = pdfDoc.addPage([595, 842]); // A4 portrait
+  const { height } = page.getSize();
+
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-  const margin = 50;
-  let cursorY = height - margin;
+  let y = height - 80;
 
-  const drawText = (text, opts = {}) => {
-    const {
-      x = margin,
-      y = cursorY,
-      size = 11,
-      bold = false,
-      color = rgb(0.95, 0.97, 1),
-    } = opts;
+  const fullName = `${profile.first_name || ""} ${
+    profile.last_name || ""
+  }`.trim();
+  const signedAt = new Date().toISOString();
 
-    const usedFont = bold ? fontBold : font;
-    page.drawText(text, { x, y, size, font: usedFont, color });
-    cursorY = y - size - 4;
-  };
-
-  // Header
-  drawText("Montelion Capital – Discretionary Management Agreement", {
-    size: 14,
-    bold: true,
+  page.drawText("Montelion Capital", {
+    x: 60,
+    y,
+    size: 16,
+    font: fontBold,
   });
-  cursorY -= 10;
-
-  drawText("This is a fictive contract template used for onboarding tests.", {
-    size: 9,
-    color: rgb(0.7, 0.75, 0.85),
+  y -= 28;
+  page.drawText("Discretionary Management Agreement (summary)", {
+    x: 60,
+    y,
+    size: 13,
+    font: fontBold,
   });
-  cursorY -= 20;
 
-  // Section: Client information
-  drawText("Client information", { size: 12, bold: true });
-  cursorY -= 6;
-
-  drawText(`Name: ${fullName}`);
-  drawText(`Date of birth: ${dob || "–"}`);
-  drawText(`Country: ${country || "–"}`);
-  drawText("Address:");
-  fullAddress.split("\n").forEach((line) => drawText(`  ${line}`));
-  cursorY -= 10;
-
-  // Section: Agreement body (factice)
-  drawText("Agreement summary", { size: 12, bold: true });
-  cursorY -= 6;
-
-  const paragraphs = [
-    "You appoint Montelion Capital to manage your trading strategy on your own exchange account, using a read-only API key with no withdrawal permissions.",
-    "You remain the sole owner and custodian of your assets at all times. You can revoke Montelion's access whenever you wish by disabling the API key on your exchange.",
-    "Fees, risk disclosures and strategy details will be specified in the final production contract template.",
-  ];
-
-  const wrapText = (text, lineWidth) => {
-    const words = text.split(" ");
-    const lines = [];
-    let current = "";
-
-    for (const w of words) {
-      const testLine = current ? `${current} ${w}` : w;
-      const width = font.widthOfTextAtSize(testLine, 11);
-      if (width > lineWidth) {
-        lines.push(current);
-        current = w;
-      } else {
-        current = testLine;
-      }
+  y -= 40;
+  page.drawText(`Client: ${fullName}`, {
+    x: 60,
+    y,
+    size: 11,
+    font,
+  });
+  y -= 18;
+  page.drawText(`Date of birth: ${profile.date_of_birth}`, {
+    x: 60,
+    y,
+    size: 11,
+    font,
+  });
+  y -= 18;
+  page.drawText(
+    `Address: ${address.address_line}, ${address.postal_code} ${address.city}, ${address.country}`,
+    {
+      x: 60,
+      y,
+      size: 11,
+      font,
     }
-    if (current) lines.push(current);
-    return lines;
-  };
+  );
 
-  const maxTextWidth = width - margin * 2;
+  y -= 40;
+  page.drawText(
+    "By signing this agreement, the Client authorises Montelion Capital to",
+    {
+      x: 60,
+      y,
+      size: 10,
+      font,
+    }
+  );
+  y -= 14;
+  page.drawText(
+    "manage the Client's exchange account on a discretionary basis, within the",
+    { x: 60, y, size: 10, font }
+  );
+  y -= 14;
+  page.drawText(
+    "limits and risk parameters defined in the full mandate and fee schedule.",
+    { x: 60, y, size: 10, font }
+  );
 
-  paragraphs.forEach((p) => {
-    const lines = wrapText(p, maxTextWidth);
-    lines.forEach((l) => drawText(l));
-    cursorY -= 6;
+  y -= 40;
+  page.drawText(`Signed electronically on: ${signedAt.slice(0, 10)}`, {
+    x: 60,
+    y,
+    size: 10,
+    font,
   });
-
-  cursorY -= 15;
-
-  // Section: Signature
-  drawText("Electronic signature", { size: 12, bold: true });
-  cursorY -= 6;
-
-  drawText(
-    `Signed electronically by: ${fullName || "________________"}`,
-    { size: 11 }
-  );
-  drawText(
-    `Signature date: ${signedAt.toISOString().slice(0, 10)}`,
-    { size: 11 }
-  );
-
-  cursorY -= 20;
-
-  drawText(
-    "By signing electronically, you agree to the terms of this agreement.",
-    { size: 10, color: rgb(0.75, 0.8, 0.9) }
-  );
+  y -= 18;
+  page.drawText(`Client: ${fullName}`, {
+    x: 60,
+    y,
+    size: 10,
+    font,
+  });
 
   const pdfBytes = await pdfDoc.save();
+  const pdfUint8 = new Uint8Array(pdfBytes);
 
-  // 5) Upload dans le bucket "contracts"
+  // 3) Upload dans le bucket "contracts"
   const fileName = `contract-${userId}-${Date.now()}.pdf`;
-  const filePath = `${userId}/${fileName}`;
-
-  const { error: uploadErr } = await supabase.storage
+  const { data: uploadData, error: uploadErr } = await supabase.storage
     .from("contracts")
-    .upload(filePath, pdfBytes, {
+    .upload(fileName, pdfUint8, {
       contentType: "application/pdf",
-      upsert: true,
+      upsert: false,
     });
 
   if (uploadErr) {
-    console.error(uploadErr);
+    console.error("upload error", uploadErr);
     return NextResponse.json(
-      { error: "Failed to upload contract PDF" },
+      { error: "Failed to upload contract PDF." },
       { status: 500 }
     );
   }
 
-  // 6) Upsert dans la table contracts
-  const { error: contractErr } = await supabase.from("contracts").upsert(
+  const pdfPath = uploadData?.path || fileName;
+
+  // 4) Upsert dans public.contracts
+  const { data: contractRow, error: upsertErr } = await supabase
+    .from("contracts")
+    .upsert(
+      {
+        user_id: userId,
+        status: "signed",
+        pdf_url: pdfPath,
+        signed_at: signedAt,
+      },
+      { onConflict: "user_id" }
+    )
+    .select()
+    .maybeSingle();
+
+  if (upsertErr) {
+    console.error("contracts upsert error", upsertErr);
+    return NextResponse.json(
+      { error: "Failed to save contract in database." },
+      { status: 500 }
+    );
+  }
+
+  // 5) Mettre à jour l'onboarding_step à 7 et completed = true
+  await supabase.from("onboarding_state").upsert(
     {
       user_id: userId,
-      status: "signed",
-      pdf_url: filePath,
-      signed_at: signedAt.toISOString(),
+      current_step: 7,
+      completed: true,
     },
     { onConflict: "user_id" }
   );
 
-  if (contractErr) {
-    console.error(contractErr);
-    return NextResponse.json(
-      { error: "Failed to save contract row" },
-      { status: 500 }
-    );
-  }
-
-  // 7) Mettre à jour onboarding_state (step 8 par exemple)
-  await supabase
-    .from("onboarding_state")
-    .upsert(
-      { user_id: userId, current_step: 8, completed: false },
-      { onConflict: "user_id" }
-    );
-
-  return NextResponse.json({ success: true, pdfPath: filePath });
+  return NextResponse.json({ ok: true, contract: contractRow });
 }
