@@ -118,27 +118,13 @@ export default function ContractPage() {
     setSigning(true);
 
     try {
-      // 1) Récupérer le access_token de la session actuelle
-      const { data: sessionData, error: sessionErr } =
-        await supabase.auth.getSession();
-
-      if (sessionErr) {
-        console.error("session error in handleSign:", sessionErr);
-        throw new Error("Not authenticated.");
-      }
-
-      const accessToken = sessionData?.session?.access_token;
-      if (!accessToken) {
-        throw new Error("Not authenticated.");
-      }
-
-      // 2) Appeler l’API en lui envoyant le token
+      // On force l’envoi des cookies d’auth à l’API
       const res = await fetch("/api/contracts/sign", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           acceptedTerms: hasAccepted,
-          accessToken,
         }),
       });
 
@@ -152,6 +138,7 @@ export default function ContractPage() {
       setOk("Your contract has been signed successfully.");
       // plus tard: router.push("/exchange-setup");
     } catch (err) {
+      console.error("handleSign error:", err);
       setError(err.message || "Something went wrong while signing.");
     } finally {
       setSigning(false);
@@ -201,8 +188,9 @@ export default function ContractPage() {
             {ok}
           </div>
         )}
-        {/* On n’affiche pas "Not authenticated." dans la bannière si on a quand même les données */}
-        {error && profile && error !== "Not authenticated." && (
+
+        {/* On affiche maintenant TOUTES les erreurs, même "Not authenticated." */}
+        {error && profile && (
           <div className="mb-4 text-sm text-rose-400 bg-rose-950/40 border border-rose-900/40 px-3 py-2 rounded-lg">
             {error}
           </div>
