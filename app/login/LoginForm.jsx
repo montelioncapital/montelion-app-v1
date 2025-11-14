@@ -14,25 +14,37 @@ export default function LoginForm() {
   const [ok, setOk] = useState("");
 
   // -----------------------
-  // Helper de routing basé sur current_step
+  // Helper de routing basé sur current_step SEUL
   // -----------------------
-  function getOnboardingDestination(stepRaw, completedRaw) {
+  function getOnboardingDestination(stepRaw, _completedRaw) {
     const step = Number(stepRaw ?? 0);
-    const completed = Boolean(completedRaw);
 
-    console.log("[ROUTER] step=", step, "completed=", completed);
+    console.log("[ROUTER] step=", step);
 
-    if (completed) return "/"; // tout terminé → dashboard
+    // Nouveau user / pas encore commencé → get-started
+    if (!Number.isFinite(step) || step <= 0) {
+      return "/get-started";
+    }
 
-    if (!Number.isFinite(step) || step <= 0) return "/get-started";
+    // 1 → 6 : onboarding (profil, téléphone, adresse, KYC, POA…)
+    if (step >= 1 && step <= 6) {
+      return "/onboarding";
+    }
 
-    if (step >= 1 && step <= 6) return "/onboarding";
+    // 7 : passage à la signature du contrat
+    if (step === 7) {
+      // si tu as une page intermédiaire type /onboarding/contract-ready, mets-la ici
+      // return "/onboarding/contract-ready";
+      return "/contract";
+    }
 
-    if (step === 7) return "/onboarding/contract-ready";
+    // 8 et + : contrat signé, compte actif → dashboard
+    if (step >= 8) {
+      return "/";
+    }
 
-    if (step === 8) return "/contract";
-
-    return "/";
+    // fallback
+    return "/get-started";
   }
 
   // -----------------------
@@ -84,7 +96,7 @@ export default function LoginForm() {
       }
 
       if (!onboarding) {
-        // Créer une ligne avec step = 0 → va sur /get-started
+        // Aucun état → on crée une ligne à step = 0 → get-started
         const { error: insertErr } = await supabase
           .from("onboarding_state")
           .insert({
@@ -156,7 +168,6 @@ export default function LoginForm() {
             </a>
           </div>
 
-          {/* Champ PW + œil */}
           <div className="relative mt-2">
             <input
               type={show ? "text" : "password"}
@@ -168,7 +179,6 @@ export default function LoginForm() {
               required
               minLength={6}
             />
-
             <button
               type="button"
               onClick={() => setShow(!show)}
