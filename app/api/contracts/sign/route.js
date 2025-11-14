@@ -6,9 +6,10 @@ import { PDFDocument, StandardFonts } from "pdf-lib";
 
 export const runtime = "nodejs";
 
-export async function POST() {
+export async function POST(request) {
   const supabase = createRouteHandlerClient({ cookies });
 
+  // ------------ SESSION ------------
   const {
     data: { session },
     error: sessionErr,
@@ -30,7 +31,17 @@ export async function POST() {
 
   const userId = session.user.id;
 
-  // 1) Récupérer les données nécessaires (sans filtrer sur status)
+  // ------------ BODY (signature) ------------
+  let body = {};
+  try {
+    body = (await request.json()) || {};
+  } catch (_e) {
+    body = {};
+  }
+
+  const { signatureDataUrl } = body;
+
+  // ------------ LOAD DATA ------------
   const [
     { data: profile, error: profileErr },
     { data: address, error: addrErr },
@@ -73,9 +84,9 @@ export async function POST() {
     );
   }
 
-  // 2) Générer un PDF simple avec pdf-lib
+  // ------------ GENERATE PDF ------------
   const pdfDoc = await PDFDocument.create();
-  const page = pdfDoc.addPage([595, 842]); // A4 portrait
+  const page = pdfDoc.addPage([595, 842]); // A4
   const { height } = page.getSize();
 
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -148,25 +159,58 @@ export async function POST() {
     { x: 60, y, size: 10, font }
   );
 
-  y -= 40;
+  // Zone de signature en bas de page
+  const signatureBlockY = 140;
+
   page.drawText(`Signed electronically on: ${signedAt.slice(0, 10)}`, {
     x: 60,
-    y,
+    y: signatureBlockY + 50,
     size: 10,
     font,
   });
-  y -= 18;
   page.drawText(`Client: ${fullName}`, {
     x: 60,
-    y,
+    y: signatureBlockY + 35,
     size: 10,
     font,
   });
+
+  // Cadre de signature
+  page.drawRectangle({
+    x: 60,
+    y: signatureBlockY,
+    width: 200,
+    height: 50,
+    borderColor: undefined,
+    borderWidth: 0.5,
+  });
+
+  // Intégrer l'image de signature si fournie
+  if (signatureDataUrl && signatureDataUrl.startsWith("data:image")) {
+    try {
+      const base64 = signatureDataUrl.split(",")[1];
+      const signatureBytes = Buffer.from(base64, "base64");
+      const signaturePng = await pdfDoc.embedPng(signatureBytes);
+
+      const sigWidth = 180;
+      const sigHeight =
+        (signaturePng.height / signaturePng.width) * sigWidth;
+
+      page.drawImage(signaturePng, {
+        x: 70,
+        y: signatureBlockY + 5,
+        width: sigWidth,
+        height: Math.min(sigHeight, 40),
+      });
+    } catch (e) {
+      console.error("Error embedding signature image", e);
+    }
+  }
 
   const pdfBytes = await pdfDoc.save();
   const pdfUint8 = new Uint8Array(pdfBytes);
 
-  // 3) Upload dans le bucket "contracts"
+  // ------------ UPLOAD TO STORAGE ------------
   const fileName = `contract-${userId}-${Date.now()}.pdf`;
   const { data: uploadData, error: uploadErr } = await supabase.storage
     .from("contracts")
@@ -185,7 +229,7 @@ export async function POST() {
 
   const pdfPath = uploadData?.path || fileName;
 
-  // 4) Upsert dans public.contracts
+  // ------------ UPSERT CONTRACT ROW ------------
   const { data: contractRow, error: upsertErr } = await supabase
     .from("contracts")
     .upsert(
@@ -208,7 +252,7 @@ export async function POST() {
     );
   }
 
-  // 5) Mettre à jour l'onboarding_step à 7 et completed = true
+  // ------------ UPDATE ONBOARDING STATE ------------
   await supabase.from("onboarding_state").upsert(
     {
       user_id: userId,
