@@ -118,11 +118,25 @@ export default function ContractPage() {
     setSigning(true);
 
     try {
-      // On force l’envoi des cookies d’auth à l’API
+      // Récupérer la session courante pour avoir le access_token
+      const { data: sessionData, error: sessionErr } =
+        await supabase.auth.getSession();
+
+      if (sessionErr || !sessionData?.session) {
+        console.error("session error in handleSign", sessionErr);
+        setError("Not authenticated.");
+        setSigning(false);
+        return;
+      }
+
+      const accessToken = sessionData.session.access_token;
+
       const res = await fetch("/api/contracts/sign", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`, // 🔑 on passe le token
+        },
         body: JSON.stringify({
           acceptedTerms: hasAccepted,
         }),
@@ -136,9 +150,8 @@ export default function ContractPage() {
       }
 
       setOk("Your contract has been signed successfully.");
-      // plus tard: router.push("/exchange-setup");
+      // si tu veux : router.push("/contract/signed") plus tard
     } catch (err) {
-      console.error("handleSign error:", err);
       setError(err.message || "Something went wrong while signing.");
     } finally {
       setSigning(false);
