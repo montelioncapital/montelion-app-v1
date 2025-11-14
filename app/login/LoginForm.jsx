@@ -4,21 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabaseClient";
 
-// Helper pour savoir où envoyer l'utilisateur selon l'onboarding
-function getRedirectForStep(step, completed) {
-  if (!step || step <= 0) return "/get-started";
-
-  if (!completed) {
-    if (step >= 1 && step <= 5) return "/onboarding";
-    if (step === 6) return "/onboarding";       // proof of address est dans l'onboarding
-    if (step === 7) return "/contract/ready";   // page "bridge"
-    if (step === 8) return "/contract";         // page de signature
-  }
-
-  // si tout est terminé ou step inconnu → dashboard / home
-  return "/";
-}
-
 export default function LoginForm() {
   const router = useRouter();
   const [show, setShow] = useState(false);
@@ -67,7 +52,7 @@ export default function LoginForm() {
           console.error("onboarding_state error:", onboardingErr);
         }
 
-        // 2) Si pas de ligne → on en crée une (step 1) et on envoie vers /onboarding
+        // 2) Si pas de ligne → on en crée une (step 1)
         if (!onboarding) {
           const { error: insertErr } = await supabase
             .from("onboarding_state")
@@ -88,13 +73,14 @@ export default function LoginForm() {
           return;
         }
 
-        // 3) Sinon, on calcule la bonne route en fonction du step + completed
-        const redirectTo = getRedirectForStep(
-          onboarding.current_step,
-          onboarding.completed
-        );
+        // 3) Si onboarding non terminé → on renvoie sur /onboarding
+        if (!onboarding.completed) {
+          router.push("/onboarding");
+          return;
+        }
 
-        router.push(redirectTo);
+        // 4) Sinon onboarding terminé → home
+        router.push("/");
       } catch (e) {
         console.error(e);
         router.push("/"); // fallback
