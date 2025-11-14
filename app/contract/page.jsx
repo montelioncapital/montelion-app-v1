@@ -136,6 +136,7 @@ export default function ContractPage() {
       setOk("Your contract has been signed successfully.");
       // plus tard: router.push("/exchange-setup");
     } catch (err) {
+      console.error("handleSign error:", err);
       setError(err.message || "Something went wrong while signing.");
     } finally {
       setSigning(false);
@@ -185,8 +186,9 @@ export default function ContractPage() {
             {ok}
           </div>
         )}
-        {/* On n’affiche pas "Not authenticated." dans la bannière */}
-        {error && profile && error !== "Not authenticated." && (
+
+        {/* On affiche TOUTES les erreurs, y compris "Not authenticated." */}
+        {error && profile && (
           <div className="mb-4 text-sm text-rose-400 bg-rose-950/40 border border-rose-900/40 px-3 py-2 rounded-lg">
             {error}
           </div>
