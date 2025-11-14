@@ -1,14 +1,13 @@
-// app/contract/signed/page.jsx
 "use client";
 
 import { Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 
 function SignedContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  // URL du PDF dans ?file=...
   const fileUrl = searchParams.get("file");
 
   return (
@@ -25,18 +24,27 @@ function SignedContent() {
           Your signed contract is now securely stored.
         </div>
 
-        {/* Bouton download "non bleu" */}
+        {/* BOUTON DOWNLOAD STYLE "MC-BTN" MAIS EN GRIS */}
         {fileUrl && (
           <a
             href={fileUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="block w-full text-center mb-6 px-4 py-2 rounded-xl border border-slate-700 bg-slate-800/40 text-slate-200 text-sm hover:bg-slate-700/40 transition"
+            className="
+              mc-btn 
+              w-full 
+              flex items-center justify-center gap-2 
+              bg-slate-700 text-white 
+              hover:bg-slate-600 
+              transition mb-6
+            "
           >
+            <ArrowDownTrayIcon className="h-5 w-5" />
             Download signed contract (PDF)
           </a>
         )}
 
+        {/* BTN CONTINUE */}
         <button
           onClick={() => router.push("/get-started")}
           className="mc-btn mc-btn-primary w-full"
