@@ -128,6 +128,13 @@ export default function ContractPage() {
 
       const data = await res.json().catch(() => ({}));
 
+      // Si jamais le serveur renvoie un 401, on renvoie vers /login
+      if (res.status === 401) {
+        console.error("sign 401 error", data);
+        router.replace("/login");
+        return;
+      }
+
       if (!res.ok) {
         console.error("sign error", data);
         throw new Error(data.error || "Unable to sign your contract.");
@@ -185,7 +192,8 @@ export default function ContractPage() {
             {ok}
           </div>
         )}
-        {error && profile && (
+        {/* On n’affiche PAS l’alerte si le message est exactement "Not authenticated." */}
+        {error && profile && error !== "Not authenticated." && (
           <div className="mb-4 text-sm text-rose-400 bg-rose-950/40 border border-rose-900/40 px-3 py-2 rounded-lg">
             {error}
           </div>
@@ -211,12 +219,10 @@ export default function ContractPage() {
 
         {/* Texte contrat */}
         <div className="rounded-2xl border border-slate-800 bg-slate-900/60 px-5 py-4 mb-6 text-sm text-slate-300 space-y-3">
-          {/* Titre */}
           <p className="font-semibold text-slate-100">
             Discretionary Management Agreement
           </p>
 
-          {/* Texte principal */}
           <p className="text-slate-400 text-xs leading-relaxed">
             By signing this agreement, you authorise Montelion Capital to manage
             your exchange account on a discretionary basis, within the
@@ -225,8 +231,7 @@ export default function ContractPage() {
             access whenever you wish.
           </p>
 
-          {/* Lien vers le mandat complet */}
-          <p className="text-slate-500 text-xs mt-1">
+          <p className="text-slate-500 text-xs">
             You can read the full management mandate{" "}
             <a
               href="/legal/montelion-discretionary-mandate.pdf"
@@ -239,7 +244,6 @@ export default function ContractPage() {
             .
           </p>
 
-          {/* Texte final */}
           <p className="text-slate-500 text-xs">
             The full legal text will be generated as a PDF and stored securely
             once you sign. You will be able to download a copy for your records.
