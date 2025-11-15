@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 
 export default function ConnectYourAccount() {
@@ -174,13 +176,7 @@ export default function ConnectYourAccount() {
   );
 }
 
-type StepProps = {
-  number: number;
-  title: string;
-  description: React.ReactNode;
-};
-
-function Step({ number, title, description }: StepProps) {
+function Step({ number, title, description }) {
   return (
     <div className="relative flex gap-4 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-900 text-sm font-semibold text-white">
