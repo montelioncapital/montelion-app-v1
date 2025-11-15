@@ -137,6 +137,7 @@ export default function ExchangeSetupPage() {
   return (
     <div className="mc-card">
       <div className="mc-section max-w-3xl mx-auto text-left">
+        
         {/* HEADER */}
         <h1 className="mc-title mb-3">Connect Your Account</h1>
         <p className="text-slate-400 text-sm mb-6">
@@ -165,9 +166,7 @@ export default function ExchangeSetupPage() {
             </svg>
           </span>
           <div>
-            <p className="font-medium mb-1.5">
-              Always keep your API keys private.
-            </p>
+            <p className="font-medium mb-1.5">Always keep your API keys private.</p>
             <p className="text-amber-100/90">
               Never share your API keys in plain text. Montelion will never ask
               for your password.
@@ -194,8 +193,8 @@ export default function ExchangeSetupPage() {
               <ul className="mt-1 space-y-1.5 text-xs text-slate-200">
                 {section.items.map((item, i) => (
                   <li key={i} className="flex gap-2">
-                    {/* BULLLET FIX: bigger, perfectly round, non-stretched */}
-                    <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-slate-400/80 shrink-0" />
+                    {/* ✔ SAME SIZE AS BEFORE + PERFECTLY ROUND + NOT SQUISHED */}
+                    <span className="mt-[6px] h-[4px] w-[4px] rounded-full bg-slate-500/70 shrink-0" />
                     <div className="flex-1">{item}</div>
                   </li>
                 ))}
