@@ -142,7 +142,26 @@ export default function ExchangeSetupPage() {
         {/* Bandeau sécurité */}
         <div className="mb-8 rounded-2xl border border-amber-500/60 bg-amber-500/10 px-4 py-3 text-xs text-amber-100 flex gap-3">
           <span className="mt-[3px] inline-flex h-6 w-6 items-center justify-center rounded-full border border-amber-300/70 text-[12px] font-semibold">
-            !
+            {/* Icône danger (triangle) */}
+            <svg
+              viewBox="0 0 24 24"
+              className="h-4 w-4"
+              aria-hidden="true"
+            >
+              <path
+                d="M12 3L2.5 19h19L12 3z"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+              />
+              <path
+                d="M12 9v5"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+              />
+              <circle cx="12" cy="16" r="0.9" fill="currentColor" />
+            </svg>
           </span>
           <div>
             <p className="font-medium mb-1.5">
@@ -155,70 +174,55 @@ export default function ExchangeSetupPage() {
           </div>
         </div>
 
-        {/* TIMELINE 100% VERTICALE */}
+        {/* SECTIONS (sans ronds verts ni traits) */}
         <div className="space-y-5 mb-10">
-          {SECTIONS.map((section, index) => {
-            const isLast = index === SECTIONS.length - 1;
-
-            return (
-              <div
-                key={section.id}
-                className="grid grid-cols-[28px,1fr] gap-4 items-stretch"
-              >
-                {/* colonne pastille + ligne (fine) */}
-                <div className="flex flex-col items-center">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/20 border border-emerald-400/70" />
-                  {!isLast && (
-                    <div className="flex-1 w-px bg-gradient-to-b from-slate-700/80 via-slate-800/80 to-slate-900 mt-1" />
-                  )}
-                </div>
-
-                {/* carte étape (pleine largeur) */}
-                <div className="rounded-2xl border border-slate-800 bg-slate-900/50 px-5 py-4 space-y-2 shadow-[0_16px_40px_rgba(15,23,42,0.85)]">
-                  <div className="flex items-center justify-between gap-3">
-                    <h2 className="text-sm font-semibold text-slate-50">
-                      {section.title}
-                    </h2>
-                    <span className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
-                      Étape {section.id}
-                    </span>
-                  </div>
-
-                  <ul className="mt-1 space-y-1.5 text-xs text-slate-200">
-                    {section.items.map((item, i) => (
-                      <li key={i} className="flex gap-2">
-                        <span className="mt-[6px] h-[4px] w-[4px] rounded-full bg-slate-500/70 flex-shrink-0" />
-                        <div>{item}</div>
-                      </li>
-                    ))}
-                  </ul>
-
-                  {section.note && (
-                    <div className="mt-2 rounded-xl border border-slate-700/70 bg-slate-950/80 px-3 py-2 text-[11px] text-slate-300">
-                      {section.note}
-                    </div>
-                  )}
-
-                  {section.warning && (
-                    <div className="mt-2 rounded-xl border border-rose-600/70 bg-rose-500/10 px-3 py-2 text-[11px] text-rose-100">
-                      {section.warning}
-                    </div>
-                  )}
-                </div>
+          {SECTIONS.map((section) => (
+            <div
+              key={section.id}
+              className="rounded-2xl border border-slate-800 bg-slate-900/50 px-5 py-4 space-y-2 shadow-[0_16px_40px_rgba(15,23,42,0.85)]"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-sm font-semibold text-slate-50">
+                  {section.title}
+                </h2>
+                <span className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
+                  Étape {section.id}
+                </span>
               </div>
-            );
-          })}
+
+              <ul className="mt-1 space-y-1.5 text-xs text-slate-200">
+                {section.items.map((item, i) => (
+                  <li key={i} className="flex gap-2">
+                    <span className="mt-[6px] h-[4px] w-[4px] rounded-full bg-slate-500/70 flex-shrink-0" />
+                    <div>{item}</div>
+                  </li>
+                ))}
+              </ul>
+
+              {section.note && (
+                <div className="mt-2 rounded-xl border border-slate-700/70 bg-slate-950/80 px-3 py-2 text-[11px] text-slate-300">
+                  {section.note}
+                </div>
+              )}
+
+              {section.warning && (
+                <div className="mt-2 rounded-xl border border-rose-600/70 bg-rose-500/10 px-3 py-2 text-[11px] text-rose-100">
+                  {section.warning}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
 
-        {/* FOOTER */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        {/* FOOTER : texte puis boutons en dessous */}
+        <div className="space-y-4">
           <p className="text-xs text-slate-500 max-w-md">
             Quand tu as terminé toutes les étapes et récupéré ton API Key, ta
             Secret Key et ta Passphrase, tu pourras les renseigner dans ton
             espace Montelion pour connecter ton compte KuCoin Futures.
           </p>
 
-          <div className="flex gap-3 justify-end">
+          <div className="flex gap-3 flex-wrap">
             <Link
               href="/get-started/advanced"
               className="mc-btn border border-slate-600/70 bg-slate-900/80 text-slate-100 hover:bg-slate-800/80"
