@@ -6,10 +6,10 @@ import Link from "next/link";
 const SECTIONS = [
   {
     id: 1,
-    title: "Créer un compte KuCoin",
+    title: "Create Your KuCoin Account",
     items: [
       <>
-        Clique sur ton lien de parrainage&nbsp;:{" "}
+        Click your personal referral link:&nbsp;
         <a
           href="https://www.kucoin.com/r/rf/QBAA2LND"
           target="_blank"
@@ -17,109 +17,109 @@ const SECTIONS = [
           className="text-[#8fa8ff] hover:text-[#b6c6ff] underline underline-offset-2"
         >
           https://www.kucoin.com/r/rf/QBAA2LND
-        </a>{" "}
-        (le code est appliqué automatiquement).
+        </a>
+        &nbsp;(the code is applied automatically).
       </>,
-      "Choisis inscription par e-mail ou numéro de téléphone.",
-      "Crée un mot de passe sécurisé.",
-      "Entre le code de vérification reçu par mail / SMS.",
-      "Ton compte est créé.",
+      "Choose to register using your email or phone number.",
+      "Create a strong and secure password.",
+      "Enter the verification code sent to your email or phone.",
+      "Your account is now created.",
     ],
   },
   {
     id: 2,
-    title: "Vérifier ton compte (KYC)",
+    title: "Verify Your Identity (KYC)",
     items: [
-      "Connecte-toi à KuCoin.",
-      "Clique sur ton avatar (en haut à droite).",
-      "Va dans Sécurité → KYC / Identity Verification.",
-      "Choisis « KYC Individuel ».",
+      "Sign in to your KuCoin account.",
+      "Click your profile icon (top-right corner).",
+      "Navigate to Security → KYC / Identity Verification.",
+      "Select “Individual Verification”.",
       <>
-        Fournis :
+        Provide the required information:
         <ul className="mt-1 list-disc list-inside text-[11px] text-slate-400 space-y-0.5">
-          <li>Nom, adresse, date de naissance</li>
-          <li>Document d’identité (CNI, passeport…)</li>
-          <li>Vérification faciale si demandée</li>
+          <li>Full name, address, date of birth</li>
+          <li>Identity document (ID card, passport, etc.)</li>
+          <li>Facial verification if requested</li>
         </ul>
       </>,
-      "Attends la validation KYC.",
+      "Wait for KYC approval.",
     ],
-    note: "Le KYC est nécessaire pour augmenter les limites et utiliser tous les services.",
+    note:
+      "KYC is required to increase your limits and access all KuCoin services.",
   },
   {
     id: 3,
-    title: "Activer la Double Authentification (2FA)",
+    title: "Enable Two-Factor Authentication (2FA)",
     items: [
-      "Va dans Compte → Sécurité → Google Authenticator / 2FA.",
-      "Installe Google Authenticator ou Authy sur ton téléphone.",
-      "Scanne le QR code affiché par KuCoin.",
-      "Entre le code à 6 chiffres pour valider.",
-      "Note et garde en sécurité la clé de récupération.",
+      "Go to Account → Security → Google Authenticator / 2FA.",
+      "Install Google Authenticator or Authy on your phone.",
+      "Scan the QR code displayed by KuCoin.",
+      "Enter the 6-digit code to confirm activation.",
+      "Store your recovery key safely—this is essential.",
     ],
-    warning: "Indispensable pour protéger ton argent.",
+    warning:
+      "2FA is mandatory to protect your account and secure your funds.",
   },
   {
     id: 4,
-    title: "Déposer de l’argent avec ta carte bancaire",
+    title: "Deposit Funds Using Your Bank Card",
     items: [
-      "Dans le menu principal, clique sur « Acheter Crypto ».",
-      "Choisis « Carte bancaire ».",
+      "In the main menu, click “Buy Crypto”.",
+      "Select “Bank Card”.",
       <>
-        Sélectionne :
+        Choose:
         <ul className="mt-1 list-disc list-inside text-[11px] text-slate-400 space-y-0.5">
-          <li>Devise : EUR</li>
-          <li>Crypto : USDT (le plus simple pour les futures)</li>
+          <li>Currency: EUR</li>
+          <li>Crypto: USDT (recommended for Futures)</li>
         </ul>
       </>,
-      "Indique le montant à déposer.",
-      "Entre les informations de ta carte bancaire.",
-      "Valide le paiement (3D Secure de ta banque).",
-      "Les USDT arrivent sur ton compte Principal ou Funding.",
+      "Enter the amount you want to deposit.",
+      "Enter your card information.",
+      "Confirm the payment via your bank's 3D Secure system.",
+      "Your USDT will arrive in your Main or Funding account.",
     ],
   },
   {
     id: 5,
-    title: "Déplacer les fonds vers les Futures",
+    title: "Transfer Funds to the Futures Account",
     items: [
-      "Va dans Actifs / Assets.",
-      "Ouvre « Compte Futures ».",
-      "Clique sur « Transférer / Transfer ».",
+      "Go to Assets.",
+      "Open your “Futures Account”.",
+      "Click “Transfer”.",
       <>
-        Sélectionne :
+        Select:
         <ul className="mt-1 list-disc list-inside text-[11px] text-slate-400 space-y-0.5">
-          <li>De : Funding ou Main</li>
-          <li>Vers : Futures Account</li>
+          <li>From: Funding or Main</li>
+          <li>To: Futures Account</li>
         </ul>
       </>,
-      "Choisis USDT.",
-      "Valide le transfert.",
-      "Tes USDT sont maintenant utilisables pour le trading Futures.",
+      "Choose USDT.",
+      "Confirm the transfer.",
+      "Your funds are now ready to be used for Futures trading.",
     ],
   },
   {
     id: 6,
-    title: "Créer une API pour le trading automatique",
+    title: "Create an API Key for Automated Trading",
     items: [
-      "Connecte-toi à ton compte KuCoin.",
-      "Clique sur ton avatar → « API Management ».",
-      "Clique sur « Create API ».",
-      'Donne un nom d’API (ex. : "Futures_Bot").',
-      "Crée une API Passphrase (et garde-la en sécurité).",
+      "Sign in to your KuCoin account.",
+      "Click your profile icon → “API Management”.",
+      "Click “Create API”.",
+      'Choose a name for your API key (e.g., “Montelion”).',
+      "Create an API Passphrase and keep it safe.",
       <>
-        Coche uniquement :
+        Enable only these permissions:
         <ul className="mt-1 list-disc list-inside text-[11px] text-slate-400 space-y-0.5">
-          <li>✔️ General (Read)</li>
-          <li>✔️ Trade</li>
-          <li>✔️ Futures</li>
-          <li>❌ Withdraw (jamais)</li>
+          <li>General (Read)</li>
+          <li>Trade</li>
+          <li>Futures</li>
         </ul>
       </>,
-      "(Option recommandé) Active IP Restriction et renseigne l’IP fournie par la plateforme.",
-      "Valide avec ton mot de passe, le code email et le code 2FA.",
-      "KuCoin affiche alors : API Key, Secret Key (uniquement une fois) et API Passphrase.",
+      "Confirm using your password, email code, and 2FA code.",
+      "KuCoin will then display: API Key, Secret Key (shown only once), and API Passphrase.",
     ],
     warning:
-      "Ne donne jamais les droits Withdraw (retrait) sur une API. Utilise toujours la restriction par IP si possible.",
+      "Never enable the Withdraw permission. Keep your API access restricted for security.",
   },
 ];
 
@@ -128,15 +128,17 @@ export default function ExchangeSetupPage() {
     <div className="mc-card">
       <div className="mc-section max-w-3xl mx-auto text-left">
         {/* HEADER */}
-        <h1 className="mc-title mb-3">Connect your KuCoin account</h1>
+        <h1 className="mc-title mb-3">Connect Your Account</h1>
         <p className="text-slate-400 text-sm mb-6">
-          Suis ces étapes une par une pour créer ton compte KuCoin, sécuriser
-          l’accès, déposer tes fonds puis générer une clé API.
+          Follow these steps carefully to create your KuCoin account, secure
+          your access, deposit funds, and generate a safe API key. For the best
+          experience, we recommend completing this setup on a computer.
         </p>
 
-        {/* Bandeau sécurité */}
+        {/* SECURITY NOTICE */}
         <div className="mb-8 rounded-2xl border border-amber-500/60 bg-amber-500/10 px-4 py-3 text-xs text-amber-100 flex gap-3">
           <span className="mt-[2px] text-amber-300">
+            {/* DANGER ICON */}
             <svg viewBox="0 0 24 24" className="h-4 w-4">
               <path
                 d="M12 3L2.5 19h19L12 3z"
@@ -154,11 +156,10 @@ export default function ExchangeSetupPage() {
             </svg>
           </span>
           <div>
-            <p className="font-medium mb-1.5">
-              Garde toujours tes clés API privées.
-            </p>
+            <p className="font-medium mb-1.5">Always keep your API keys private.</p>
             <p className="text-amber-100/90">
-              Ne partage jamais ta Secret Key ou ta Passphrase en clair.
+              Never share your API keys in plain text. Montelion will never ask
+              for your password or Secret Key.
             </p>
           </div>
         </div>
@@ -172,7 +173,7 @@ export default function ExchangeSetupPage() {
             >
               <div className="space-y-1 mb-1.5">
                 <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
-                  Étape {section.id}
+                  Step {section.id}
                 </p>
                 <h2 className="text-sm font-semibold text-slate-50">
                   {section.title}
@@ -206,8 +207,9 @@ export default function ExchangeSetupPage() {
         {/* FOOTER */}
         <div className="space-y-4">
           <p className="text-xs text-slate-500 max-w-md">
-            Quand tu as terminé toutes les étapes et récupéré ton API Key, tu
-            pourras connecter ton compte KuCoin Futures.
+            Once you have completed all steps and retrieved your API Key,
+            Secret Key, and Passphrase, you will be able to securely connect
+            your KuCoin Futures account to your Montelion dashboard.
           </p>
 
           <div className="flex gap-3 flex-wrap">
@@ -217,6 +219,7 @@ export default function ExchangeSetupPage() {
             >
               Back to overview
             </Link>
+
             <button type="button" className="mc-btn mc-btn-primary">
               I&apos;ve created my API keys
             </button>
