@@ -119,7 +119,7 @@ const SECTIONS = [
       "KuCoin will then display: API Key, Secret Key (shown only once), and API Passphrase.",
     ],
     warning:
-      "Never enable the Withdraw permission. Keep your API access restricted for security.",
+      "Never enable the Withdraw permission. Keep your API access restricted.",
   },
 ];
 
