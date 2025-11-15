@@ -18,7 +18,7 @@ const SECTIONS = [
         >
           https://www.kucoin.com/r/rf/QBAA2LND
         </a>
-        &nbsp;(the code is applied automatically).
+        {/* removed mention about automatic code */}
       </>,
       "Choose to register using your email or phone number.",
       "Create a strong and secure password.",
@@ -138,7 +138,6 @@ export default function ExchangeSetupPage() {
         {/* SECURITY NOTICE */}
         <div className="mb-8 rounded-2xl border border-amber-500/60 bg-amber-500/10 px-4 py-3 text-xs text-amber-100 flex gap-3">
           <span className="mt-[2px] text-amber-300">
-            {/* DANGER ICON */}
             <svg viewBox="0 0 24 24" className="h-4 w-4">
               <path
                 d="M12 3L2.5 19h19L12 3z"
@@ -164,7 +163,7 @@ export default function ExchangeSetupPage() {
           </div>
         </div>
 
-        {/* SECTIONS */}
+        {/* STEPS */}
         <div className="space-y-5 mb-10">
           {SECTIONS.map((section) => (
             <div
