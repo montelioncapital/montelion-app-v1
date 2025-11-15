@@ -127,24 +127,17 @@ export default function ExchangeSetupPage() {
   return (
     <div className="mc-card">
       <div className="mc-section max-w-3xl mx-auto text-left">
-        {/* HEADER (sans le sous-titre KuCoin Futures · Setup guide) */}
+        {/* HEADER */}
         <h1 className="mc-title mb-3">Connect your KuCoin account</h1>
         <p className="text-slate-400 text-sm mb-6">
           Suis ces étapes une par une pour créer ton compte KuCoin, sécuriser
-          l’accès, déposer tes fonds puis générer une clé API. À la fin, ton
-          compte sera prêt à être connecté à Montelion tout en gardant le
-          contrôle total de tes fonds.
+          l’accès, déposer tes fonds puis générer une clé API.
         </p>
 
         {/* Bandeau sécurité */}
         <div className="mb-8 rounded-2xl border border-amber-500/60 bg-amber-500/10 px-4 py-3 text-xs text-amber-100 flex gap-3">
           <span className="mt-[2px] text-amber-300">
-            {/* Icône danger (triangle) sans deuxième cadrant */}
-            <svg
-              viewBox="0 0 24 24"
-              className="h-4 w-4"
-              aria-hidden="true"
-            >
+            <svg viewBox="0 0 24 24" className="h-4 w-4">
               <path
                 d="M12 3L2.5 19h19L12 3z"
                 fill="none"
@@ -165,8 +158,7 @@ export default function ExchangeSetupPage() {
               Garde toujours tes clés API privées.
             </p>
             <p className="text-amber-100/90">
-              Ne partage jamais ta Secret Key ou ta Passphrase en clair. Nous ne
-              te demanderons jamais ton mot de passe KuCoin.
+              Ne partage jamais ta Secret Key ou ta Passphrase en clair.
             </p>
           </div>
         </div>
@@ -176,9 +168,8 @@ export default function ExchangeSetupPage() {
           {SECTIONS.map((section) => (
             <div
               key={section.id}
-              className="rounded-2xl border border-slate-800 bg-slate-900/50 px-5 py-4 space-y-2 shadow-[0_16px_40px_rgba(15,23,42,0.85)]"
+              className="rounded-2xl border border-slate-800 bg-slate-900/50 px-5 py-4 space-y-2"
             >
-              {/* Étape au-dessus du titre */}
               <div className="space-y-1 mb-1.5">
                 <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
                   Étape {section.id}
@@ -191,7 +182,7 @@ export default function ExchangeSetupPage() {
               <ul className="mt-1 space-y-1.5 text-xs text-slate-200">
                 {section.items.map((item, i) => (
                   <li key={i} className="flex gap-2">
-                    <span className="mt-[6px] h-[4px] w-[4px] rounded-full bg-slate-500/70 flex-shrink-0" />
+                    <span className="mt-[6px] h-[4px] w-[4px] rounded-full bg-slate-500/70" />
                     <div>{item}</div>
                   </li>
                 ))}
@@ -212,12 +203,11 @@ export default function ExchangeSetupPage() {
           ))}
         </div>
 
-        {/* FOOTER : texte puis boutons */}
+        {/* FOOTER */}
         <div className="space-y-4">
           <p className="text-xs text-slate-500 max-w-md">
-            Quand tu as terminé toutes les étapes et récupéré ton API Key, ta
-            Secret Key et ta Passphrase, tu pourras les renseigner dans ton
-            espace Montelion pour connecter ton compte KuCoin Futures.
+            Quand tu as terminé toutes les étapes et récupéré ton API Key, tu
+            pourras connecter ton compte KuCoin Futures.
           </p>
 
           <div className="flex gap-3 flex-wrap">
@@ -227,10 +217,7 @@ export default function ExchangeSetupPage() {
             >
               Back to overview
             </Link>
-            <button
-              type="button"
-              className="mc-btn mc-btn-primary"
-            >
+            <button type="button" className="mc-btn mc-btn-primary">
               I&apos;ve created my API keys
             </button>
           </div>
