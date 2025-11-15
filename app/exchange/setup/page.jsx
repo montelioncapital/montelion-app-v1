@@ -194,8 +194,9 @@ export default function ExchangeSetupPage() {
               <ul className="mt-1 space-y-1.5 text-xs text-slate-200">
                 {section.items.map((item, i) => (
                   <li key={i} className="flex gap-2">
-                    <span className="mt-[6px] h-[4px] w-[4px] rounded-full bg-slate-500/70" />
-                    <div>{item}</div>
+                    {/* BULLLET FIX: bigger, perfectly round, non-stretched */}
+                    <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-slate-400/80 shrink-0" />
+                    <div className="flex-1">{item}</div>
                   </li>
                 ))}
               </ul>
