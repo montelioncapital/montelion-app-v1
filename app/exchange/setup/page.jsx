@@ -7,7 +7,6 @@ const SECTIONS = [
   {
     id: 1,
     title: "Créer un compte KuCoin",
-    category: "Compte",
     items: [
       <>
         Clique sur ton lien de parrainage&nbsp;:{" "}
@@ -30,7 +29,6 @@ const SECTIONS = [
   {
     id: 2,
     title: "Vérifier ton compte (KYC)",
-    category: "KYC",
     items: [
       "Connecte-toi à KuCoin.",
       "Clique sur ton avatar (en haut à droite).",
@@ -51,7 +49,6 @@ const SECTIONS = [
   {
     id: 3,
     title: "Activer la Double Authentification (2FA)",
-    category: "Sécurité",
     items: [
       "Va dans Compte → Sécurité → Google Authenticator / 2FA.",
       "Installe Google Authenticator ou Authy sur ton téléphone.",
@@ -64,7 +61,6 @@ const SECTIONS = [
   {
     id: 4,
     title: "Déposer de l’argent avec ta carte bancaire",
-    category: "Dépôt",
     items: [
       "Dans le menu principal, clique sur « Acheter Crypto ».",
       "Choisis « Carte bancaire ».",
@@ -84,7 +80,6 @@ const SECTIONS = [
   {
     id: 5,
     title: "Déplacer les fonds vers les Futures",
-    category: "Futures",
     items: [
       "Va dans Actifs / Assets.",
       "Ouvre « Compte Futures ».",
@@ -104,7 +99,6 @@ const SECTIONS = [
   {
     id: 6,
     title: "Créer une API pour le trading automatique",
-    category: "API",
     items: [
       "Connecte-toi à ton compte KuCoin.",
       "Clique sur ton avatar → « API Management ».",
@@ -132,47 +126,21 @@ const SECTIONS = [
 export default function ExchangeSetupPage() {
   return (
     <div className="mc-card">
-      <div className="mc-section max-w-5xl mx-auto text-left">
-        {/* Header distinctif */}
-        <div className="rounded-3xl border border-slate-800/80 bg-gradient-to-br from-slate-900 via-slate-950 to-black px-6 py-6 lg:px-8 lg:py-7 shadow-[0_30px_80px_rgba(15,23,42,0.9)] mb-8">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-slate-500 mb-3">
-                KuCoin Futures · Setup guide
-              </p>
-              <h1 className="text-2xl sm:text-3xl font-semibold text-slate-50 mb-3">
-                Connect your KuCoin account
-              </h1>
-              <p className="text-slate-400 text-sm sm:text-[15px] max-w-xl">
-                Suis ces étapes pour créer ton compte KuCoin, sécuriser l’accès,
-                déposer tes fonds puis générer une clé API. À la fin, ton compte
-                sera prêt à être connecté à Montelion, tout en gardant le
-                contrôle total de tes fonds.
-              </p>
-            </div>
+      <div className="mc-section max-w-3xl mx-auto text-left">
+        {/* HEADER */}
+        <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-slate-500 mb-3">
+          KuCoin Futures · Setup guide
+        </p>
+        <h1 className="mc-title mb-3">Connect your KuCoin account</h1>
+        <p className="text-slate-400 text-sm mb-6">
+          Suis ces étapes une par une pour créer ton compte KuCoin, sécuriser
+          l’accès, déposer tes fonds puis générer une clé API. À la fin, ton
+          compte sera prêt à être connecté à Montelion tout en gardant le
+          contrôle total de tes fonds.
+        </p>
 
-            {/* Petit résumé à droite */}
-            <div className="hidden md:flex flex-col gap-2 text-[11px] text-slate-300">
-              <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-3 py-2">
-                <p className="font-medium text-emerald-200 mb-0.5">
-                  6 grandes étapes
-                </p>
-                <p className="text-emerald-100/80">
-                  Compte, KYC, sécurité, dépôt, futures, puis API.
-                </p>
-              </div>
-              <div className="rounded-2xl border border-slate-700/70 bg-slate-900/80 px-3 py-2">
-                <p className="font-medium text-slate-200 mb-0.5">
-                  Temps estimé
-                </p>
-                <p className="text-slate-400/90">≈ 15–20 minutes posément.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Alerte sécurité globale */}
-        <div className="mb-8 rounded-2xl border border-amber-500/50 bg-amber-500/10 px-4 py-3 text-xs text-amber-100 flex gap-3">
+        {/* Bandeau sécurité */}
+        <div className="mb-8 rounded-2xl border border-amber-500/60 bg-amber-500/10 px-4 py-3 text-xs text-amber-100 flex gap-3">
           <span className="mt-[3px] inline-flex h-6 w-6 items-center justify-center rounded-full border border-amber-300/70 text-[12px] font-semibold">
             !
           </span>
@@ -187,89 +155,65 @@ export default function ExchangeSetupPage() {
           </div>
         </div>
 
-        {/* Layout 2 colonnes : résumé / cartes */}
-        <div className="grid gap-6 lg:grid-cols-[240px,minmax(0,1fr)]">
-          {/* Colonne résumé des phases */}
-          <aside className="space-y-4 lg:sticky lg:top-6 self-start">
-            <div className="rounded-2xl border border-slate-800/80 bg-slate-950/80 px-4 py-4">
-              <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500 mb-2">
-                Phases
-              </p>
-              <ul className="space-y-1.5 text-xs text-slate-300">
-                <li>1–2 · Création + KYC</li>
-                <li>3 · Sécurisation (2FA)</li>
-                <li>4–5 · Dépôt & transfert futures</li>
-                <li>6 · Création de l’API</li>
-              </ul>
-            </div>
+        {/* TIMELINE 100% VERTICALE */}
+        <div className="space-y-5 mb-10">
+          {SECTIONS.map((section, index) => {
+            const isLast = index === SECTIONS.length - 1;
 
-            <div className="rounded-2xl border border-slate-800/80 bg-slate-950/80 px-4 py-4 text-xs text-slate-400">
-              <p className="font-medium text-slate-100 mb-1.5">
-                Conseils rapides
-              </p>
-              <ul className="space-y-1.5">
-                <li>• Utilise un mot de passe unique pour KuCoin.</li>
-                <li>• Active la 2FA avant tout dépôt important.</li>
-                <li>• Sauvegarde ta Secret Key au moment où elle s’affiche.</li>
-              </ul>
-            </div>
-          </aside>
-
-          {/* Colonne cartes étapes (design différent de get-started) */}
-          <div className="grid gap-5 md:grid-cols-2">
-            {SECTIONS.map((section) => (
+            return (
               <div
                 key={section.id}
-                className="relative overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-900/60 px-5 py-4 shadow-[0_18px_45px_rgba(15,23,42,0.75)]"
+                className="grid grid-cols-[28px,1fr] gap-4 items-stretch"
               >
-                {/* Badge step */}
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500/70 to-sky-500/80 text-[13px] font-semibold text-slate-950 shadow-lg">
-                      {section.id}
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-[10px] uppercase tracking-[0.16em] text-slate-500">
-                        Step {section.id}
-                      </span>
-                      <span className="text-xs font-medium text-slate-200">
-                        {section.category}
-                      </span>
-                    </div>
+                {/* colonne pastille + ligne (fine) */}
+                <div className="flex flex-col items-center">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/20 border border-emerald-400/70 text-[11px] font-semibold text-emerald-200">
+                    {section.id}
                   </div>
+                  {!isLast && (
+                    <div className="flex-1 w-px bg-gradient-to-b from-slate-700/80 via-slate-800/80 to-slate-900 mt-1" />
+                  )}
                 </div>
 
-                <h2 className="text-sm font-semibold text-slate-50 mb-2">
-                  {section.title}
-                </h2>
-
-                <ul className="space-y-1.5 text-xs text-slate-200">
-                  {section.items.map((item, i) => (
-                    <li key={i} className="flex gap-2">
-                      <span className="mt-[5px] h-[5px] w-[5px] rounded-full bg-slate-500/70 flex-shrink-0" />
-                      <div>{item}</div>
-                    </li>
-                  ))}
-                </ul>
-
-                {section.note && (
-                  <div className="mt-3 rounded-xl border border-slate-700/70 bg-slate-950/80 px-3 py-2 text-[11px] text-slate-300">
-                    {section.note}
+                {/* carte étape (pleine largeur) */}
+                <div className="rounded-2xl border border-slate-800 bg-slate-900/50 px-5 py-4 space-y-2 shadow-[0_16px_40px_rgba(15,23,42,0.85)]">
+                  <div className="flex items-center justify-between gap-3">
+                    <h2 className="text-sm font-semibold text-slate-50">
+                      {section.title}
+                    </h2>
+                    <span className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
+                      Étape {section.id}
+                    </span>
                   </div>
-                )}
 
-                {section.warning && (
-                  <div className="mt-3 rounded-xl border border-rose-600/70 bg-rose-500/10 px-3 py-2 text-[11px] text-rose-100">
-                    {section.warning}
-                  </div>
-                )}
+                  <ul className="mt-1 space-y-1.5 text-xs text-slate-200">
+                    {section.items.map((item, i) => (
+                      <li key={i} className="flex gap-2">
+                        <span className="mt-[6px] h-[4px] w-[4px] rounded-full bg-slate-500/70 flex-shrink-0" />
+                        <div>{item}</div>
+                      </li>
+                    ))}
+                  </ul>
+
+                  {section.note && (
+                    <div className="mt-2 rounded-xl border border-slate-700/70 bg-slate-950/80 px-3 py-2 text-[11px] text-slate-300">
+                      {section.note}
+                    </div>
+                  )}
+
+                  {section.warning && (
+                    <div className="mt-2 rounded-xl border border-rose-600/70 bg-rose-500/10 px-3 py-2 text-[11px] text-rose-100">
+                      {section.warning}
+                    </div>
+                  )}
+                </div>
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
 
-        {/* Footer actions */}
-        <div className="mt-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        {/* FOOTER */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <p className="text-xs text-slate-500 max-w-md">
             Quand tu as terminé toutes les étapes et récupéré ton API Key, ta
             Secret Key et ta Passphrase, tu pourras les renseigner dans ton
