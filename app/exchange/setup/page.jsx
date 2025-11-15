@@ -127,10 +127,7 @@ export default function ExchangeSetupPage() {
   return (
     <div className="mc-card">
       <div className="mc-section max-w-3xl mx-auto text-left">
-        {/* HEADER */}
-        <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-slate-500 mb-3">
-          KuCoin Futures · Setup guide
-        </p>
+        {/* HEADER (sans le sous-titre KuCoin Futures · Setup guide) */}
         <h1 className="mc-title mb-3">Connect your KuCoin account</h1>
         <p className="text-slate-400 text-sm mb-6">
           Suis ces étapes une par une pour créer ton compte KuCoin, sécuriser
@@ -141,8 +138,8 @@ export default function ExchangeSetupPage() {
 
         {/* Bandeau sécurité */}
         <div className="mb-8 rounded-2xl border border-amber-500/60 bg-amber-500/10 px-4 py-3 text-xs text-amber-100 flex gap-3">
-          <span className="mt-[3px] inline-flex h-6 w-6 items-center justify-center rounded-full border border-amber-300/70 text-[12px] font-semibold">
-            {/* Icône danger (triangle) */}
+          <span className="mt-[2px] text-amber-300">
+            {/* Icône danger (triangle) sans deuxième cadrant */}
             <svg
               viewBox="0 0 24 24"
               className="h-4 w-4"
@@ -174,20 +171,21 @@ export default function ExchangeSetupPage() {
           </div>
         </div>
 
-        {/* SECTIONS (sans ronds verts ni traits) */}
+        {/* SECTIONS */}
         <div className="space-y-5 mb-10">
           {SECTIONS.map((section) => (
             <div
               key={section.id}
               className="rounded-2xl border border-slate-800 bg-slate-900/50 px-5 py-4 space-y-2 shadow-[0_16px_40px_rgba(15,23,42,0.85)]"
             >
-              <div className="flex items-center justify-between gap-3">
+              {/* Étape au-dessus du titre */}
+              <div className="space-y-1 mb-1.5">
+                <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
+                  Étape {section.id}
+                </p>
                 <h2 className="text-sm font-semibold text-slate-50">
                   {section.title}
                 </h2>
-                <span className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
-                  Étape {section.id}
-                </span>
               </div>
 
               <ul className="mt-1 space-y-1.5 text-xs text-slate-200">
@@ -214,7 +212,7 @@ export default function ExchangeSetupPage() {
           ))}
         </div>
 
-        {/* FOOTER : texte puis boutons en dessous */}
+        {/* FOOTER : texte puis boutons */}
         <div className="space-y-4">
           <p className="text-xs text-slate-500 max-w-md">
             Quand tu as terminé toutes les étapes et récupéré ton API Key, ta
