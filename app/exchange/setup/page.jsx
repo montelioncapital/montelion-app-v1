@@ -158,7 +158,7 @@ export default function ExchangeSetupPage() {
             <p className="font-medium mb-1.5">Always keep your API keys private.</p>
             <p className="text-amber-100/90">
               Never share your API keys in plain text. Montelion will never ask
-              for your password or Secret Key.
+              for your password.
             </p>
           </div>
         </div>
