@@ -155,7 +155,7 @@ export default function ExchangeSetupPage() {
           </div>
         </div>
 
-        {/* TIMELINE VERTICALE */}
+        {/* TIMELINE 100% VERTICALE */}
         <div className="space-y-5 mb-10">
           {SECTIONS.map((section, index) => {
             const isLast = index === SECTIONS.length - 1;
@@ -165,17 +165,15 @@ export default function ExchangeSetupPage() {
                 key={section.id}
                 className="grid grid-cols-[28px,1fr] gap-4 items-stretch"
               >
-                {/* colonne pastille */}
+                {/* colonne pastille + ligne (fine) */}
                 <div className="flex flex-col items-center">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/20 border border-emerald-400/70 text-[11px] font-semibold text-emerald-200">
-                    {section.id}
-                  </div>
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/20 border border-emerald-400/70" />
                   {!isLast && (
                     <div className="flex-1 w-px bg-gradient-to-b from-slate-700/80 via-slate-800/80 to-slate-900 mt-1" />
                   )}
                 </div>
 
-                {/* carte */}
+                {/* carte étape (pleine largeur) */}
                 <div className="rounded-2xl border border-slate-800 bg-slate-900/50 px-5 py-4 space-y-2 shadow-[0_16px_40px_rgba(15,23,42,0.85)]">
                   <div className="flex items-center justify-between gap-3">
                     <h2 className="text-sm font-semibold text-slate-50">
@@ -212,27 +210,28 @@ export default function ExchangeSetupPage() {
           })}
         </div>
 
-        {/* FOOTER — 100% VERTICAL (MODIFICATION DEMANDÉE) */}
-        <div className="flex flex-col gap-4 mt-6">
+        {/* FOOTER */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <p className="text-xs text-slate-500 max-w-md">
             Quand tu as terminé toutes les étapes et récupéré ton API Key, ta
             Secret Key et ta Passphrase, tu pourras les renseigner dans ton
             espace Montelion pour connecter ton compte KuCoin Futures.
           </p>
 
-          <Link
-            href="/get-started/advanced"
-            className="mc-btn border border-slate-600/70 bg-slate-900/80 text-slate-100 hover:bg-slate-800/80 w-full sm:w-auto"
-          >
-            Back to overview
-          </Link>
-
-          <button
-            type="button"
-            className="mc-btn mc-btn-primary w-full sm:w-auto"
-          >
-            I&apos;ve created my API keys
-          </button>
+          <div className="flex gap-3 justify-end">
+            <Link
+              href="/get-started/advanced"
+              className="mc-btn border border-slate-600/70 bg-slate-900/80 text-slate-100 hover:bg-slate-800/80"
+            >
+              Back to overview
+            </Link>
+            <button
+              type="button"
+              className="mc-btn mc-btn-primary"
+            >
+              I&apos;ve created my API keys
+            </button>
+          </div>
         </div>
       </div>
     </div>
