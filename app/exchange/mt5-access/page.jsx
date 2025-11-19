@@ -5,12 +5,10 @@ import { useState } from "react";
 
 export default function Mt5AccessPage() {
   const [form, setForm] = useState({
-    accountType: "live",          // live | demo
     login: "",
     password: "",
     server: "",
     brokerName: "",
-    platform: "MetaTrader 5",
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,8 +25,8 @@ export default function Mt5AccessPage() {
     setSubmitted(false);
 
     try {
-      // TODO: connecter Supabase ici
-      // Exemple:
+      // TODO: connecter Supabase ici quand tu seras prêt
+      // Exemple :
       // const supabase = createClientComponentClient();
       // const { data: { user } } = await supabase.auth.getUser();
       // await supabase.from("mt5_accounts").insert({
@@ -36,11 +34,11 @@ export default function Mt5AccessPage() {
       //   ...form,
       // });
 
-      console.log("MT5 access submitted:", form);
+      console.log("Trading access submitted:", form);
       setSubmitted(true);
     } catch (error) {
-      console.error("Failed to save MT5 access:", error);
-      alert("An error occurred while saving your MT5 access. Please try again.");
+      console.error("Failed to save access:", error);
+      alert("An error occurred while saving your access. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -50,7 +48,7 @@ export default function Mt5AccessPage() {
     <div className="mc-card">
       <div className="mc-section max-w-2xl mx-auto text-left">
         {/* HEADER */}
-        <h1 className="mc-title mb-3">Connect Your MetaTrader 5 Account</h1>
+        <h1 className="mc-title mb-3">Connect Your Trading Account</h1>
         <p className="text-slate-400 text-sm mb-6">
           Please provide the details of the MetaTrader 5 account that Montelion
           will use for trading. Make sure the information is accurate to avoid
@@ -68,42 +66,7 @@ export default function Mt5AccessPage() {
 
         {/* FORM */}
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Account type */}
-          <div className="space-y-2">
-            <label className="block text-xs font-medium text-slate-200">
-              Account type
-            </label>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                className={`px-3 py-1.5 rounded-lg text-xs border ${
-                  form.accountType === "live"
-                    ? "bg-emerald-500 text-white border-emerald-500"
-                    : "bg-slate-900 border-slate-700 text-slate-300"
-                }`}
-                onClick={() =>
-                  setForm((prev) => ({ ...prev, accountType: "live" }))
-                }
-              >
-                Live account
-              </button>
-              <button
-                type="button"
-                className={`px-3 py-1.5 rounded-lg text-xs border ${
-                  form.accountType === "demo"
-                    ? "bg-emerald-500 text-white border-emerald-500"
-                    : "bg-slate-900 border-slate-700 text-slate-300"
-                }`}
-                onClick={() =>
-                  setForm((prev) => ({ ...prev, accountType: "demo" }))
-                }
-              >
-                Demo account
-              </button>
-            </div>
-          </div>
-
-          {/* Login */}
+          {/* MT5 Login */}
           <div className="space-y-2">
             <label
               htmlFor="login"
@@ -195,19 +158,6 @@ export default function Mt5AccessPage() {
             />
           </div>
 
-          {/* Platform (fixed MT5) */}
-          <div className="space-y-2">
-            <label className="block text-xs font-medium text-slate-200">
-              Platform
-            </label>
-            <input
-              type="text"
-              value={form.platform}
-              disabled
-              className="w-full rounded-lg border border-slate-800 bg-slate-900/60 px-3 py-2 text-xs text-slate-400"
-            />
-          </div>
-
           {/* Confirmation */}
           <div className="rounded-2xl border border-slate-800 bg-slate-900/70 px-4 py-3 text-[11px] text-slate-300 space-y-1.5">
             <p>
@@ -224,14 +174,14 @@ export default function Mt5AccessPage() {
               disabled={isSubmitting}
               className="mc-btn mc-btn-primary min-w-[180px] disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? "Saving your MT5 access..." : "Save my MT5 access"}
+              {isSubmitting ? "Saving your access..." : "Save my trading access"}
             </button>
           </div>
 
           {submitted && (
             <p className="text-[11px] text-emerald-400 pt-1">
-              Your MetaTrader 5 access has been recorded. You can safely close
-              this page or go back to your dashboard.
+              Your trading access has been recorded. You can safely close this
+              page or go back to your dashboard.
             </p>
           )}
         </form>
