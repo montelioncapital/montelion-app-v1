@@ -25,15 +25,8 @@ export default function Mt5AccessPage() {
     setSubmitted(false);
 
     try {
-      // TODO: connecter Supabase ici quand tu seras prêt
-      // Exemple :
-      // const supabase = createClientComponentClient();
-      // const { data: { user } } = await supabase.auth.getUser();
-      // await supabase.from("mt5_accounts").insert({
-      //   user_id: user.id,
-      //   ...form,
-      // });
-
+      // TODO: connexion Supabase ici plus tard
+      // console.log pour l'instant
       console.log("Trading access submitted:", form);
       setSubmitted(true);
     } catch (error) {
