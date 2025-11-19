@@ -2,7 +2,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { useEffect, useState } from "react";
+import { supabase } from "../../lib/supabaseClient";
 
 const SECTIONS = [
   {
@@ -136,37 +137,75 @@ const SECTIONS = [
 
 export default function ExchangeSetupPage() {
   const router = useRouter();
-  const supabase = createClientComponentClient();
+  const [userId, setUserId] = useState(null);
+  const [loadingSession, setLoadingSession] = useState(true);
 
-  const handleCreatedApiKeys = async () => {
+  // Même logique que /get-started/advanced : on récupère l'user via supabase.auth.getSession()
+  useEffect(() => {
+    (async () => {
+      setLoadingSession(true);
+      const { data: sessionData, error: sessionErr } =
+        await supabase.auth.getSession();
+
+      if (sessionErr) {
+        console.error("Error getting session:", sessionErr);
+        setLoadingSession(false);
+        return;
+      }
+
+      const session = sessionData?.session;
+      if (!session?.user) {
+        router.replace("/login");
+        return;
+      }
+
+      setUserId(session.user.id);
+      setLoadingSession(false);
+    })();
+  }, [router]);
+
+  async function handleCreatedApiKeys() {
     try {
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-
-      if (userError) {
-        console.error("Error getting user:", userError);
+      if (!userId) {
+        // Sécurité : si pas d'user, on renvoie vers login
+        router.push("/login");
+        return;
       }
 
-      if (user) {
-        const { error } = await supabase
-          .from("onboarding_state")
-          .update({ current_step: 12 })
-          .eq("user_id", user.id);
+      const targetStep = 12;
 
-        if (error) {
-          console.error("Error updating current_step:", error);
-        }
-      } else {
-        console.warn("No authenticated user found when updating current_step.");
+      // Même style que handleContinue() dans get-started/advanced
+      const { error } = await supabase.from("onboarding_state").upsert(
+        {
+          user_id: userId,
+          current_step: targetStep,
+          completed: false,
+        },
+        { onConflict: "user_id" }
+      );
+
+      if (error) {
+        console.error("Error updating onboarding_state to step 12:", error);
       }
-    } catch (error) {
-      console.error("Failed to update current step to 12", error);
+    } catch (err) {
+      console.error("Unexpected error updating step 12:", err);
     } finally {
       router.push("/exchange/mt5-access");
     }
-  };
+  }
+
+  if (loadingSession) {
+    return (
+      <div className="mc-card">
+        <div className="mc-section text-left">
+          <h1 className="mc-title mb-2">Connect Your Account</h1>
+          <p className="text-slate-400 text-sm">
+            Loading your session…
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mc-card">
