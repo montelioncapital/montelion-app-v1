@@ -193,7 +193,7 @@ export default function ExchangeSetupPage() {
               <ul className="mt-1 space-y-1.5 text-xs text-slate-200">
                 {section.items.map((item, i) => (
                   <li key={i} className="flex gap-2">
-                    {/* ✔ SAME SIZE AS BEFORE + PERFECTLY ROUND + NOT SQUISHED */}
+                    {/* Perfect round bullet, same size as before */}
                     <span className="mt-[6px] h-[4px] w-[4px] rounded-full bg-slate-500/70 shrink-0" />
                     <div className="flex-1">{item}</div>
                   </li>
@@ -215,7 +215,7 @@ export default function ExchangeSetupPage() {
           ))}
         </div>
 
-        {/* FOOTER */}
+        {/* FOOTER — BACK BUTTON REMOVED */}
         <div className="space-y-4">
           <p className="text-xs text-slate-500 max-w-md">
             Once you have completed all steps and retrieved your API Key,
@@ -224,18 +224,12 @@ export default function ExchangeSetupPage() {
           </p>
 
           <div className="flex gap-3 flex-wrap">
-            <Link
-              href="/get-started/advanced"
-              className="mc-btn border border-slate-600/70 bg-slate-900/80 text-slate-100 hover:bg-slate-800/80"
-            >
-              Back to overview
-            </Link>
-
             <button type="button" className="mc-btn mc-btn-primary">
               I&apos;ve created my API keys
             </button>
           </div>
         </div>
+
       </div>
     </div>
   );
