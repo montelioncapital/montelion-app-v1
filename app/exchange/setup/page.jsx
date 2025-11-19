@@ -1,8 +1,8 @@
 // app/exchange/setup/page.jsx
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 const SECTIONS = [
   {
@@ -136,25 +136,33 @@ const SECTIONS = [
 
 export default function ExchangeSetupPage() {
   const router = useRouter();
+  const supabase = createClientComponentClient();
 
   const handleCreatedApiKeys = async () => {
     try {
-      // TODO: connecter Supabase ici quand tu seras prêt
-      // Exemple avec @supabase/auth-helpers-nextjs :
-      //
-      // import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-      // const supabase = createClientComponentClient();
-      // const { data: { user } } = await supabase.auth.getUser();
-      // if (user) {
-      //   await supabase
-      //     .from("profiles")          // ou le nom de ta table
-      //     .update({ current_step: 12 })
-      //     .eq("id", user.id);
-      // }
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
 
+      if (userError) {
+        console.error("Error getting user:", userError);
+      }
+
+      if (user) {
+        const { error } = await supabase
+          .from("onboarding_state")
+          .update({ current_step: 12 })
+          .eq("user_id", user.id);
+
+        if (error) {
+          console.error("Error updating current_step:", error);
+        }
+      } else {
+        console.warn("No authenticated user found when updating current_step.");
+      }
     } catch (error) {
       console.error("Failed to update current step to 12", error);
-      // On ne bloque pas l'utilisateur pour autant
     } finally {
       router.push("/exchange/mt5-access");
     }
@@ -259,7 +267,6 @@ export default function ExchangeSetupPage() {
             </button>
           </div>
         </div>
-
       </div>
     </div>
   );
