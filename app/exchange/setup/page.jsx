@@ -2,6 +2,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const SECTIONS = [
   {
@@ -134,10 +135,34 @@ const SECTIONS = [
 ];
 
 export default function ExchangeSetupPage() {
+  const router = useRouter();
+
+  const handleCreatedApiKeys = async () => {
+    try {
+      // TODO: connecter Supabase ici quand tu seras prêt
+      // Exemple avec @supabase/auth-helpers-nextjs :
+      //
+      // import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+      // const supabase = createClientComponentClient();
+      // const { data: { user } } = await supabase.auth.getUser();
+      // if (user) {
+      //   await supabase
+      //     .from("profiles")          // ou le nom de ta table
+      //     .update({ current_step: 12 })
+      //     .eq("id", user.id);
+      // }
+
+    } catch (error) {
+      console.error("Failed to update current step to 12", error);
+      // On ne bloque pas l'utilisateur pour autant
+    } finally {
+      router.push("/exchange/mt5-access");
+    }
+  };
+
   return (
     <div className="mc-card">
       <div className="mc-section max-w-3xl mx-auto text-left">
-        
         {/* HEADER */}
         <h1 className="mc-title mb-3">Connect Your Account</h1>
         <p className="text-slate-400 text-sm mb-6">
@@ -166,7 +191,9 @@ export default function ExchangeSetupPage() {
             </svg>
           </span>
           <div>
-            <p className="font-medium mb-1.5">Always keep your API keys private.</p>
+            <p className="font-medium mb-1.5">
+              Always keep your API keys private.
+            </p>
             <p className="text-amber-100/90">
               Never share your API keys in plain text. Montelion will never ask
               for your password.
@@ -193,7 +220,6 @@ export default function ExchangeSetupPage() {
               <ul className="mt-1 space-y-1.5 text-xs text-slate-200">
                 {section.items.map((item, i) => (
                   <li key={i} className="flex gap-2">
-                    {/* Perfect round bullet, same size as before */}
                     <span className="mt-[6px] h-[4px] w-[4px] rounded-full bg-slate-500/70 shrink-0" />
                     <div className="flex-1">{item}</div>
                   </li>
@@ -215,7 +241,7 @@ export default function ExchangeSetupPage() {
           ))}
         </div>
 
-        {/* FOOTER — BACK BUTTON REMOVED */}
+        {/* FOOTER */}
         <div className="space-y-4">
           <p className="text-xs text-slate-500 max-w-md">
             Once you have completed all steps and retrieved your API Key,
@@ -224,7 +250,11 @@ export default function ExchangeSetupPage() {
           </p>
 
           <div className="flex gap-3 flex-wrap">
-            <button type="button" className="mc-btn mc-btn-primary">
+            <button
+              type="button"
+              className="mc-btn mc-btn-primary"
+              onClick={handleCreatedApiKeys}
+            >
               I&apos;ve created my API keys
             </button>
           </div>
