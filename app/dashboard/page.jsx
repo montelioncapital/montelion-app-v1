@@ -32,7 +32,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="mc-card">
+      <div className="mc-card mc-card-wide">
         <div className="mc-section text-left">
           <h1 className="mc-title mb-2">Dashboard</h1>
           <p className="text-slate-400 text-sm">Loading your account…</p>
@@ -42,10 +42,9 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="mc-card">
-      {/* on élargit un max, version paysage */}
-      <div className="mc-section max-w-6xl lg:max-w-7xl mx-auto text-left">
-        {/* GROS CADRAN PRINCIPAL */}
+    <div className="mc-card mc-card-wide">
+      <div className="mc-section text-left">
+        {/* GROS CADRAN PRINCIPAL EN PAYSAGE */}
         <div className="rounded-[32px] border border-slate-800 bg-slate-950/95 px-6 py-6 lg:px-8 lg:py-7 shadow-[0_24px_80px_rgba(15,23,42,0.95)]">
           {/* HEADER TOP BAR */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
@@ -74,7 +73,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* BARRE DE FILTRES (12M / 6M / 30D...) */}
+          {/* BARRE D’INTERVALLE (OVERVIEW / 12M / 6M / etc.) */}
           <div className="flex items-center justify-between gap-4 mb-5">
             <div className="flex items-center gap-2 text-[11px] text-slate-500">
               <span className="text-slate-400/80">Overview</span>
@@ -104,7 +103,7 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] gap-6">
             {/* COLONNE GAUCHE : TOTAL PORTFOLIO + COURBE */}
             <div className="rounded-3xl border border-slate-800 bg-slate-950/90 px-5 py-4 lg:px-6 lg:py-5 flex flex-col">
-              {/* Header bloc gauche */}
+              {/* Header du bloc gauche */}
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
                 <div>
                   <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500 mb-1">
@@ -163,7 +162,7 @@ export default function DashboardPage() {
                       </linearGradient>
                     </defs>
 
-                    {/* Grid */}
+                    {/* Grille */}
                     <g stroke="rgba(148,163,184,0.12)" strokeWidth="0.6">
                       <line x1="0" y1="25" x2="340" y2="25" />
                       <line x1="0" y1="70" x2="340" y2="70" />
@@ -173,13 +172,13 @@ export default function DashboardPage() {
                       <line x1="280" y1="0" x2="280" y2="150" />
                     </g>
 
-                    {/* Area */}
+                    {/* Zone sous la courbe */}
                     <path
                       d="M0 120 C 40 115, 80 90, 120 95 C 160 105, 200 70, 240 80 C 280 95, 310 55, 340 40 L 340 150 L 0 150 Z"
                       fill="url(#fillGradient)"
                     />
 
-                    {/* Line */}
+                    {/* Courbe */}
                     <path
                       d="M0 120 C 40 115, 80 90, 120 95 C 160 105, 200 70, 240 80 C 280 95, 310 55, 340 40"
                       fill="none"
@@ -188,7 +187,7 @@ export default function DashboardPage() {
                       strokeLinecap="round"
                     />
 
-                    {/* Point highlight */}
+                    {/* Point mis en avant */}
                     <circle cx="280" cy="95" r="3.4" fill="#22d3ee" />
                     <circle
                       cx="280"
@@ -216,7 +215,7 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* AXES TEMPS */}
+              {/* Axe temps */}
               <div className="mt-3 flex justify-between text-[10px] text-slate-500 px-1">
                 <span>12M ago</span>
                 <span>9M</span>
@@ -226,7 +225,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* COLONNE DROITE : CARTE STATS RAPIDES */}
+            {/* COLONNE DROITE : CONNECTED ACCOUNT + SNAPSHOT */}
             <div className="space-y-4">
               <div className="rounded-3xl border border-slate-800 bg-slate-950/90 px-5 py-4 lg:px-5 lg:py-4">
                 <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500 mb-1">
