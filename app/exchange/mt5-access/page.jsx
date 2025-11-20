@@ -1,9 +1,16 @@
 // app/exchange/mt5-access/page.jsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "../../lib/supabaseClient";
 
 export default function Mt5AccessPage() {
+  const router = useRouter();
+
+  const [userId, setUserId] = useState(null);
+  const [loadingSession, setLoadingSession] = useState(true);
+
   const [form, setForm] = useState({
     login: "",
     password: "",
@@ -14,38 +21,112 @@ export default function Mt5AccessPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
+  // ---------------------------
+  //  AUTH PROTECTION (like other pages)
+  // ---------------------------
+  useEffect(() => {
+    (async () => {
+      const { data, error } = await supabase.auth.getSession();
+
+      if (error) {
+        console.error("Error getting session:", error);
+        setLoadingSession(false);
+        return;
+      }
+
+      const session = data?.session;
+      if (!session?.user) {
+        router.replace("/login");
+        return;
+      }
+
+      setUserId(session.user.id);
+      setLoadingSession(false);
+    })();
+  }, [router]);
+
+  // ---------------------------
+  //  FORM INPUT CHANGE
+  // ---------------------------
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  // ---------------------------
+  //  SUBMIT: UPSERT into mt5_accounts
+  // ---------------------------
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!userId) {
+      router.push("/login");
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitted(false);
 
     try {
-      // TODO: connexion Supabase ici plus tard
-      // console.log pour l'instant
-      console.log("Trading access submitted:", form);
+      const { error } = await supabase
+        .from("mt5_accounts")
+        .upsert(
+          {
+            user_id: userId,
+            login: form.login,
+            password: form.password, // we can encrypt later
+            server: form.server,
+            broker_name: form.brokerName,
+          },
+          { onConflict: "user_id" }
+        );
+
+      if (error) {
+        console.error("Error saving MT5 account:", error);
+        alert("An unexpected error occurred. Please try again.");
+        return;
+      }
+
       setSubmitted(true);
-    } catch (error) {
-      console.error("Failed to save access:", error);
-      alert("An error occurred while saving your access. Please try again.");
+
+      // OPTION: Advance onboarding step here later (step 13)
+      // await supabase.from("onboarding_state")
+      //   .update({ current_step: 13 })
+      //   .eq("user_id", userId);
+
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      alert("An unexpected error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // ---------------------------
+  // LOADING SESSION
+  // ---------------------------
+  if (loadingSession) {
+    return (
+      <div className="mc-card">
+        <div className="mc-section text-left">
+          <h1 className="mc-title mb-2">Connect Your Trading Account</h1>
+          <p className="text-slate-400 text-sm">Loading session…</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ---------------------------
+  //  PAGE CONTENT
+  // ---------------------------
   return (
     <div className="mc-card">
       <div className="mc-section max-w-2xl mx-auto text-left">
         {/* HEADER */}
         <h1 className="mc-title mb-3">Connect Your Trading Account</h1>
         <p className="text-slate-400 text-sm mb-6">
-          Please provide the details of the MetaTrader 5 account that Montelion
-          will use for trading. Make sure the information is accurate to avoid
-          connection issues.
+          Provide the details of your MetaTrader 5 trading account. Montelion
+          will use these credentials to execute trades on your behalf.
         </p>
 
         {/* SECURITY NOTICE */}
@@ -59,122 +140,85 @@ export default function Mt5AccessPage() {
 
         {/* FORM */}
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* MT5 Login */}
+          {/* Login */}
           <div className="space-y-2">
-            <label
-              htmlFor="login"
-              className="block text-xs font-medium text-slate-200"
-            >
+            <label className="text-xs font-medium text-slate-200">
               MT5 Login ID
             </label>
             <input
-              id="login"
               name="login"
-              type="text"
               required
               value={form.login}
               onChange={handleChange}
               placeholder="e.g. 50234819"
-              className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-xs text-slate-50 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+              className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-xs text-slate-50"
             />
           </div>
 
           {/* Password */}
           <div className="space-y-2">
-            <label
-              htmlFor="password"
-              className="block text-xs font-medium text-slate-200"
-            >
+            <label className="text-xs font-medium text-slate-200">
               MT5 Password
             </label>
             <input
-              id="password"
               name="password"
               type="password"
               required
               value={form.password}
               onChange={handleChange}
               placeholder="Your MetaTrader 5 trading password"
-              className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-xs text-slate-50 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+              className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-xs text-slate-50"
             />
-            <p className="text-[11px] text-slate-500">
-              If possible, use an{" "}
-              <span className="font-medium text-slate-300">
-                investor/read-only password
-              </span>{" "}
-              that still allows Montelion to trade according to your broker’s
-              configuration.
-            </p>
           </div>
 
           {/* Server */}
           <div className="space-y-2">
-            <label
-              htmlFor="server"
-              className="block text-xs font-medium text-slate-200"
-            >
+            <label className="text-xs font-medium text-slate-200">
               Trading server
             </label>
             <input
-              id="server"
               name="server"
-              type="text"
               required
               value={form.server}
               onChange={handleChange}
               placeholder="e.g. ICMarketsSC-Live19, FTMO-Demo, etc."
-              className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-xs text-slate-50 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+              className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-xs text-slate-50"
             />
-            <p className="text-[11px] text-slate-500">
-              You can find the exact server name in your broker&apos;s MT5
-              login email or inside the MetaTrader 5 terminal.
-            </p>
           </div>
 
-          {/* Broker name */}
+          {/* Broker */}
           <div className="space-y-2">
-            <label
-              htmlFor="brokerName"
-              className="block text-xs font-medium text-slate-200"
-            >
+            <label className="text-xs font-medium text-slate-200">
               Broker name
             </label>
             <input
-              id="brokerName"
               name="brokerName"
-              type="text"
               required
               value={form.brokerName}
               onChange={handleChange}
               placeholder="e.g. IC Markets, FTMO, Eightcap..."
-              className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-xs text-slate-50 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+              className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-xs text-slate-50"
             />
           </div>
 
           {/* Confirmation */}
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/70 px-4 py-3 text-[11px] text-slate-300 space-y-1.5">
-            <p>
-              By submitting this form, you confirm that you are the owner of the
-              MetaTrader 5 account and authorize Montelion to connect and
-              execute trades according to the agreed strategy.
-            </p>
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/70 px-4 py-3 text-[11px] text-slate-300">
+            By submitting this form, you authorize Montelion to connect to your
+            MT5 account and execute trades according to the agreed strategy.
           </div>
 
           {/* Submit */}
-          <div className="pt-2">
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="mc-btn mc-btn-primary min-w-[180px] disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? "Saving your access..." : "Save my trading access"}
-            </button>
-          </div>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="mc-btn mc-btn-primary min-w-[180px] disabled:opacity-60"
+          >
+            {isSubmitting ? "Saving..." : "Save my trading access"}
+          </button>
 
           {submitted && (
             <p className="text-[11px] text-emerald-400 pt-1">
-              Your trading access has been recorded. You can safely close this
-              page or go back to your dashboard.
+              Your trading access has been recorded successfully.
             </p>
           )}
         </form>
