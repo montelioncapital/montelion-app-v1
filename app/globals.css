@@ -11,26 +11,36 @@
   --card-border: rgba(255, 255, 255, 0.08);
 }
 
-/* --- Fond global --- */
-.bg-page {
-  background-color: #090e18;
+/* Hauteur full screen partout */
+html,
+body {
+  height: 100%;
 }
 
-/* --- Scrollbars invisibles partout --- */
-* {
-  scrollbar-width: none;              /* Firefox */
+/* Fond global + typo */
+@layer base {
+  body {
+    @apply min-h-screen bg-page text-slate-100 antialiased;
+  }
 }
-*::-webkit-scrollbar {
+
+/* Fond global (même couleur qu’avant) */
+.bg-page {
+  background-color: #050814;
+}
+
+/* Scrollbars invisibles mais scroll OK */
+body::-webkit-scrollbar {
   width: 0;
   height: 0;
 }
+body {
+  scrollbar-width: none;
+}
 
-/* ------------------------------------------------------------------ */
-/*                             COMPONENTS                              */
-/* ------------------------------------------------------------------ */
-
+/* ---- COMPONENTS ---- */
 @layer components {
-  /* --- Rectangle commun (login, onboarding, etc.) --- */
+  /* --- Rectangle commun (login / onboarding / etc.) --- */
   .mc-card {
     @apply w-full max-w-[560px] rounded-2xl border;
     background: linear-gradient(
@@ -39,7 +49,7 @@
       rgba(255, 255, 255, 0.02)
     );
     border-color: var(--card-border);
-    box-shadow: none !important; /* aucune ombre */
+    box-shadow: none !important;
   }
 
   .mc-section {
@@ -68,10 +78,9 @@
     @apply inline-flex items-center justify-center text-sm font-medium px-5 py-3 rounded-md;
     transition: background-color 0.15s ease, border-color 0.15s ease;
     transform: none !important;
-    box-shadow: none !important; /* aucune ombre */
+    box-shadow: none !important;
   }
 
-  /* Plein */
   .mc-btn-primary {
     color: #fff;
     background: var(--brand);
@@ -87,9 +96,8 @@
     border-color: var(--brand-light);
   }
 
-  /* Contour */
   .mc-btn-ghost {
-    color: #e6eaf2;
+    color: #E6EAF2;
     background: transparent;
     border: 1px solid rgba(255, 255, 255, 0.15);
   }
@@ -102,16 +110,29 @@
     border-color: rgba(255, 255, 255, 0.3);
   }
 
-  /* --- Liens (aucun effet global) --- */
+  /* --- Liens (ne rien changer visuellement) --- */
   a {
     text-decoration: none !important;
     transition: color 0.25s ease;
   }
-
   .mc-link-muted {
     color: inherit !important;
   }
   .mc-link-muted:hover {
     color: inherit !important;
+  }
+
+  /* --- Shell du dashboard full-screen --- */
+  .dashboard-root {
+    @apply flex min-h-screen w-full bg-page;
+  }
+
+  .dashboard-main {
+    @apply flex-1 min-h-screen;
+    scrollbar-width: none;
+  }
+  .dashboard-main::-webkit-scrollbar {
+    width: 0;
+    height: 0;
   }
 }
