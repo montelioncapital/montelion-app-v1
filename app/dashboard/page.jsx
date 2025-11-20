@@ -27,7 +27,7 @@ function useLinePath(points) {
     const normalized = points.map((p, index) => {
       const x = (index / Math.max(points.length - 1, 1)) * 100;
       const yNorm = (p.value - min) / range;
-      const y = 90 - yNorm * 70; // un peu de marge haut/bas
+      const y = 90 - yNorm * 70; // marge haut/bas
       return { x, y };
     });
 
@@ -122,7 +122,8 @@ export default function DashboardPage() {
 
       {/* MAIN AREA */}
       <main className="dashboard-main flex-1 overflow-y-auto">
-        <div className="mx-auto flex max-w-6xl flex-col px-6 pb-10 pt-8 lg:px-10">
+        {/* ICI on enlève max-w et mx-auto pour être full screen */}
+        <div className="flex flex-col px-6 pb-10 pt-8 md:px-8 xl:px-12 2xl:px-16">
           {/* Breadcrumb + actions */}
           <div className="mb-6 flex items-center justify-between gap-4">
             <div className="text-xs text-slate-500">
@@ -242,7 +243,7 @@ export default function DashboardPage() {
 
             <div className="mt-6 h-[260px] w-full rounded-2xl bg-gradient-to-b from-[rgba(37,99,235,0.18)] via-[rgba(15,23,42,0.7)] to-[rgba(15,23,42,0.95)] p-5">
               <div className="relative h-full w-full">
-                {/* Grid lines */}
+                {/* Grid + curve */}
                 <svg
                   viewBox="0 0 100 100"
                   preserveAspectRatio="none"
@@ -255,7 +256,6 @@ export default function DashboardPage() {
                     </linearGradient>
                   </defs>
 
-                  {/* horizontales */}
                   {[20, 40, 60, 80].map((y) => (
                     <line
                       key={y}
@@ -268,7 +268,6 @@ export default function DashboardPage() {
                     />
                   ))}
 
-                  {/* zone sous la courbe */}
                   {linePath && (
                     <path
                       d={`${linePath} L 100 100 L 0 100 Z`}
@@ -276,7 +275,6 @@ export default function DashboardPage() {
                     />
                   )}
 
-                  {/* courbe */}
                   {linePath && (
                     <path
                       d={linePath}
@@ -287,7 +285,6 @@ export default function DashboardPage() {
                     />
                   )}
 
-                  {/* point highlight dernier */}
                   {linePath && pnlHistory.length > 0 && (
                     <>
                       {(() => {
@@ -312,12 +309,7 @@ export default function DashboardPage() {
                               stroke="#38bdf8"
                               strokeWidth="1.4"
                             />
-                            <circle
-                              cx={x}
-                              cy={y}
-                              r="1"
-                              fill="#38bdf8"
-                            />
+                            <circle cx={x} cy={y} r="1" fill="#38bdf8" />
                           </g>
                         );
                       })()}
