@@ -32,19 +32,17 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="mc-card mc-card-wide">
-        <div className="mc-section text-left">
-          <h1 className="mc-title mb-2">Dashboard</h1>
-          <p className="text-slate-400 text-sm">Loading your account…</p>
-        </div>
+      <div className="w-full min-h-[60vh] flex items-center justify-center">
+        <p className="text-slate-400 text-sm">Loading your dashboard…</p>
       </div>
     );
   }
 
   return (
-    <div className="mc-card mc-card-wide">
-      <div className="mc-section text-left">
-        {/* GROS CADRAN PRINCIPAL EN PAYSAGE */}
+    <div className="w-full">
+      {/* container plein écran, pas de mc-card */}
+      <div className="mx-auto max-w-6xl lg:max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
+        {/* GROS BLOC PRINCIPAL = TON DASHBOARD */}
         <div className="rounded-[32px] border border-slate-800 bg-slate-950/95 px-6 py-6 lg:px-8 lg:py-7 shadow-[0_24px_80px_rgba(15,23,42,0.95)]">
           {/* HEADER TOP BAR */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
@@ -73,7 +71,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* BARRE D’INTERVALLE (OVERVIEW / 12M / 6M / etc.) */}
+          {/* BARRE D’INTERVALLE (Overview / 12M / 6M / etc.) */}
           <div className="flex items-center justify-between gap-4 mb-5">
             <div className="flex items-center gap-2 text-[11px] text-slate-500">
               <span className="text-slate-400/80">Overview</span>
@@ -99,11 +97,11 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* ZONE PRINCIPALE EN PAYSAGE */}
+          {/* ZONE PRINCIPALE EN PAYSAGE (graph + infos) */}
           <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] gap-6">
-            {/* COLONNE GAUCHE : TOTAL PORTFOLIO + COURBE */}
+            {/* GAUCHE : TOTAL PORTFOLIO + COURBE */}
             <div className="rounded-3xl border border-slate-800 bg-slate-950/90 px-5 py-4 lg:px-6 lg:py-5 flex flex-col">
-              {/* Header du bloc gauche */}
+              {/* Header bloc gauche */}
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
                 <div>
                   <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500 mb-1">
@@ -225,7 +223,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* COLONNE DROITE : CONNECTED ACCOUNT + SNAPSHOT */}
+            {/* DROITE : CONNECTED ACCOUNT + SNAPSHOT */}
             <div className="space-y-4">
               <div className="rounded-3xl border border-slate-800 bg-slate-950/90 px-5 py-4 lg:px-5 lg:py-4">
                 <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500 mb-1">
@@ -293,7 +291,7 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
-          {/* FIN GROS CADRAN */}
+          {/* FIN DU GROS BLOC */}
         </div>
       </div>
     </div>
