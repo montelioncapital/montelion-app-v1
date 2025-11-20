@@ -32,18 +32,17 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-page">
+      <div className="fixed inset-0 flex items-center justify-center bg-page">
         <p className="text-slate-400 text-sm">Loading your dashboard…</p>
       </div>
     );
   }
 
   return (
-    // FULL SCREEN FIXÉ
-    <div className="h-screen w-full bg-page text-slate-50 overflow-hidden">
-      {/* tout l'écran en flex */}
+    // >>> ICI : on colle le dashboard au viewport complet
+    <div className="fixed inset-0 w-full bg-page text-slate-50 overflow-hidden">
       <div className="flex h-full w-full">
-        {/* SIDEBAR GAUCHE (prend toute la hauteur) */}
+        {/* SIDEBAR GAUCHE */}
         <aside className="hidden lg:flex lg:flex-col w-64 border-r border-slate-900/60 bg-slate-950/40">
           <div className="px-6 pt-6 pb-4 border-b border-slate-900/60">
             <div className="flex items-center gap-3">
@@ -125,9 +124,8 @@ export default function DashboardPage() {
           </div>
         </aside>
 
-        {/* CONTENU PRINCIPAL : scrollable, occupe TOUTE la hauteur */}
+        {/* CONTENU PRINCIPAL */}
         <main className="flex-1 h-full flex flex-col overflow-hidden">
-          {/* zone scrollable interne */}
           <div className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
             {/* BREADCRUMB + ACTIONS */}
             <div className="flex items-center justify-between gap-4 mb-4">
