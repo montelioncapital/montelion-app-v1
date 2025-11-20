@@ -1,3 +1,4 @@
+// app/dashboard/page.jsx
 "use client";
 
 import React from "react";
@@ -9,53 +10,83 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  ReferenceDot,
 } from "recharts";
 
-// Faux P&L depuis l'ouverture du compte
-const pnlSinceOpening = [
-  { month: "Jan", value: 12000 },
-  { month: "Feb", value: 18000 },
-  { month: "Mar", value: 26000 },
-  { month: "Apr", value: 24000 },
-  { month: "May", value: 34000 },
-  { month: "Jun", value: 42000 },
-  { month: "Jul", value: 51000 },
+// Faux P&L (balance) data
+const pnlData = [
+  { month: "Jan", value: 17000 },
+  { month: "Feb", value: 21500 },
+  { month: "Mar", value: 28500 },
+  { month: "Apr", value: 27200 },
+  { month: "May", value: 34500 },
+  { month: "Jun", value: 41200 },
+  { month: "Jul", value: 50500 },
   { month: "Aug", value: 62000 },
 ];
 
 const formatCurrency = (v) =>
   `$${v.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 
+// Tooltip custom Recharts
 const CustomTooltip = ({ active, payload, label }) => {
-  if (!active || !payload?.length) return null;
-  const point = payload[0].payload;
-
+  if (!active || !payload || !payload.length) return null;
+  const v = payload[0].value;
   return (
-    <div className="rounded-xl border border-white/10 bg-[#050814]/95 px-4 py-3 shadow-lg shadow-black/40 backdrop-blur-sm">
-      <div className="text-xs text-slate-400">{label}</div>
-      <div className="mt-1 text-sm font-semibold text-slate-50">
-        {formatCurrency(point.value)}
+    <div className="rounded-lg border border-white/10 bg-slate-900/90 px-3 py-2 text-xs shadow-lg backdrop-blur">
+      <div className="mb-1 text-[10px] uppercase tracking-[0.16em] text-slate-400">
+        {label}
       </div>
-      <div className="text-[11px] text-slate-400">P&amp;L since opening</div>
+      <div className="text-sm font-semibold text-slate-50">
+        {formatCurrency(v)}
+      </div>
     </div>
   );
 };
 
-export default function DashboardPage() {
-  const lastPoint = pnlSinceOpening[pnlSinceOpening.length - 1];
+// Icônes simples (style Quantix)
+const IconDashboard = (props) => (
+  <svg viewBox="0 0 24 24" {...props}>
+    <rect x="3" y="3" width="7" height="7" rx="2" />
+    <rect x="14" y="3" width="7" height="5" rx="2" />
+    <rect x="14" y="11" width="7" height="10" rx="2" />
+    <rect x="3" y="13" width="7" height="8" rx="2" />
+  </svg>
+);
 
+const IconTrading = (props) => (
+  <svg viewBox="0 0 24 24" {...props}>
+    <path d="M4 18L9 9l4 6 4-10 3 6" />
+    <path d="M3 20h18" />
+  </svg>
+);
+
+const IconSettings = (props) => (
+  <svg viewBox="0 0 24 24" {...props}>
+    <path d="M12 15a3 3 0 100-6 3 3 0 000 6z" />
+    <path d="M19.4 13a7.97 7.97 0 000-2l2.1-1.6a.5.5 0 00.1-.6l-2-3.5a.5.5 0 00-.6-.2l-2.5 1a8 8 0 00-1.7-1L14.3 2.5a.5.5 0 00-.5-.5h-3.6a.5.5 0 00-.5.5L9.1 5.1a8 8 0 00-1.7 1l-2.5-1a.5.5 0 00-.6.2l-2 3.5a.5.5 0 00.1.6L4.6 11a7.97 7.97 0 000 2l-2.1 1.6a.5.5 0 00-.1.6l2 3.5a.5.5 0 00.6.2l2.5-1a8 8 0 001.7 1l.6 2.6a.5.5 0 00.5.5h3.6a.5.5 0 00.5-.5l.6-2.6a8 8 0 001.7-1l2.5 1a.5.5 0 00.6-.2l2-3.5a.5.5 0 00-.1-.6L19.4 13z" />
+  </svg>
+);
+
+const IconBell = (props) => (
+  <svg viewBox="0 0 24 24" {...props}>
+    <path d="M6 17h12" />
+    <path d="M8 17V10a4 4 0 018 0v7" />
+    <path d="M10 17a2 2 0 004 0" />
+  </svg>
+);
+
+export default function DashboardPage() {
   return (
     <div className="dashboard-root">
-      {/* --- SIDEBAR --- */}
-      <aside className="flex w-[260px] flex-col border-r border-white/5 bg-[radial-gradient(circle_at_top_left,#192446_0%,#050814_45%,#02040a_100%)] px-5 pt-8 pb-6">
-        {/* Brand / avatar */}
+      {/* SIDEBAR */}
+      <aside className="flex w-[260px] flex-col border-r border-white/5 bg-[radial-gradient(circle_at_top_left,#111827_0%,#050814_45%,#020617_100%)] px-5 pt-6 pb-4">
+        {/* Logo + titre */}
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#2664EC] text-sm font-semibold text-white shadow-[0_0_25px_rgba(38,100,236,0.65)]">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#2664EC] text-sm font-semibold text-white">
             17
           </div>
           <div className="flex flex-col">
-            <span className="text-[13px] font-semibold text-slate-50">
+            <span className="text-sm font-semibold text-slate-50">
               Montelion Capital
             </span>
             <span className="text-[11px] text-slate-400">
@@ -65,151 +96,156 @@ export default function DashboardPage() {
         </div>
 
         {/* Search */}
-        <button className="mt-6 flex items-center gap-2 rounded-xl border border-white/5 bg-white/5 px-3 py-2 text-xs text-slate-400 outline-none transition hover:border-white/15 hover:bg-white/[0.08]">
-          <span className="text-[10px] rounded-md border border-white/10 px-1.5 py-0.5 text-[10px] text-slate-400">
-            ⌘K
-          </span>
-          <span className="text-[12px]">Search</span>
-        </button>
-
-        {/* Sections */}
-        <div className="mt-6 space-y-6 text-[11px]">
-          <div>
-            <div className="mb-2 text-[11px] font-medium tracking-[0.16em] text-slate-500">
-              GENERAL
-            </div>
-            <button className="flex w-full items-center justify-between rounded-xl bg-white/[0.06] px-3 py-2 text-left text-[13px] text-slate-50 shadow-[0_0_0_1px_rgba(255,255,255,0.08)]">
-              <span className="flex items-center gap-2">
-                <span className="flex h-5 w-5 items-center justify-center rounded-md bg-white/5 text-[11px]">
-                  ⬜
-                </span>
-                <span>Dashboard</span>
-              </span>
-              <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]" />
-            </button>
-          </div>
-
-          <div>
-            <div className="mb-2 text-[11px] font-medium tracking-[0.16em] text-slate-500">
-              TRADING
-            </div>
-            <button className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[13px] text-slate-400 hover:bg-white/[0.03]">
-              <span className="flex h-5 w-5 items-center justify-center rounded-md bg-white/5 text-[11px]">
-                B
-              </span>
-              Trading
-            </button>
-          </div>
-
-          <div>
-            <div className="mb-2 text-[11px] font-medium tracking-[0.16em] text-slate-500">
-              ACCOUNT
-            </div>
-            <button className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[13px] text-slate-400 hover:bg-white/[0.03]">
-              ⚙️ Settings
-            </button>
-            <button className="mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[13px] text-slate-400 hover:bg-white/[0.03]">
-              🔔 Notifications
-            </button>
+        <div className="mt-6">
+          <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-slate-400">
+            <span className="rounded-md border border-white/10 px-2 py-1 text-[10px] text-slate-300">
+              ⌘K
+            </span>
+            <span>Search</span>
           </div>
         </div>
 
-        <div className="mt-auto pt-4 text-[11px] text-slate-500">
-          <div className="text-[10px] uppercase tracking-[0.16em] text-slate-600">
+        {/* GENERAL */}
+        <div className="mt-8">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+            General
+          </div>
+
+          {/* Dashboard actif */}
+          <div className="mt-3 flex items-center gap-3 rounded-xl border border-[#2664EC]/40 bg-[#0B1220] px-3 py-2">
+            <IconDashboard className="h-4 w-4 flex-none stroke-[1.7] text-slate-50" />
+            <span className="text-sm font-medium text-slate-50">
+              Dashboard
+            </span>
+            <span className="ml-auto h-2 w-2 rounded-full bg-emerald-400" />
+          </div>
+        </div>
+
+        {/* TRADING */}
+        <div className="mt-7">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+            Trading
+          </div>
+          <button className="mt-3 flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm text-slate-300 transition hover:bg-white/5">
+            <IconTrading className="h-4 w-4 flex-none stroke-[1.7] text-slate-400" />
+            <span>Trading</span>
+          </button>
+        </div>
+
+        {/* ACCOUNT */}
+        <div className="mt-7">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+            Account
+          </div>
+          <button className="mt-3 flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm text-slate-300 transition hover:bg-white/5">
+            <IconSettings className="h-4 w-4 flex-none stroke-[1.6] text-slate-400 fill-transparent" />
+            <span>Settings</span>
+          </button>
+          <button className="mt-1.5 flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm text-slate-300 transition hover:bg-white/5">
+            <IconBell className="h-4 w-4 flex-none stroke-[1.7] text-slate-400" />
+            <span>Notifications</span>
+          </button>
+        </div>
+
+        {/* Logged in */}
+        <div className="mt-auto pt-6 text-[11px] text-slate-500">
+          <div className="text-[10px] uppercase tracking-[0.2em] text-slate-600">
             Logged in as
           </div>
-          <div className="text-[11px] text-slate-300">montelion.capital</div>
+          <div className="mt-1 text-xs text-slate-300">montelion.capital</div>
         </div>
       </aside>
 
-      {/* --- MAIN --- */}
-      <main className="dashboard-main px-10 pb-10 pt-8">
-        {/* Top bar */}
-        <div className="mb-6 flex items-center justify-between">
-          <div className="text-xs text-slate-500">
-            <span className="text-slate-400">Dashboard</span>
-            <span className="mx-1">/</span>
-            <span className="text-slate-500">Overview</span>
-          </div>
+      {/* MAIN */}
+      <main className="dashboard-main px-10 py-8">
+        {/* Breadcrumb */}
+        <div className="text-xs text-slate-500">
+          <span>Dashboard</span>
+          <span className="mx-1.5 text-slate-600">/</span>
+          <span className="text-slate-400">Overview</span>
         </div>
 
         {/* Title */}
-        <h1 className="text-3xl font-semibold tracking-tight text-slate-50">
+        <h1 className="mt-2 text-3xl font-semibold tracking-[-0.03em] text-slate-50">
           Dashboard
         </h1>
 
         {/* Metric cards */}
-        <section className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-3">
-          {/* Balance */}
-          <div className="rounded-2xl border border-white/5 bg-[radial-gradient(circle_at_top_left,#111827_0%,#050814_40%,#040713_100%)] px-5 py-4 shadow-[0_18px_40px_rgba(0,0,0,0.65)]">
-            <div className="text-[11px] font-medium tracking-[0.16em] text-slate-500">
-              ACCOUNT BALANCE
+        <section className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+          {/* Account balance */}
+          <div className="rounded-2xl border border-white/10 bg-[#050814]/90 px-5 py-4 backdrop-blur-sm">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+              Account balance
             </div>
             <div className="mt-3 text-2xl font-semibold text-slate-50">
               $171,610.25
             </div>
-            <div className="mt-1 text-[12px] text-slate-400">
+            <div className="mt-1 text-xs text-slate-400">
               Your current equity (mock data)
             </div>
           </div>
 
           {/* Today P&L */}
-          <div className="rounded-2xl border border-white/5 bg-[radial-gradient(circle_at_top_left,#111827_0%,#050814_40%,#040713_100%)] px-5 py-4 shadow-[0_18px_40px_rgba(0,0,0,0.65)]">
-            <div className="text-[11px] font-medium tracking-[0.16em] text-slate-500">
-              TODAY&apos;S P&amp;L
+          <div className="rounded-2xl border border-white/10 bg-[#050814]/90 px-5 py-4 backdrop-blur-sm">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+              Today&apos;s P&amp;L
             </div>
             <div className="mt-3 text-2xl font-semibold text-emerald-400">
               + $3,928.00
             </div>
-            <div className="mt-1 text-[12px] text-slate-400">
+            <div className="mt-1 text-xs text-slate-400">
               Realized &amp; unrealized (mock data)
             </div>
           </div>
 
           {/* Monthly P&L */}
-          <div className="rounded-2xl border border-white/5 bg-[radial-gradient(circle_at_top_left,#111827_0%,#050814_40%,#040713_100%)] px-5 py-4 shadow-[0_18px_40px_rgba(0,0,0,0.65)]">
-            <div className="text-[11px] font-medium tracking-[0.16em] text-slate-500">
-              MONTHLY P&amp;L
+          <div className="rounded-2xl border border-white/10 bg-[#050814]/90 px-5 py-4 backdrop-blur-sm">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+              Monthly P&amp;L
             </div>
             <div className="mt-3 text-2xl font-semibold text-emerald-400">
               + $12,450.90
             </div>
-            <div className="mt-1 text-[12px] text-slate-400">
+            <div className="mt-1 text-xs text-slate-400">
               From the start of this month (mock data)
             </div>
           </div>
         </section>
 
-        {/* P&L curve */}
-        <section className="mt-8 rounded-3xl border border-white/5 bg-[radial-gradient(circle_at_top,#111827_0%,#050814_45%,#02040a_100%)] px-6 pb-6 pt-5 shadow-[0_24px_60px_rgba(0,0,0,0.8)]">
-          <div className="mb-4 flex items-center justify-between">
+        {/* Chart section */}
+        <section className="mt-8 rounded-3xl border border-white/10 bg-gradient-to-b from-[#050814] via-[#020617] to-[#02040a] px-6 pb-6 pt-5">
+          <div className="flex items-start justify-between gap-4">
             <div>
-              <div className="text-[11px] font-medium tracking-[0.16em] text-slate-500">
-                P&amp;L SINCE ACCOUNT OPENING
+              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                P&amp;L since account opening
               </div>
-              <div className="mt-1 text-[12px] text-slate-400">
+              <p className="mt-1 text-xs text-slate-400">
                 Mock curve for design preview. We will plug real trading data
                 later.
-              </div>
+              </p>
             </div>
-            <div className="text-right text-xs text-emerald-300">
-              <div className="font-semibold">
-                {formatCurrency(lastPoint.value)}
+            <div className="text-right text-xs text-slate-300">
+              <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
+                Total P&amp;L
               </div>
-              <div className="text-[11px] text-emerald-400/80">
-                +32.8% since opening
+              <div className="mt-1 text-sm font-semibold text-emerald-400">
+                +$62,000{" "}
+                <span className="ml-1 text-[11px] font-normal text-emerald-300">
+                  +32.8% since opening
+                </span>
               </div>
             </div>
           </div>
 
-          <div className="h-[360px] w-full rounded-2xl bg-gradient-to-b from-slate-900/60 via-[#050814] to-[#02040a] p-[1px]">
-            <div className="h-full w-full rounded-[18px] bg-[radial-gradient(circle_at_top,#1b2550_0%,#050814_45%,#02040a_100%)]">
+          <div className="mt-5 h-[340px] w-full rounded-2xl bg-[#050814] p-[1px]">
+            <div className="h-full w-full rounded-[18px] bg-[radial-gradient(circle_at_top,#111827_0%,#050814_55%,#020617_100%)]">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
-                  data={pnlSinceOpening}
-                  margin={{ top: 40, right: 40, left: 0, bottom: 20 }}
+                  data={pnlData}
+                  margin={{ top: 40, right: 32, left: 32, bottom: 32 }}
                 >
                   <defs>
+                    {/* fond de zone */}
                     <linearGradient
                       id="pnlAreaGradient"
                       x1="0"
@@ -217,27 +253,21 @@ export default function DashboardPage() {
                       x2="0"
                       y2="1"
                     >
-                      <stop
-                        offset="0%"
-                        stopColor="#4FD1FF"
-                        stopOpacity={0.45}
-                      />
-                      <stop
-                        offset="80%"
-                        stopColor="#2664EC"
-                        stopOpacity={0}
-                      />
+                      <stop offset="0%" stopColor="#4FD1FF" stopOpacity={0.45} />
+                      <stop offset="60%" stopColor="#2664EC" stopOpacity={0.1} />
+                      <stop offset="100%" stopColor="#020617" stopOpacity={0} />
                     </linearGradient>
 
+                    {/* lueur douce */}
                     <filter
                       id="softGlow"
-                      x="-50%"
-                      y="-50%"
-                      width="200%"
-                      height="200%"
+                      x="-40%"
+                      y="-40%"
+                      width="180%"
+                      height="180%"
                     >
                       <feGaussianBlur
-                        stdDeviation="10"
+                        stdDeviation="6"
                         result="coloredBlur"
                       />
                       <feMerge>
@@ -248,46 +278,42 @@ export default function DashboardPage() {
                   </defs>
 
                   <CartesianGrid
-                    stroke="#1F2937"
-                    strokeDasharray="4 8"
+                    stroke="rgba(148, 163, 184, 0.12)"
+                    strokeDasharray="3 8"
                     vertical={false}
                   />
+
                   <XAxis
                     dataKey="month"
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: "#6B7280", fontSize: 12 }}
-                    tickMargin={14}
+                    tickMargin={12}
+                    tick={{ fill: "rgba(148,163,184,0.9)", fontSize: 11 }}
                   />
                   <YAxis
                     hide
-                    domain={["dataMin - 5000", "dataMax + 5000"]}
+                    domain={["dataMin - 4000", "dataMax + 4000"]}
                   />
+
                   <Tooltip
                     content={<CustomTooltip />}
-                    cursor={{
-                      stroke: "rgba(148,163,184,0.35)",
-                      strokeWidth: 1,
-                    }}
+                    cursor={{ stroke: "rgba(148,163,184,0.4)", strokeWidth: 1 }}
                   />
+
                   <Area
                     type="monotone"
                     dataKey="value"
                     stroke="#4FD1FF"
-                    strokeWidth={3}
+                    strokeWidth={2.5}
                     fill="url(#pnlAreaGradient)"
                     filter="url(#softGlow)"
                     dot={false}
-                    activeDot={false}
-                  />
-                  {/* Point final mis en avant */}
-                  <ReferenceDot
-                    x={lastPoint.month}
-                    y={lastPoint.value}
-                    r={5}
-                    fill="#0ea5e9"
-                    stroke="#e0f2fe"
-                    strokeWidth={2}
+                    activeDot={{
+                      r: 5,
+                      fill: "#ffffff",
+                      stroke: "#4FD1FF",
+                      strokeWidth: 2,
+                    }}
                   />
                 </AreaChart>
               </ResponsiveContainer>
