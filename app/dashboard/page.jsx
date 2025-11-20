@@ -39,10 +39,9 @@ export default function DashboardPage() {
   }
 
   return (
-    // >>> ICI : on colle le dashboard au viewport complet
     <div className="fixed inset-0 w-full bg-page text-slate-50 overflow-hidden">
       <div className="flex h-full w-full">
-        {/* SIDEBAR GAUCHE */}
+        {/* SIDEBAR */}
         <aside className="hidden lg:flex lg:flex-col w-64 border-r border-slate-900/60 bg-slate-950/40">
           <div className="px-6 pt-6 pb-4 border-b border-slate-900/60">
             <div className="flex items-center gap-3">
@@ -124,10 +123,10 @@ export default function DashboardPage() {
           </div>
         </aside>
 
-        {/* CONTENU PRINCIPAL */}
+        {/* MAIN */}
         <main className="flex-1 h-full flex flex-col overflow-hidden">
           <div className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-            {/* BREADCRUMB + ACTIONS */}
+            {/* breadcrumb + actions */}
             <div className="flex items-center justify-between gap-4 mb-4">
               <div className="flex items-center gap-2 text-[12px] text-slate-500">
                 <span>Dashboard</span>
@@ -144,7 +143,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* TITRE + TABS */}
+            {/* title + timeframe pills */}
             <div className="mb-4">
               <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-3">
                 Dashboard
@@ -168,9 +167,9 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* BLOC PRINCIPAL : GRAPH + PANEL DROIT */}
+            {/* main content : graph + right card */}
             <section className="mt-4 grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
-              {/* TOTAL PORTFOLIO */}
+              {/* TOTAL PORTFOLIO + COURBE */}
               <div className="rounded-2xl border border-slate-800 bg-slate-950/80 px-5 py-4 lg:px-6 lg:py-5 flex flex-col">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
                   <div>
@@ -196,7 +195,6 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                {/* Graph */}
                 <div className="relative flex-1 min-h-[220px]">
                   <div className="relative rounded-2xl border border-slate-800 bg-slate-950/95 px-4 py-4 h-full overflow-hidden">
                     <svg
@@ -233,6 +231,7 @@ export default function DashboardPage() {
                         </linearGradient>
                       </defs>
 
+                      {/* grid lines */}
                       <g
                         stroke="rgba(148,163,184,0.12)"
                         strokeWidth="0.6"
@@ -245,21 +244,25 @@ export default function DashboardPage() {
                         <line x1="280" y1="0" x2="280" y2="150" />
                       </g>
 
+                      {/* area fill */}
                       <path
-                        d="M0 120 C 40 110, 80 85, 120 95 C 160 105, 200 70, 240 80 C 280 95, 310 60, 340 40 L 340 150 L 0 150 Z"
+                        d="M0 120 C 40 110, 80 90, 120 95 C 160 100, 180 80, 210 90 C 240 105, 280 70, 340 40 L 340 150 L 0 150 Z"
                         fill="url(#fillGradient)"
                       />
+                      {/* main line */}
                       <path
-                        d="M0 120 C 40 110, 80 85, 120 95 C 160 105, 200 70, 240 80 C 280 95, 310 60, 340 40"
+                        d="M0 120 C 40 110, 80 90, 120 95 C 160 100, 180 80, 210 90 C 240 105, 280 70, 340 40"
                         fill="none"
                         stroke="url(#lineGradient)"
                         strokeWidth="2.4"
                         strokeLinecap="round"
                       />
-                      <circle cx="230" cy="82" r="3.4" fill="#22d3ee" />
+
+                      {/* point highlight (comme sur le mock) */}
+                      <circle cx="220" cy="88" r="3.5" fill="#22d3ee" />
                       <circle
-                        cx="230"
-                        cy="82"
+                        cx="220"
+                        cy="88"
                         r="8"
                         fill="rgba(34,211,238,0.12)"
                         stroke="rgba(34,211,238,0.4)"
@@ -267,6 +270,7 @@ export default function DashboardPage() {
                       />
                     </svg>
 
+                    {/* tooltip flottant */}
                     <div className="absolute right-6 top-6 rounded-xl border border-slate-700 bg-slate-950/95 px-3 py-2 text-[11px] text-slate-200 shadow-[0_12px_30px_rgba(15,23,42,0.9)]">
                       <p className="text-[10px] text-slate-400 mb-0.5">
                         Today • 12:34
@@ -294,65 +298,75 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* PANEL DROIT */}
+              {/* CARTE DROITE : BITCOIN / PRICE CARD */}
               <div className="rounded-2xl border border-slate-800 bg-slate-950/80 px-5 py-4 lg:px-6 lg:py-5 flex flex-col">
-                <div className="flex items-start justify-between gap-3 mb-3">
+                {/* header */}
+                <div className="flex items-start justify-between gap-3 mb-4">
                   <div>
                     <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500 mb-1">
-                      Connected account
+                      Bitcoin (BTC-USD)
                     </p>
-                    <p className="text-sm font-semibold text-slate-50">
-                      MetaTrader 5 • Live
+                    <p className="text-[11px] text-slate-400">
+                      Performance of your managed crypto exposure.
                     </p>
-                    <p className="text-[11px] text-slate-400 mt-1">
-                      Your managed MT5 account connected to Montelion.
-                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-500">
+                    <button className="h-8 w-8 rounded-full bg-slate-900/80 flex items-center justify-center text-xs border border-slate-700/80">
+                      ↗
+                    </button>
+                    <button className="h-8 w-8 rounded-full bg-slate-900/80 flex items-center justify-center text-xs border border-slate-700/80">
+                      ⋯
+                    </button>
                   </div>
                 </div>
 
-                <div className="mt-2 mb-4">
-                  <p className="text-xs text-slate-400 mb-0.5">
-                    Account equity
+                {/* price */}
+                <div className="mb-4">
+                  <p className="text-[11px] text-slate-400 mb-1">
+                    Market price
                   </p>
-                  <p className="text-2xl font-semibold text-slate-50">
-                    $30,672.15{" "}
-                    <span className="text-[11px] text-emerald-300 align-middle">
+                  <div className="flex items-baseline gap-2">
+                    <p className="text-2xl font-semibold text-slate-50">
+                      $30,672.15
+                    </p>
+                    <span className="text-[11px] text-emerald-300">
                       +7.3%
                     </span>
-                  </p>
+                  </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2 mb-4 text-[11px]">
-                  <button className="rounded-lg border border-slate-700 bg-slate-900/70 px-3 py-1.5 text-slate-200">
-                    View trading access
+                {/* actions */}
+                <div className="flex flex-wrap gap-2 mb-5 text-[11px]">
+                  <button className="rounded-lg border border-slate-700 bg-slate-900/80 px-3 py-1.5 text-slate-200">
+                    Add to watchlist
                   </button>
-                  <button className="rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-1.5 text-slate-300">
-                    Track in dashboard
+                  <button className="rounded-lg border border-slate-700 bg-slate-900/40 px-3 py-1.5 text-slate-100">
+                    Track in portfolio
                   </button>
                 </div>
 
-                <dl className="space-y-2 text-[11px] text-slate-300">
-                  <div className="flex justify-between gap-4">
-                    <dt className="text-slate-500">Broker</dt>
-                    <dd>IC Markets</dd>
-                  </div>
-                  <div className="flex justify-between gap-4">
-                    <dt className="text-slate-500">Server</dt>
-                    <dd>ICMarketsSC-Live19</dd>
-                  </div>
-                  <div className="flex justify-between gap-4">
-                    <dt className="text-slate-500">Base currency</dt>
-                    <dd>USD</dd>
-                  </div>
-                  <div className="flex justify-between gap-4">
-                    <dt className="text-slate-500">Leverage</dt>
-                    <dd>1:100</dd>
-                  </div>
-                  <div className="flex justify-between gap-4">
-                    <dt className="text-slate-500">Risk mode</dt>
-                    <dd className="text-emerald-300">Normal</dd>
-                  </div>
-                </dl>
+                {/* metrics list avec petites barres comme sur le mock */}
+                <div className="space-y-3 text-[11px] text-slate-300">
+                  {[
+                    { label: "Market cap", value: "$595B", ratio: 0.78 },
+                    { label: "24h volume", value: "$16B", ratio: 0.52 },
+                    { label: "Circulating supply", value: "19.4M BTC", ratio: 0.64 },
+                    { label: "Dominance", value: "48.3%", ratio: 0.48 },
+                  ].map((row, idx) => (
+                    <div key={idx} className="space-y-1">
+                      <div className="flex justify-between gap-4">
+                        <span className="text-slate-500">{row.label}</span>
+                        <span>{row.value}</span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-slate-900/80 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-sky-400 to-emerald-400"
+                          style={{ width: `${row.ratio * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </section>
           </div>
