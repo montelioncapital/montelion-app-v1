@@ -1,334 +1,336 @@
-"use client";
+// app/dashboard/page.jsx
+'use client';
 
-import { useState } from "react";
+import React, { useMemo } from 'react';
 
-const TIME_RANGES = ["12 months", "6 months", "30 days", "7 days", "24 hours"];
+// --- Mock data for the PnL since account opening curve ---
+const pnlHistory = [
+  { label: 'Jan', value: 0 },
+  { label: 'Feb', value: 4 },
+  { label: 'Mar', value: 7 },
+  { label: 'Apr', value: 5 },
+  { label: 'May', value: 9 },
+  { label: 'Jun', value: 13 },
+  { label: 'Jul', value: 12 },
+  { label: 'Aug', value: 16 },
+];
 
-function TimeRangePills({ active, onChange }) {
-  return (
-    <div className="mt-4 flex flex-wrap gap-2">
-      {TIME_RANGES.map((range) => {
-        const isActive = range === active;
-        return (
-          <button
-            key={range}
-            type="button"
-            onClick={() => onChange(range)}
-            className={`dash-pill ${
-              isActive ? "dash-pill-active" : "border border-white/5"
-            }`}
-          >
-            {range}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
+function useLinePath(points) {
+  return useMemo(() => {
+    if (!points.length) return '';
 
-function MetricCard({ label, value, subLabel, trend }) {
-  return (
-    <div className="dash-metric-card">
-      <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
-        {label}
-      </p>
-      <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-50">
-        {value}
-      </p>
-      <div className="mt-1 flex items-center justify-between text-[12px] text-slate-400">
-        <span>{subLabel}</span>
-        {trend && (
-          <span
-            className={
-              trend.startsWith("-") ? "text-rose-400" : "text-emerald-400"
-            }
-          >
-            {trend}
-          </span>
-        )}
-      </div>
-    </div>
-  );
+    const values = points.map((p) => p.value);
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const range = max - min || 1;
+
+    const normalized = points.map((p, index) => {
+      const x = (index / Math.max(points.length - 1, 1)) * 100;
+      const yNorm = (p.value - min) / range;
+      const y = 90 - yNorm * 70; // un peu de marge haut/bas
+      return { x, y };
+    });
+
+    let d = `M ${normalized[0].x},${normalized[0].y}`;
+    for (let i = 1; i < normalized.length; i++) {
+      d += ` L ${normalized[i].x},${normalized[i].y}`;
+    }
+    return d;
+  }, [points]);
 }
 
 export default function DashboardPage() {
-  const [activeRange, setActiveRange] = useState("6 months");
+  const linePath = useLinePath(pnlHistory);
 
   return (
-    <div className="flex h-screen w-screen bg-page text-slate-100">
-      {/* Sidebar */}
-      <aside className="flex h-full w-64 flex-col border-r border-white/5 bg-[#040713]/90 px-6 py-6">
-        <div className="mb-8 flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--brand)] text-sm font-semibold">
+    <div className="dashboard-root flex min-h-screen bg-page text-slate-100">
+      {/* SIDEBAR */}
+      <aside className="hidden lg:flex w-72 flex-col border-r border-white/5 bg-gradient-to-b from-[#050814] to-[#02040a]">
+        {/* Top brand */}
+        <div className="flex items-center gap-3 px-6 pt-6 pb-4">
+          <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[var(--brand)] text-sm font-semibold">
             17
           </div>
-          <div className="leading-tight">
-            <p className="text-sm font-semibold tracking-tight">
+          <div>
+            <div className="text-sm font-semibold tracking-tight">
               Montelion Capital
-            </p>
-            <p className="text-[11px] text-slate-400">
+            </div>
+            <div className="text-[11px] text-slate-400">
               Managed trading dashboard
-            </p>
+            </div>
           </div>
         </div>
 
         {/* Search */}
-        <div className="mb-6">
-          <div className="flex items-center gap-2 rounded-xl bg-slate-900/70 px-3 py-2.5 text-xs text-slate-400">
-            <span className="rounded-md border border-slate-700 px-1.5 py-0.5 text-[10px] text-slate-300">
-              ⌘K
-            </span>
+        <div className="px-6 pb-4">
+          <div className="flex items-center gap-2 rounded-xl bg-white/5 px-3 py-2 text-xs text-slate-400">
+            <span className="text-xs">⌘K</span>
             <span>Search</span>
           </div>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 space-y-6 text-sm">
-          <div>
-            <p className="mb-2 text-[11px] uppercase tracking-[0.2em] text-slate-500">
-              General
-            </p>
-            <button className="mb-1 flex w-full items-center justify-between gap-2 rounded-xl bg-slate-900 px-3 py-2.5 text-xs font-medium text-slate-100">
-              <span className="flex items-center gap-2">
-                <span className="flex h-5 w-5 items-center justify-center rounded-md bg-slate-800 text-[10px]">
-                  ⬛
-                </span>
-                Dashboard
-              </span>
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_0_4px_rgba(16,185,129,0.25)]" />
-            </button>
+        {/* Nav */}
+        <nav className="flex-1 overflow-y-auto px-4 dashboard-main">
+          <div className="px-2 pb-3 text-[11px] uppercase tracking-[0.12em] text-slate-500">
+            General
           </div>
 
-          <div>
-            <p className="mb-2 text-[11px] uppercase tracking-[0.2em] text-slate-500">
-              Account
-            </p>
-            <ul className="space-y-1 text-xs text-slate-400">
-              <li className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-slate-900/60 hover:text-slate-100">
-                <span>⚙️</span>
-                <span>Settings</span>
-              </li>
-              <li className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-slate-900/60 hover:text-slate-100">
-                <span>🔔</span>
-                <span>Notifications</span>
-              </li>
-            </ul>
+          <button className="mb-1 flex w-full items-center justify-between rounded-xl bg-white/5 px-3 py-2 text-sm text-slate-50">
+            <span className="flex items-center gap-2">
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-lg bg-white/5 text-[13px]">
+                ⬛
+              </span>
+              Dashboard
+            </span>
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+          </button>
+
+          <button className="mb-1 flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm text-slate-400 hover:bg-white/5">
+            <span className="flex items-center gap-2">
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-lg bg-white/5 text-[13px]">
+                ₿
+              </span>
+              Trading
+            </span>
+          </button>
+
+          <div className="mt-6 px-2 pb-3 text-[11px] uppercase tracking-[0.12em] text-slate-500">
+            Account
           </div>
+
+          <button className="mb-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-400 hover:bg-white/5">
+            <span className="inline-flex h-6 w-6 items-center justify-center rounded-lg bg-white/5 text-[13px]">
+              ⚙️
+            </span>
+            Settings
+          </button>
+
+          <button className="mb-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-400 hover:bg-white/5">
+            <span className="inline-flex h-6 w-6 items-center justify-center rounded-lg bg-white/5 text-[13px]">
+              🔔
+            </span>
+            Notifications
+          </button>
         </nav>
 
-        <div className="mt-6 border-t border-slate-800 pt-4 text-[11px] text-slate-500">
-          <p>Logged in as</p>
-          <p className="font-medium text-slate-300">montelion.capital</p>
+        {/* Footer */}
+        <div className="border-t border-white/5 px-6 py-4 text-[11px] text-slate-500">
+          Logged in as
+          <div className="text-xs text-slate-300">montelion.capital</div>
         </div>
       </aside>
 
-      {/* Main content */}
-      <main className="flex-1 overflow-hidden">
-        <div className="no-scrollbar flex h-full flex-col overflow-y-auto px-8 py-6 md:px-12">
-          {/* Header */}
-          <header className="flex items-start justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 text-xs text-slate-500">
-                <span className="text-slate-400">Dashboard</span>
-                <span>/</span>
-                <span className="text-slate-300">Overview</span>
-              </div>
-              <h1 className="mt-2 text-3xl font-semibold tracking-[-0.03em] text-slate-50">
+      {/* MAIN AREA */}
+      <main className="dashboard-main flex-1 overflow-y-auto">
+        <div className="mx-auto flex max-w-6xl flex-col px-6 pb-10 pt-8 lg:px-10">
+          {/* Breadcrumb + actions */}
+          <div className="mb-6 flex items-center justify-between gap-4">
+            <div className="text-xs text-slate-500">
+              <span className="cursor-default hover:text-slate-400">
                 Dashboard
-              </h1>
+              </span>
+              <span className="mx-1 text-slate-600">/</span>
+              <span className="text-slate-400">Overview</span>
             </div>
 
-            <div className="flex gap-2">
-              <button className="rounded-full border border-slate-700/70 px-4 py-1.5 text-xs text-slate-200 hover:bg-slate-900">
+            <div className="flex items-center gap-3">
+              <button className="mc-btn mc-btn-ghost h-9 rounded-full px-4 text-xs">
                 Import
               </button>
-              <button className="rounded-full border border-[var(--brand-light)] bg-[var(--brand)] px-4 py-1.5 text-xs font-medium text-white hover:bg-[var(--brand-600)]">
+              <button className="mc-btn mc-btn-primary h-9 rounded-full px-4 text-xs">
                 + Add
               </button>
             </div>
-          </header>
+          </div>
 
-          {/* Time ranges */}
-          <TimeRangePills active={activeRange} onChange={setActiveRange} />
+          {/* Title + time range pills */}
+          <div className="mb-6">
+            <div className="text-3xl font-semibold tracking-tight">
+              Dashboard
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2 text-xs">
+              {['12 months', '6 months', '30 days', '7 days', '24 hours'].map(
+                (label, idx) => (
+                  <button
+                    key={label}
+                    className={`rounded-full border px-3 py-1 ${
+                      idx === 1
+                        ? 'border-[var(--brand)] bg-[var(--brand)]/10 text-slate-50'
+                        : 'border-white/5 text-slate-400 hover:border-white/15'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ),
+              )}
+            </div>
+          </div>
 
-          {/* Top metrics */}
-          <section className="mt-6 grid gap-4 md:grid-cols-3">
-            <MetricCard
-              label="Account balance"
-              value="$171,610.25"
-              subLabel="Your current equity (mock data)"
-              trend="+5.29% vs last month"
-            />
-            <MetricCard
-              label="Today's P&L"
-              value="+$3,928.00"
-              subLabel="Realized & unrealized"
-              trend="+1.42%"
-            />
-            <MetricCard
-              label="Monthly P&L"
-              value="+$12,450.90"
-              subLabel="From the start of this month"
-              trend="+8.15%"
-            />
+          {/* KPI ROW */}
+          <section className="mb-8 grid gap-4 md:grid-cols-3">
+            {/* Account balance */}
+            <div className="rounded-2xl border border-white/5 bg-gradient-to-br from-white/[0.03] via-white/[0.01] to-transparent px-6 py-5">
+              <div className="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">
+                Account balance
+              </div>
+              <div className="mt-3 text-2xl font-semibold">$171,610.25</div>
+              <div className="mt-1 text-[11px] text-slate-400">
+                Your current equity (mock data)
+              </div>
+              <div className="mt-3 text-[11px] text-emerald-400">
+                +5.29% <span className="text-slate-400">vs last month</span>
+              </div>
+            </div>
+
+            {/* Today PnL */}
+            <div className="rounded-2xl border border-white/5 bg-gradient-to-br from-white/[0.03] via-white/[0.01] to-transparent px-6 py-5">
+              <div className="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">
+                Today&apos;s P&amp;L
+              </div>
+              <div className="mt-3 text-2xl font-semibold">+ $3,928.00</div>
+              <div className="mt-1 text-[11px] text-slate-400">
+                Realized &amp; unrealized (mock data)
+              </div>
+              <div className="mt-3 text-[11px] text-emerald-400">
+                +1.42% <span className="text-slate-400">vs previous day</span>
+              </div>
+            </div>
+
+            {/* Monthly PnL */}
+            <div className="rounded-2xl border border-white/5 bg-gradient-to-br from-white/[0.03] via-white/[0.01] to-transparent px-6 py-5">
+              <div className="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">
+                Monthly P&amp;L
+              </div>
+              <div className="mt-3 text-2xl font-semibold">+ $12,450.90</div>
+              <div className="mt-1 text-[11px] text-slate-400">
+                From the start of this month (mock data)
+              </div>
+              <div className="mt-3 flex items-center justify-between text-[11px]">
+                <span className="text-emerald-400">
+                  +8.15% <span className="text-slate-400">this month</span>
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] text-emerald-300">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                  Live connection
+                </span>
+              </div>
+            </div>
           </section>
 
-          {/* PnL chart since account opening */}
-          <section className="mt-6 mb-6">
-            <div className="dash-chart-card">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="text-[11px] uppercase tracking-[0.22em] text-slate-400">
-                    P&amp;L since account opening
-                  </p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    Mock curve for design preview. We&apos;ll plug real data
-                    later.
-                  </p>
+          {/* PNL CURVE */}
+          <section className="rounded-3xl border border-white/5 bg-gradient-to-b from-[#071628] via-[#050c18] to-[#02050d] px-6 py-6 md:px-8 md:py-7">
+            <div className="flex flex-wrap items-baseline justify-between gap-4">
+              <div>
+                <div className="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">
+                  P&amp;L since account opening
                 </div>
-                <div className="flex items-center gap-2 text-xs">
-                  <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-3 py-1 text-emerald-300">
-                    <span className="mr-1 h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                    Live connection
-                  </span>
-                  <span className="text-slate-500">Last update: 2 min ago</span>
+                <div className="mt-1 text-[11px] text-slate-400">
+                  Mock curve for design preview. We will plug real trading data
+                  later.
                 </div>
               </div>
+              <div className="flex flex-col items-end text-right text-[11px] text-slate-400">
+                <span className="text-xs text-slate-200">
+                  Total P&amp;L&nbsp;&nbsp;
+                  <span className="font-semibold text-emerald-400">
+                    +$45,920.32
+                  </span>
+                </span>
+                <span className="mt-1 text-emerald-400">+32.8% since opening</span>
+              </div>
+            </div>
 
-              <div className="mt-5 h-72 rounded-2xl bg-gradient-to-b from-[rgba(59,119,255,0.35)] via-[rgba(6,12,26,0.9)] to-[rgba(6,12,26,1)] px-4 pt-4 pb-6">
+            <div className="mt-6 h-[260px] w-full rounded-2xl bg-gradient-to-b from-[rgba(37,99,235,0.18)] via-[rgba(15,23,42,0.7)] to-[rgba(15,23,42,0.95)] p-5">
+              <div className="relative h-full w-full">
+                {/* Grid lines */}
                 <svg
-                  viewBox="0 0 600 260"
-                  className="h-full w-full"
+                  viewBox="0 0 100 100"
                   preserveAspectRatio="none"
+                  className="absolute inset-0 h-full w-full"
                 >
                   <defs>
-                    <linearGradient
-                      id="pnlLine"
-                      x1="0%"
-                      y1="0%"
-                      x2="100%"
-                      y2="0%"
-                    >
-                      <stop offset="0%" stopColor="#3B77FF" />
-                      <stop offset="50%" stopColor="#4DF3FF" />
-                      <stop offset="100%" stopColor="#38bdf8" />
+                    <linearGradient id="pnl-fill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.35" />
+                      <stop offset="100%" stopColor="#0b1120" stopOpacity="0" />
                     </linearGradient>
-
-                    <linearGradient
-                      id="pnlFill"
-                      x1="0%"
-                      y1="0%"
-                      x2="0%"
-                      y2="100%"
-                    >
-                      <stop offset="0%" stopColor="rgba(61, 191, 255, 0.45)" />
-                      <stop
-                        offset="50%"
-                        stopColor="rgba(61, 191, 255, 0.20)"
-                      />
-                      <stop offset="100%" stopColor="transparent" />
-                    </linearGradient>
-
-                    <pattern
-                      id="pnlGrid"
-                      x="0"
-                      y="0"
-                      width="60"
-                      height="40"
-                      patternUnits="userSpaceOnUse"
-                    >
-                      <path
-                        d="M 0 40 H 60 M 0 0 V 0"
-                        stroke="rgba(148, 163, 184, 0.12)"
-                        strokeWidth="0.5"
-                      />
-                    </pattern>
                   </defs>
 
-                  <rect
-                    x="0"
-                    y="0"
-                    width="600"
-                    height="260"
-                    fill="url(#pnlGrid)"
-                  />
-
-                  <path
-                    d="M 0 210
-                       C 80 200, 120 190, 160 180
-                       C 200 170, 240 165, 280 175
-                       C 320 185, 360 170, 400 150
-                       C 440 135, 480 120, 520 90
-                       C 560 70, 580 55, 600 50"
-                    fill="url(#pnlFill)"
-                    stroke="none"
-                  />
-
-                  <path
-                    d="M 0 210
-                       C 80 200, 120 190, 160 180
-                       C 200 170, 240 165, 280 175
-                       C 320 185, 360 170, 400 150
-                       C 440 135, 480 120, 520 90
-                       C 560 70, 580 55, 600 50"
-                    fill="none"
-                    stroke="url(#pnlLine)"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                  />
-
-                  <circle cx="600" cy="50" r="5" fill="#0f172a" />
-                  <circle
-                    cx="600"
-                    cy="50"
-                    r="4"
-                    fill="#4DF3FF"
-                    stroke="#0f172a"
-                    strokeWidth="2"
-                  />
-
-                  <g transform="translate(430, 60)">
-                    <rect
-                      x="0"
-                      y="0"
-                      rx="10"
-                      ry="10"
-                      width="140"
-                      height="46"
-                      fill="rgba(15,23,42,0.95)"
-                      stroke="rgba(148,163,184,0.45)"
-                      strokeWidth="0.6"
+                  {/* horizontales */}
+                  {[20, 40, 60, 80].map((y) => (
+                    <line
+                      key={y}
+                      x1="0"
+                      y1={y}
+                      x2="100"
+                      y2={y}
+                      stroke="rgba(148,163,184,0.18)"
+                      strokeWidth="0.3"
                     />
-                    <text
-                      x="12"
-                      y="17"
-                      fill="#64748b"
-                      fontSize="10"
-                      fontFamily="system-ui, -apple-system, BlinkMacSystemFont"
-                    >
-                      Total P&amp;L
-                    </text>
-                    <text
-                      x="12"
-                      y="32"
-                      fill="#e2e8f0"
-                      fontSize="13"
-                      fontWeight="600"
-                      fontFamily="system-ui, -apple-system, BlinkMacSystemFont"
-                    >
-                      +$45,920.32
-                    </text>
-                    <text
-                      x="100"
-                      y="32"
-                      fill="#4ade80"
-                      fontSize="11"
-                      fontFamily="system-ui, -apple-system, BlinkMacSystemFont"
-                    >
-                      +32.8%
-                    </text>
-                  </g>
+                  ))}
+
+                  {/* zone sous la courbe */}
+                  {linePath && (
+                    <path
+                      d={`${linePath} L 100 100 L 0 100 Z`}
+                      fill="url(#pnl-fill)"
+                    />
+                  )}
+
+                  {/* courbe */}
+                  {linePath && (
+                    <path
+                      d={linePath}
+                      fill="none"
+                      stroke="#3b82f6"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                    />
+                  )}
+
+                  {/* point highlight dernier */}
+                  {linePath && pnlHistory.length > 0 && (
+                    <>
+                      {(() => {
+                        const last = pnlHistory[pnlHistory.length - 1];
+                        const values = pnlHistory.map((p) => p.value);
+                        const min = Math.min(...values);
+                        const max = Math.max(...values);
+                        const range = max - min || 1;
+                        const index = pnlHistory.length - 1;
+                        const x =
+                          (index / Math.max(pnlHistory.length - 1, 1)) * 100;
+                        const yNorm = (last.value - min) / range;
+                        const y = 90 - yNorm * 70;
+
+                        return (
+                          <g key="highlight">
+                            <circle
+                              cx={x}
+                              cy={y}
+                              r="2.6"
+                              fill="#0f172a"
+                              stroke="#38bdf8"
+                              strokeWidth="1.4"
+                            />
+                            <circle
+                              cx={x}
+                              cy={y}
+                              r="1"
+                              fill="#38bdf8"
+                            />
+                          </g>
+                        );
+                      })()}
+                    </>
+                  )}
                 </svg>
+
+                {/* X-axis labels */}
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-between px-1 pb-1 text-[10px] text-slate-500">
+                  {pnlHistory.map((p) => (
+                    <span key={p.label}>{p.label}</span>
+                  ))}
+                </div>
               </div>
             </div>
           </section>
