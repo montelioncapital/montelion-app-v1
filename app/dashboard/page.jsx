@@ -24,10 +24,10 @@ const pnlSinceOpening = [
   { month: "Aug", value: 62000 },
 ];
 
-const formatCurrency = (v: number) =>
+const formatCurrency = (v) =>
   `$${v.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   const point = payload[0].payload;
 
@@ -229,8 +229,17 @@ export default function DashboardPage() {
                       />
                     </linearGradient>
 
-                    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
-                      <feGaussianBlur stdDeviation="10" result="coloredBlur" />
+                    <filter
+                      id="softGlow"
+                      x="-50%"
+                      y="-50%"
+                      width="200%"
+                      height="200%"
+                    >
+                      <feGaussianBlur
+                        stdDeviation="10"
+                        result="coloredBlur"
+                      />
                       <feMerge>
                         <feMergeNode in="coloredBlur" />
                         <feMergeNode in="SourceGraphic" />
@@ -256,7 +265,10 @@ export default function DashboardPage() {
                   />
                   <Tooltip
                     content={<CustomTooltip />}
-                    cursor={{ stroke: "rgba(148,163,184,0.35)", strokeWidth: 1 }}
+                    cursor={{
+                      stroke: "rgba(148,163,184,0.35)",
+                      strokeWidth: 1,
+                    }}
                   />
                   <Area
                     type="monotone"
