@@ -1,379 +1,419 @@
-"use client";
-
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
-
-const balanceData = [
-  { month: "Jan", value: 24000 },
-  { month: "Feb", value: 27500 },
-  { month: "Mar", value: 31000 },
-  { month: "Apr", value: 30000 },
-  { month: "May", value: 34500 },
-  { month: "Jun", value: 38800 },
-  { month: "Jul", value: 43200 },
-  { month: "Aug", value: 46200 },
-];
-
-// petit helper pour afficher les valeurs
-const formatCurrency = (v) =>
-  `$${v.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
-
-// tooltip custom (fond sombre + bord bleu)
-const CustomTooltip = ({ active, payload, label }) => {
-  if (!active || !payload || !payload.length) return null;
-
-  const point = payload[0];
-
-  return (
-    <div className="rounded-xl border border-white/10 bg-slate-900/95 px-4 py-3 text-xs shadow-none">
-      <div className="mb-1 text-[10px] uppercase tracking-[0.16em] text-slate-400">
-        {label}
-      </div>
-      <div className="text-sm font-medium text-white">
-        {formatCurrency(point.value)}
-      </div>
-      <div className="mt-1 text-[11px] text-emerald-400">Total equity</div>
-    </div>
-  );
-};
+// app/dashboard/page.jsx
 
 export default function DashboardPage() {
-  const totalPnl = 62000;
-  const totalPnlPct = 32.8;
-
   return (
-    <div className="dashboard-root">
-      {/* SIDEBAR */}
-      <aside className="flex h-screen w-72 flex-col border-r border-white/5 bg-gradient-to-b from-slate-950/95 via-slate-950/90 to-slate-950/98 px-6 py-6">
-        {/* Logo / brand */}
-        <div className="mb-8 flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600">
-            {/* M logo minimaliste */}
-            <span className="text-sm font-semibold text-white">M</span>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-xs font-medium tracking-[0.2em] text-slate-400 uppercase">
-              Montelion
-            </span>
-            <span className="text-xs text-slate-500">
-              Managed trading dashboard
-            </span>
-          </div>
-        </div>
+    <div className="min-h-screen w-full bg-[#050516] text-slate-100">
+      {/* Fond global avec halo bleu en haut */}
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(1200px_600px_at_50%_-200px,#2846ff33,transparent_55%),radial-gradient(900px_900px_at_0%_100%,#1a2a5f66,transparent_60%),radial-gradient(900px_900px_at_100%_100%,#2c1f5f66,transparent_60%)]" />
 
-        {/* Search */}
-        <div className="mb-6">
-          <div className="flex items-center gap-2 rounded-xl border border-white/8 bg-slate-900/60 px-3 py-2 text-sm text-slate-300">
-            {/* Icône search */}
-            <svg
-              viewBox="0 0 20 20"
-              className="h-4 w-4 text-slate-400"
-              aria-hidden="true"
-            >
-              <path
-                d="M9 3.5a5.5 5.5 0 0 1 4.384 8.76l2.178 2.178a1 1 0 0 1-1.414 1.414l-2.178-2.178A5.5 5.5 0 1 1 9 3.5zm0 2A3.5 3.5 0 1 0 9 12a3.5 3.5 0 0 0 0-7.5z"
-                fill="currentColor"
-              />
-            </svg>
-            <span className="text-xs text-slate-400">Search</span>
-          </div>
-        </div>
-
-        {/* Sections */}
-        <nav className="flex-1 space-y-6 text-sm">
-          {/* GENERAL */}
-          <div>
-            <div className="mb-2 text-[11px] font-medium tracking-[0.2em] text-slate-500 uppercase">
-              General
+      <div className="relative flex h-screen">
+        {/* SIDEBAR */}
+        <aside className="flex w-72 flex-col border-r border-white/5 bg-[#050513]/80 backdrop-blur-xl">
+          {/* Logo / brand */}
+          <div className="flex items-center gap-3 px-6 pt-6 pb-4">
+            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2f6bff] to-[#38e1ff]">
+              <span className="text-sm font-semibold text-white">M</span>
             </div>
-            <div className="space-y-1">
-              {/* Dashboard active */}
-              <button className="group flex w-full items-center justify-between rounded-xl border border-sky-500/40 bg-sky-500/15 px-3 py-2 text-left text-[13px] text-slate-50 shadow-[0_0_25px_rgba(56,189,248,0.35)]">
-                <div className="flex items-center gap-2">
-                  {/* grid icon */}
-                  <svg
-                    viewBox="0 0 20 20"
-                    className="h-4 w-4 text-sky-400"
-                    aria-hidden="true"
-                  >
-                    <rect
-                      x="3"
-                      y="3"
-                      width="5"
-                      height="5"
-                      rx="1.2"
-                      fill="currentColor"
-                    />
-                    <rect
-                      x="12"
-                      y="3"
-                      width="5"
-                      height="5"
-                      rx="1.2"
-                      fill="currentColor"
-                    />
-                    <rect
-                      x="3"
-                      y="12"
-                      width="5"
-                      height="5"
-                      rx="1.2"
-                      fill="currentColor"
-                    />
-                    <rect
-                      x="12"
-                      y="12"
-                      width="5"
-                      height="5"
-                      rx="1.2"
-                      fill="currentColor"
-                    />
-                  </svg>
-                  <span>Dashboard</span>
-                </div>
-                <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.8)]" />
-              </button>
+            <div className="flex flex-col">
+              <span className="text-xs font-semibold tracking-[0.24em] text-slate-400">
+                MONTELION
+              </span>
+              <span className="text-[13px] text-slate-300">
+                Managed trading dashboard
+              </span>
             </div>
           </div>
 
-          {/* TRADING */}
-          <div>
-            <div className="mb-2 text-[11px] font-medium tracking-[0.2em] text-slate-500 uppercase">
-              Trading
-            </div>
-            <div className="space-y-1">
-              <button className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[13px] text-slate-400 hover:bg-slate-900/60 hover:text-slate-100">
-                {/* trend icon */}
-                <svg
-                  viewBox="0 0 20 20"
-                  className="h-4 w-4 text-slate-500"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M4 12.5 8 8l3 3 5-6.5"
-                    stroke="currentColor"
-                    strokeWidth="1.4"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M12.5 4H16v3.5"
-                    stroke="currentColor"
-                    strokeWidth="1.4"
-                    strokeLinecap="round"
-                  />
-                </svg>
-                <span>Trading</span>
-              </button>
+          {/* Search */}
+          <div className="px-6 pb-4">
+            <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-300">
+              <SearchIcon className="h-4 w-4 text-slate-400" />
+              <span className="flex-1 text-xs text-slate-400">
+                Search
+              </span>
+              <span className="rounded-full bg-black/40 px-2 py-1 text-[10px] text-slate-500">
+                ⌘K
+              </span>
             </div>
           </div>
 
-          {/* ACCOUNT */}
-          <div>
-            <div className="mb-2 text-[11px] font-medium tracking-[0.2em] text-slate-500 uppercase">
-              Account
-            </div>
-            <div className="space-y-1">
-              <button className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[13px] text-slate-400 hover:bg-slate-900/60 hover:text-slate-100">
-                {/* settings icon */}
-                <svg
-                  viewBox="0 0 20 20"
-                  className="h-4 w-4 text-slate-500"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M10 6.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7Z"
-                    stroke="currentColor"
-                    strokeWidth="1.3"
-                  />
-                  <path
-                    d="M4.4 7.1 5.4 5.4 7 4.4M4.4 12.9 5.4 14.6 7 15.6M12.9 4.4 14.6 5.4 15.6 7M12.9 15.6 14.6 14.6 15.6 12.9"
-                    stroke="currentColor"
-                    strokeWidth="1.3"
-                    strokeLinecap="round"
-                  />
-                </svg>
-                <span>Settings</span>
-              </button>
-              <button className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[13px] text-slate-400 hover:bg-slate-900/60 hover:text-slate-100">
-                {/* bell icon */}
-                <svg
-                  viewBox="0 0 20 20"
-                  className="h-4 w-4 text-slate-500"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M10 16.5a2 2 0 0 0 1.8-1.1M4.5 7.8A4.7 4.7 0 0 1 10 3a4.7 4.7 0 0 1 5.5 4.8c0 3 .8 4 1.1 4.4.2.2.1.5-.2.5H3.6c-.3 0-.4-.3-.2-.5.3-.4 1.1-1.4 1.1-4.4Z"
-                    stroke="currentColor"
-                    strokeWidth="1.3"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                <span>Notifications</span>
-              </button>
-            </div>
-          </div>
-        </nav>
+          {/* Sections */}
+          <nav className="mt-2 flex-1 space-y-6 px-4 text-[13px]">
+            <SidebarSection label="MENU" />
+            <ul className="space-y-1">
+              <SidebarItem active icon={<GridIcon />} label="Dashboard" />
+              <SidebarItem icon={<StatsIcon />} label="Stats" />
+              <SidebarItem icon={<WalletIcon />} label="Accounts" />
+              <SidebarItem icon={<TrophyIcon />} label="Competitions" />
+              <SidebarItem icon={<StarIcon />} label="Leaderboard" />
+            </ul>
 
-        {/* Footer */}
-        <div className="mt-4 border-t border-white/5 pt-4">
-          <div className="text-[11px] uppercase tracking-[0.22em] text-slate-500 mb-1">
+            <SidebarSection label="ACCOUNT" />
+            <ul className="space-y-1">
+              <SidebarItem icon={<DocIcon />} label="Certificates" />
+              <SidebarItem icon={<CoinsIcon />} label="Payouts" />
+              <SidebarItem icon={<UsersIcon />} label="Affiliate Program" />
+              <SidebarItem icon={<DownloadIcon />} label="Downloads" />
+            </ul>
+
+            <SidebarSection label="SUPPORT" />
+            <ul className="space-y-1">
+              <SidebarItem icon={<HelpIcon />} label="Help Center" />
+              <SidebarItem icon={<SettingsIcon />} label="Settings" />
+            </ul>
+          </nav>
+
+          {/* Footer */}
+          <div className="border-t border-white/5 px-6 py-4 text-[11px] text-slate-500">
             Logged in as
-          </div>
-          <div className="text-xs text-slate-300">montelion.capital</div>
-        </div>
-      </aside>
-
-      {/* MAIN */}
-      <main className="dashboard-main flex flex-col overflow-y-auto px-10 py-8">
-        {/* Breadcrumb + title */}
-        <header className="mb-8">
-          <div className="mb-1 text-xs text-slate-500">
-            Dashboard <span className="mx-1">/</span>{" "}
-            <span className="text-slate-400">Overview</span>
-          </div>
-          <h1 className="text-3xl font-semibold tracking-[-0.03em] text-slate-50">
-            Dashboard
-          </h1>
-        </header>
-
-        {/* 3 cards top: balance / day / month */}
-        <section className="mb-8 grid grid-cols-1 gap-5 xl:grid-cols-3">
-          {/* Card helper */}
-          <div className="rounded-2xl border border-white/8 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.18),_transparent_55%),linear-gradient(to_bottom,_rgba(15,23,42,0.95),_rgba(15,23,42,0.9))] px-6 py-5">
-            <div className="mb-3 text-[11px] font-medium uppercase tracking-[0.2em] text-slate-400">
-              Account balance
-            </div>
-            <div className="text-[26px] font-semibold tracking-tight text-slate-50">
-              $171,610.25
-            </div>
-            <div className="mt-2 text-xs text-slate-400">
-              Your current equity (mock data)
+            <div className="font-medium text-slate-300">
+              montelion.capital
             </div>
           </div>
+        </aside>
 
-          <div className="rounded-2xl border border-emerald-500/35 bg-[radial-gradient(circle_at_top,_rgba(52,211,153,0.15),_transparent_55%),linear-gradient(to_bottom,_rgba(15,23,42,0.95),_rgba(15,23,42,0.9))] px-6 py-5">
-            <div className="mb-3 text-[11px] font-medium uppercase tracking-[0.2em] text-slate-400">
-              Today&apos;s P&amp;L
-            </div>
-            <div className="text-[26px] font-semibold tracking-tight text-emerald-400">
-              + $3,928.00
-            </div>
-            <div className="mt-2 text-xs text-slate-400">
-              Realized &amp; unrealized (mock data)
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-sky-500/35 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.18),_transparent_55%),linear-gradient(to_bottom,_rgba(15,23,42,0.95),_rgba(15,23,42,0.9))] px-6 py-5">
-            <div className="mb-3 text-[11px] font-medium uppercase tracking-[0.2em] text-slate-400">
-              Monthly P&amp;L
-            </div>
-            <div className="text-[26px] font-semibold tracking-tight text-emerald-400">
-              + $12,450.90
-            </div>
-            <div className="mt-2 text-xs text-slate-400">
-              From the start of this month (mock data)
-            </div>
-          </div>
-        </section>
-
-        {/* BIG CHART */}
-        <section className="rounded-3xl border border-white/10 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.12),_transparent_55%),linear-gradient(to_bottom,_rgba(7,15,35,0.98),_rgba(3,6,18,0.98))] px-7 py-6">
-          {/* header row */}
-          <div className="mb-4 flex items-start justify-between">
-            <div>
-              <div className="mb-1 text-[11px] font-medium uppercase tracking-[0.2em] text-slate-400">
-                P&amp;L since account opening
+        {/* CONTENU PRINCIPAL */}
+        <main className="flex-1 overflow-y-auto">
+          <div className="mx-auto flex h-full max-w-6xl flex-col px-8 py-8">
+            {/* Top bar */}
+            <div className="mb-6 flex items-center justify-between gap-4">
+              <div className="text-xs text-slate-400">
+                <span className="text-slate-500">Dashboard</span>
+                <span className="mx-1 text-slate-600">/</span>
+                <span className="text-slate-300">Overview</span>
               </div>
-              <p className="text-xs text-slate-500">
-                Mock curve for design preview. Real trading data will be plugged
-                later.
-              </p>
-            </div>
-            <div className="text-right">
-              <div className="text-xs font-medium text-slate-400">Total P&amp;L</div>
-              <div className="text-sm font-semibold text-emerald-400">
-                +{formatCurrency(totalPnl)}{" "}
-                <span className="ml-1 text-xs text-emerald-400/75">
-                  +{totalPnlPct}%
-                </span>
+              <div className="flex items-center gap-4">
+                <button className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-slate-300">
+                  Last update: <span className="text-emerald-400">2 min ago</span>
+                </button>
+                <div className="flex items-center gap-3 rounded-full bg-white/5 px-2 py-1">
+                  <div className="h-7 w-7 rounded-full bg-[url('https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg')] bg-cover bg-center" />
+                  <div className="flex flex-col">
+                    <span className="text-xs font-medium text-slate-100">
+                      Montelion Client
+                    </span>
+                    <span className="text-[10px] text-slate-500">
+                      Private Hedge Fund
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="mt-2 h-[320px] rounded-2xl border border-white/5 bg-gradient-to-b from-slate-900/40 via-slate-950/40 to-slate-950/90 px-4 py-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart
-                data={balanceData}
-                margin={{ top: 10, right: 20, left: 0, bottom: 20 }}
-              >
-                <defs>
-                  <linearGradient id="balanceArea" x1="0" y1="0" x2="0" y2="1">
-                    <stop
-                      offset="0%"
-                      stopColor="#38bdf8"
-                      stopOpacity={0.85}
+            {/* Cards haut */}
+            <div className="mb-6 grid grid-cols-3 gap-4">
+              <GlassCard>
+                <div className="flex h-full flex-col justify-between">
+                  <div className="mb-4 text-[11px] uppercase tracking-[0.2em] text-slate-400">
+                    Account Balance
+                  </div>
+                  <div className="text-3xl font-semibold text-slate-50">
+                    $171,610.25
+                  </div>
+                  <div className="mt-2 text-[11px] text-slate-400">
+                    Your current equity (mock data)
+                  </div>
+                </div>
+              </GlassCard>
+
+              <GlassCard>
+                <div className="flex h-full flex-col justify-between">
+                  <div className="mb-4 text-[11px] uppercase tracking-[0.2em] text-slate-400">
+                    Today&apos;s P&amp;L
+                  </div>
+                  <div className="text-3xl font-semibold text-emerald-400">
+                    + $3,928.00
+                  </div>
+                  <div className="mt-2 text-[11px] text-slate-400">
+                    Realized &amp; unrealized (mock data)
+                  </div>
+                </div>
+              </GlassCard>
+
+              <GlassCard>
+                <div className="flex h-full flex-col justify-between">
+                  <div className="mb-4 text-[11px] uppercase tracking-[0.2em] text-slate-400">
+                    Monthly P&amp;L
+                  </div>
+                  <div className="text-3xl font-semibold text-emerald-400">
+                    + $12,450.90
+                  </div>
+                  <div className="mt-2 text-[11px] text-slate-400">
+                    From the start of this month (mock data)
+                  </div>
+                </div>
+              </GlassCard>
+            </div>
+
+            {/* Mega card type FXIFY */}
+            <div className="relative mb-10 overflow-hidden rounded-3xl border border-[#4f7bff33] bg-gradient-to-b from-[#151b33] via-[#050516] to-[#050516]">
+              {/* halo violet en bas de la carte */}
+              <div className="pointer-events-none absolute inset-x-0 bottom-[-40%] h-[60%] bg-[radial-gradient(900px_400px_at_50%_0%,#365bff44,transparent_70%)]" />
+
+              <div className="relative px-8 pt-6 pb-8">
+                {/* Header section */}
+                <div className="mb-4 flex items-center justify-between text-[12px]">
+                  <div>
+                    <div className="text-[11px] uppercase tracking-[0.3em] text-slate-500">
+                      P&amp;L Since Account Opening
+                    </div>
+                    <div className="mt-1 text-[11px] text-slate-400">
+                      Mock curve for design preview. Real trading data will be plugged later.
+                    </div>
+                  </div>
+                  <div className="text-right text-[11px]">
+                    <div className="text-slate-400">Total P&amp;L</div>
+                    <div className="mt-1 text-emerald-400 font-semibold">
+                      +$62,000 <span className="text-xs text-emerald-500">+32.8% since opening</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Graph stylisé (fake, pure CSS) */}
+                <div className="relative mt-4 overflow-hidden rounded-2xl border border-white/5 bg-[radial-gradient(circle_at_0%_0%,#2f6bff33,transparent_55%),radial-gradient(circle_at_100%_0%,#3be4ff22,transparent_55%),linear-gradient(to_bottom,#050716,#050513)] px-8 py-10">
+                  {/* lignes horizontales */}
+                  <div className="pointer-events-none absolute inset-0">
+                    <div className="absolute inset-x-6 top-1/5 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+                    <div className="absolute inset-x-6 top-2/4 h-px bg-gradient-to-r from-transparent via-white/7 to-transparent" />
+                    <div className="absolute inset-x-6 top-3/4 h-px bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+                  </div>
+
+                  {/* courbe */}
+                  <svg
+                    viewBox="0 0 1000 260"
+                    className="relative h-52 w-full"
+                    preserveAspectRatio="none"
+                  >
+                    {/* zone dégradée sous la courbe */}
+                    <defs>
+                      <linearGradient id="mc-area" x1="0" x2="0" y1="0" y2="1">
+                        <stop offset="0%" stopColor="#4fd3ff" stopOpacity="0.55" />
+                        <stop offset="100%" stopColor="#050716" stopOpacity="0" />
+                      </linearGradient>
+                      <linearGradient id="mc-line" x1="0" x2="1" y1="0" y2="0">
+                        <stop offset="0%" stopColor="#4fd3ff" />
+                        <stop offset="100%" stopColor="#7aa9ff" />
+                      </linearGradient>
+                    </defs>
+
+                    <path
+                      d="M0,210 C120,200 190,190 260,175 C340,160 410,150 470,155 C540,160 590,175 640,185 C720,200 800,210 1000,220 L1000,260 L0,260 Z"
+                      fill="url(#mc-area)"
                     />
-                    <stop
-                      offset="80%"
-                      stopColor="#38bdf8"
-                      stopOpacity={0}
+
+                    <path
+                      d="M0,210 C120,200 190,190 260,175 C340,160 410,150 470,155 C540,160 590,175 640,185 C720,200 800,210 1000,220"
+                      fill="none"
+                      stroke="url(#mc-line)"
+                      strokeWidth="3"
+                      strokeLinecap="round"
                     />
-                  </linearGradient>
-                  <linearGradient id="gridFade" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#64748b" stopOpacity={0.4} />
-                    <stop offset="100%" stopColor="#1e293b" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
 
-                <CartesianGrid
-                  stroke="url(#gridFade)"
-                  strokeDasharray="3 8"
-                  horizontal={true}
-                  vertical={false}
-                />
+                    {/* point final */}
+                    <circle
+                      cx="1000"
+                      cy="220"
+                      r="7"
+                      fill="#050716"
+                      stroke="#7aa9ff"
+                      strokeWidth="3"
+                    />
+                    <circle cx="1000" cy="220" r="3" fill="#7aa9ff" />
+                  </svg>
 
-                <XAxis
-                  dataKey="month"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={10}
-                  tick={{
-                    fill: "#64748b",
-                    fontSize: 11,
-                  }}
-                />
-
-                <Tooltip
-                  cursor={{ stroke: "#38bdf8", strokeWidth: 1, opacity: 0.5 }}
-                  content={<CustomTooltip />}
-                />
-
-                <Area
-                  type="monotone"
-                  dataKey="value"
-                  stroke="#38bdf8"
-                  strokeWidth={2.4}
-                  fill="url(#balanceArea)"
-                  activeDot={{
-                    r: 5,
-                    strokeWidth: 2,
-                    stroke: "#e5f3ff",
-                    fill: "#0ea5e9",
-                  }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+                  {/* labels mois */}
+                  <div className="mt-6 grid grid-cols-8 text-center text-[11px] text-slate-400">
+                    <span>Jan</span>
+                    <span>Feb</span>
+                    <span>Mar</span>
+                    <span>Apr</span>
+                    <span>May</span>
+                    <span>Jun</span>
+                    <span>Jul</span>
+                    <span>Aug</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        </section>
-      </main>
+        </main>
+      </div>
     </div>
+  );
+}
+
+/* ---------- PETITS COMPOSANTS ---------- */
+
+function GlassCard({ children }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-[radial-gradient(circle_at_0%_0%,#4f7bff26,transparent_55%),linear-gradient(to_bottom,#0b1020,#050513)] px-6 py-5">
+      {children}
+    </div>
+  );
+}
+
+function SidebarSection({ label }) {
+  return (
+    <div className="px-2 pb-1 text-[10px] font-medium tracking-[0.2em] text-slate-500">
+      {label}
+    </div>
+  );
+}
+
+function SidebarItem({ icon, label, active }) {
+  return (
+    <button
+      className={[
+        "group flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-[13px] transition",
+        active
+          ? "bg-gradient-to-r from-[#2f6bff] via-[#2f6bff] to-transparent text-slate-50"
+          : "text-slate-300 hover:bg-white/5",
+      ].join(" ")}
+    >
+      <span
+        className={
+          "flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 " +
+          (active
+            ? "bg-white/10"
+            : "bg-black/30 group-hover:border-white/20 group-hover:bg-white/5")
+        }
+      >
+        {icon}
+      </span>
+      <span>{label}</span>
+    </button>
+  );
+}
+
+/* ---------- ICONES SVG (pas de dépendances externes) ---------- */
+
+function GridIcon(props) {
+  return (
+    <svg
+      {...props}
+      viewBox="0 0 24 24"
+      className="h-4 w-4 stroke-[1.6] text-slate-100"
+      fill="none"
+    >
+      <rect x="3" y="3" width="7" height="7" rx="1.5" />
+      <rect x="14" y="3" width="7" height="7" rx="1.5" />
+      <rect x="3" y="14" width="7" height="7" rx="1.5" />
+      <rect x="14" y="14" width="7" height="7" rx="1.5" />
+    </svg>
+  );
+}
+
+function StatsIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4 stroke-[1.6] text-slate-200" fill="none">
+      <path d="M4 20V9" />
+      <path d="M10 20V4" />
+      <path d="M16 20v-7" />
+      <path d="M4 20h16" />
+    </svg>
+  );
+}
+
+function WalletIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4 stroke-[1.6] text-slate-200" fill="none">
+      <rect x="3" y="6" width="18" height="12" rx="2" />
+      <path d="M17 12h2.5" />
+      <circle cx="15" cy="12" r="1" />
+    </svg>
+  );
+}
+
+function TrophyIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4 stroke-[1.6] text-slate-200" fill="none">
+      <path d="M8 4h8v3a4 4 0 0 1-8 0V4Z" />
+      <path d="M10 17h4" />
+      <path d="M9 21h6" />
+      <path d="M8 4H5a2 2 0 0 0 0 4h1" />
+      <path d="M16 4h3a2 2 0 0 1 0 4h-1" />
+    </svg>
+  );
+}
+
+function StarIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4 stroke-[1.6] text-slate-200" fill="none">
+      <path d="m12 3 2.3 4.7L19 9l-3.5 3.4L16 17l-4-2.1L8 17l.5-4.6L5 9l4.7-.3L12 3Z" />
+    </svg>
+  );
+}
+
+function DocIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4 stroke-[1.6] text-slate-200" fill="none">
+      <path d="M7 3h7l5 5v13H7Z" />
+      <path d="M14 3v5h5" />
+      <path d="M10 13h6" />
+      <path d="M10 17h4" />
+    </svg>
+  );
+}
+
+function CoinsIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4 stroke-[1.6] text-slate-200" fill="none">
+      <circle cx="9" cy="12" r="4" />
+      <circle cx="17" cy="12" r="4" />
+    </svg>
+  );
+}
+
+function UsersIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4 stroke-[1.6] text-slate-200" fill="none">
+      <circle cx="9" cy="8" r="3" />
+      <circle cx="17" cy="9" r="3" />
+      <path d="M4 19a4 4 0 0 1 8 0" />
+      <path d="M14 19a4 4 0 0 1 7-2" />
+    </svg>
+  );
+}
+
+function DownloadIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4 stroke-[1.6] text-slate-200" fill="none">
+      <path d="M12 3v12" />
+      <path d="m7 11 5 5 5-5" />
+      <path d="M5 21h14" />
+    </svg>
+  );
+}
+
+function HelpIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4 stroke-[1.6] text-slate-200" fill="none">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9.5 9a2.5 2.5 0 0 1 4.5 1.3c0 1.2-.8 1.7-1.5 2.1-.6.4-1 1-1 1.6" />
+      <circle cx="12" cy="17" r="0.9" />
+    </svg>
+  );
+}
+
+function SettingsIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4 stroke-[1.6] text-slate-200" fill="none">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M4.9 12a7.1 7.1 0 0 1 .1-1l-1.8-1.4 1.5-2.6 2.1.5a7.2 7.2 0 0 1 1.7-1l.3-2.2h3l.3 2.2a7.2 7.2 0 0 1 1.7 1l2.1-.5 1.5 2.6-1.8 1.4a7.1 7.1 0 0 1 .1 1 7.1 7.1 0 0 1-.1 1l1.8 1.4-1.5 2.6-2.1-.5a7.2 7.2 0 0 1-1.7 1l-.3 2.2h-3l-.3-2.2a7.2 7.2 0 0 1-1.7-1l-2.1.5-1.5-2.6 1.8-1.4a7.1 7.1 0 0 1-.1-1Z" />
+    </svg>
+  );
+}
+
+function SearchIcon(props) {
+  return (
+    <svg
+      {...props}
+      viewBox="0 0 24 24"
+      className={"h-4 w-4 stroke-[1.6] " + (props.className ?? "")}
+      fill="none"
+    >
+      <circle cx="11" cy="11" r="6" />
+      <path d="m16 16 4 4" />
+    </svg>
   );
 }
