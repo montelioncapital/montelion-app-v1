@@ -215,4 +215,12 @@ export default function Mt5AccessPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="mc-btn mc-btn-
+            className="mc-btn mc-btn-primary min-w-[180px] disabled:opacity-60"
+          >
+            {isSubmitting ? "Saving..." : "Save my trading access"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
