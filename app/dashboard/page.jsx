@@ -12,7 +12,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-// Faux P&L (balance) data
+// Données P&L factices
 const pnlData = [
   { month: "Jan", value: 17000 },
   { month: "Feb", value: 21500 },
@@ -27,12 +27,12 @@ const pnlData = [
 const formatCurrency = (v) =>
   `$${v.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 
-// Tooltip custom Recharts
+// Tooltip custom Recharts (simple, propre)
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload || !payload.length) return null;
   const v = payload[0].value;
   return (
-    <div className="rounded-lg border border-white/10 bg-slate-900/90 px-3 py-2 text-xs shadow-lg backdrop-blur">
+    <div className="rounded-lg border border-white/10 bg-slate-900/95 px-3 py-2 text-xs backdrop-blur">
       <div className="mb-1 text-[10px] uppercase tracking-[0.16em] text-slate-400">
         {label}
       </div>
@@ -43,13 +43,13 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
-// Icônes simples (style Quantix)
+/* Petites icônes très simples pour la sidebar */
 const IconDashboard = (props) => (
   <svg viewBox="0 0 24 24" {...props}>
-    <rect x="3" y="3" width="7" height="7" rx="2" />
-    <rect x="14" y="3" width="7" height="5" rx="2" />
-    <rect x="14" y="11" width="7" height="10" rx="2" />
-    <rect x="3" y="13" width="7" height="8" rx="2" />
+    <rect x="3" y="3" width="8" height="8" rx="2" />
+    <rect x="13" y="3" width="8" height="5" rx="2" />
+    <rect x="13" y="10" width="8" height="11" rx="2" />
+    <rect x="3" y="13" width="8" height="8" rx="2" />
   </svg>
 );
 
@@ -78,9 +78,9 @@ const IconBell = (props) => (
 export default function DashboardPage() {
   return (
     <div className="dashboard-root">
-      {/* SIDEBAR */}
-      <aside className="flex w-[260px] flex-col border-r border-white/5 bg-[radial-gradient(circle_at_top_left,#111827_0%,#050814_45%,#020617_100%)] px-5 pt-6 pb-4">
-        {/* Logo + titre */}
+      {/* ----- SIDEBAR (design proche de l'ancien) ----- */}
+      <aside className="flex w-[260px] flex-col border-r border-white/5 bg-[#050814] px-5 pt-6 pb-4">
+        {/* Logo / titre */}
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#2664EC] text-sm font-semibold text-white">
             17
@@ -111,8 +111,7 @@ export default function DashboardPage() {
             General
           </div>
 
-          {/* Dashboard actif */}
-          <div className="mt-3 flex items-center gap-3 rounded-xl border border-[#2664EC]/40 bg-[#0B1220] px-3 py-2">
+          <div className="mt-3 flex items-center gap-3 rounded-xl bg-white/5 px-3 py-2">
             <IconDashboard className="h-4 w-4 flex-none stroke-[1.7] text-slate-50" />
             <span className="text-sm font-medium text-slate-50">
               Dashboard
@@ -156,7 +155,7 @@ export default function DashboardPage() {
         </div>
       </aside>
 
-      {/* MAIN */}
+      {/* ----- MAIN ----- */}
       <main className="dashboard-main px-10 py-8">
         {/* Breadcrumb */}
         <div className="text-xs text-slate-500">
@@ -170,10 +169,9 @@ export default function DashboardPage() {
           Dashboard
         </h1>
 
-        {/* Metric cards */}
+        {/* Cartes métriques (style ancien, sans ombre) */}
         <section className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-          {/* Account balance */}
-          <div className="rounded-2xl border border-white/10 bg-[#050814]/90 px-5 py-4 backdrop-blur-sm">
+          <div className="rounded-2xl border border-white/10 bg-white/5 px-5 py-4">
             <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
               Account balance
             </div>
@@ -185,8 +183,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Today P&L */}
-          <div className="rounded-2xl border border-white/10 bg-[#050814]/90 px-5 py-4 backdrop-blur-sm">
+          <div className="rounded-2xl border border-white/10 bg-white/5 px-5 py-4">
             <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
               Today&apos;s P&amp;L
             </div>
@@ -198,8 +195,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Monthly P&L */}
-          <div className="rounded-2xl border border-white/10 bg-[#050814]/90 px-5 py-4 backdrop-blur-sm">
+          <div className="rounded-2xl border border-white/10 bg-white/5 px-5 py-4">
             <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
               Monthly P&amp;L
             </div>
@@ -212,8 +208,8 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        {/* Chart section */}
-        <section className="mt-8 rounded-3xl border border-white/10 bg-gradient-to-b from-[#050814] via-[#020617] to-[#02040a] px-6 pb-6 pt-5">
+        {/* Bloc graphique, proche de ton ancien design */}
+        <section className="mt-8 rounded-3xl border border-white/10 bg-gradient-to-b from-slate-900/40 via-slate-900/70 to-slate-900/90 px-6 pb-6 pt-5">
           <div className="flex items-start justify-between gap-4">
             <div>
               <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
@@ -237,87 +233,62 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="mt-5 h-[340px] w-full rounded-2xl bg-[#050814] p-[1px]">
-            <div className="h-full w-full rounded-[18px] bg-[radial-gradient(circle_at_top,#111827_0%,#050814_55%,#020617_100%)]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart
-                  data={pnlData}
-                  margin={{ top: 40, right: 32, left: 32, bottom: 32 }}
-                >
-                  <defs>
-                    {/* fond de zone */}
-                    <linearGradient
-                      id="pnlAreaGradient"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop offset="0%" stopColor="#4FD1FF" stopOpacity={0.45} />
-                      <stop offset="60%" stopColor="#2664EC" stopOpacity={0.1} />
-                      <stop offset="100%" stopColor="#020617" stopOpacity={0} />
-                    </linearGradient>
+          <div className="mt-5 h-[340px] w-full rounded-2xl bg-[#050814]">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart
+                data={pnlData}
+                margin={{ top: 40, right: 32, left: 32, bottom: 32 }}
+              >
+                <defs>
+                  <linearGradient
+                    id="pnlAreaGradient"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop offset="0%" stopColor="#4FD1FF" stopOpacity={0.4} />
+                    <stop offset="60%" stopColor="#2664EC" stopOpacity={0.12} />
+                    <stop offset="100%" stopColor="#020617" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
 
-                    {/* lueur douce */}
-                    <filter
-                      id="softGlow"
-                      x="-40%"
-                      y="-40%"
-                      width="180%"
-                      height="180%"
-                    >
-                      <feGaussianBlur
-                        stdDeviation="6"
-                        result="coloredBlur"
-                      />
-                      <feMerge>
-                        <feMergeNode in="coloredBlur" />
-                        <feMergeNode in="SourceGraphic" />
-                      </feMerge>
-                    </filter>
-                  </defs>
+                <CartesianGrid
+                  stroke="rgba(148,163,184,0.16)"
+                  strokeDasharray="3 8"
+                  vertical={false}
+                />
 
-                  <CartesianGrid
-                    stroke="rgba(148, 163, 184, 0.12)"
-                    strokeDasharray="3 8"
-                    vertical={false}
-                  />
+                <XAxis
+                  dataKey="month"
+                  axisLine={false}
+                  tickLine={false}
+                  tickMargin={12}
+                  tick={{ fill: "rgba(148,163,184,0.9)", fontSize: 11 }}
+                />
+                <YAxis hide domain={["dataMin - 4000", "dataMax + 4000"]} />
 
-                  <XAxis
-                    dataKey="month"
-                    axisLine={false}
-                    tickLine={false}
-                    tickMargin={12}
-                    tick={{ fill: "rgba(148,163,184,0.9)", fontSize: 11 }}
-                  />
-                  <YAxis
-                    hide
-                    domain={["dataMin - 4000", "dataMax + 4000"]}
-                  />
+                <Tooltip
+                  content={<CustomTooltip />}
+                  cursor={{ stroke: "rgba(148,163,184,0.35)", strokeWidth: 1 }}
+                />
 
-                  <Tooltip
-                    content={<CustomTooltip />}
-                    cursor={{ stroke: "rgba(148,163,184,0.4)", strokeWidth: 1 }}
-                  />
-
-                  <Area
-                    type="monotone"
-                    dataKey="value"
-                    stroke="#4FD1FF"
-                    strokeWidth={2.5}
-                    fill="url(#pnlAreaGradient)"
-                    filter="url(#softGlow)"
-                    dot={false}
-                    activeDot={{
-                      r: 5,
-                      fill: "#ffffff",
-                      stroke: "#4FD1FF",
-                      strokeWidth: 2,
-                    }}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
+                <Area
+                  type="monotone"
+                  dataKey="value"
+                  stroke="#4FD1FF"
+                  strokeWidth={2.4}
+                  fill="url(#pnlAreaGradient)"
+                  dot={false}
+                  activeDot={{
+                    r: 5,
+                    fill: "#ffffff",
+                    stroke: "#4FD1FF",
+                    strokeWidth: 2,
+                  }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
         </section>
       </main>
