@@ -58,15 +58,12 @@ const STEPS = [
   },
 ];
 
-const CURRENT_STEP_ID = 5; // On est à l'étape Montelion review
+const CURRENT_STEP_ID = 5;
 
 export default function ReviewPage() {
   const router = useRouter();
-  const [userId, setUserId] = useState(null);
-  const [currentStep, setCurrentStep] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Charger session + onboarding_state
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -80,8 +77,25 @@ export default function ReviewPage() {
       }
 
       const uid = session.user.id;
-      setUserId(uid);
 
+      // 1) Récupérer le statut du profil
+      const { data: profile, error: profErr } = await supabase
+        .from("profiles")
+        .select("status")
+        .eq("id", uid)
+        .maybeSingle();
+
+      if (profErr) {
+        console.error("Error loading profile status:", profErr);
+      }
+
+      // 👉 Si le profil est ACTIF, on envoie directement au dashboard
+      if (profile?.status === "active") {
+        router.replace("/dashboard");
+        return;
+      }
+
+      // 2) Vérifier qu'il a bien fait tout l'onboarding avant review
       const { data: onboard, error: onboardErr } = await supabase
         .from("onboarding_state")
         .select("current_step, completed")
@@ -94,26 +108,18 @@ export default function ReviewPage() {
         return;
       }
 
-      if (!onboard) {
-        router.replace("/get-started");
+      const currentStep = onboard?.current_step ?? 0;
+
+      if (currentStep < 13) {
+        router.replace("/get-started/advanced");
         return;
       }
 
-      if (onboard.completed) {
-        router.replace("/");
+      if (onboard?.completed) {
+        router.replace("/dashboard");
         return;
       }
 
-      const step = onboard.current_step ?? 0;
-
-      // Si l'utilisateur n'a pas encore fait la connexion exchange/MT5,
-      // on le renvoie sur l'étape précédente.
-      if (step < 13) {
-        router.replace("/exchange/setup");
-        return;
-      }
-
-      setCurrentStep(step);
       setLoading(false);
     })();
   }, [router]);
@@ -123,7 +129,7 @@ export default function ReviewPage() {
       <div className="mc-card">
         <div className="mc-section text-left">
           <h1 className="mc-title mb-2">Montelion review</h1>
-          <p className="text-slate-400">Loading your progress…</p>
+          <p className="text-slate-400">Loading your journey…</p>
         </div>
       </div>
     );
@@ -134,9 +140,9 @@ export default function ReviewPage() {
       <div className="mc-section text-left max-w-2xl mx-auto">
         <h1 className="mc-title mb-3">Your account is under review</h1>
         <p className="text-slate-400 mb-10">
-          You&apos;ve completed all onboarding steps. Montelion is now
-          reviewing your file and your trading connection. You&apos;ll be
-          notified as soon as your account is activated.
+          You&apos;ve completed all onboarding steps. Montelion is now reviewing
+          your file and your trading connection. You&apos;ll be notified as soon
+          as your account is activated.
         </p>
 
         {/* Timeline */}
