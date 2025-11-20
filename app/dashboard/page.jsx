@@ -1,4 +1,3 @@
-// app/dashboard/page.jsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -46,7 +45,7 @@ export default function DashboardPage() {
           {/* Brand */}
           <div className="px-6 pt-6 pb-4 border-b border-slate-900/70">
             <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-2xl bg-gradient-to-br from-emerald-400 to-sky-500 flex items-center justify-center text-xs font-semibold">
+              <div className="h-9 w-9 rounded-2xl bg-gradient-to-br from-[var(--brand)] to-sky-500 flex items-center justify-center text-xs font-semibold">
                 17
               </div>
               <div>
@@ -76,12 +75,12 @@ export default function DashboardPage() {
               </p>
               <ul className="space-y-1">
                 <li>
-                  <button className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 bg-slate-900 border border-emerald-500/60 text-slate-50 text-sm">
-                    <span className="h-5 w-5 rounded-lg bg-emerald-500/20 border border-emerald-400/70 flex items-center justify-center text-[11px]">
+                  <button className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 bg-slate-900 border border-[var(--brand-light)]/70 text-slate-50 text-sm">
+                    <span className="h-5 w-5 rounded-lg bg-[var(--brand)]/20 border border-[var(--brand-light)] flex items-center justify-center text-[11px]">
                       ⬤
                     </span>
                     <span className="flex-1 text-left">Dashboard</span>
-                    <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded-full border border-emerald-400/60">
+                    <span className="text-[10px] bg-[var(--brand)]/15 text-sky-200 px-1.5 py-0.5 rounded-full border border-[var(--brand-light)]/70">
                       3
                     </span>
                   </button>
@@ -176,16 +175,16 @@ export default function DashboardPage() {
         {/* MAIN AREA */}
         <main className="flex-1 h-full flex flex-col overflow-hidden">
           <div className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-7">
-            {/* TOP BAR CARD (Dashboard + subtitle) */}
-            <div className="mb-6 rounded-2xl border border-emerald-500/15 bg-gradient-to-r from-slate-950/90 via-slate-950/80 to-slate-950/40 px-5 py-4 flex items-center justify-between gap-4 shadow-[0_18px_45px_rgba(0,0,0,0.75)]">
+            {/* TOP BAR CARD */}
+            <div className="mb-6 rounded-2xl border border-[var(--brand-light)]/25 bg-gradient-to-r from-slate-950/90 via-slate-950/80 to-slate-950/40 px-5 py-4 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-2xl bg-emerald-500/20 border border-emerald-400/60 flex items-center justify-center text-lg">
+                <div className="h-9 w-9 rounded-2xl bg-[var(--brand)]/15 border border-[var(--brand-light)] flex items-center justify-center text-lg text-slate-50">
                   📊
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-semibold">Dashboard</p>
-                    <span className="text-[10px] bg-emerald-500/15 text-emerald-300 px-1.5 py-0.5 rounded-full border border-emerald-400/50">
+                    <span className="text-[10px] bg-[var(--brand)]/15 text-sky-200 px-1.5 py-0.5 rounded-full border border-[var(--brand-light)]/60">
                       3
                     </span>
                   </div>
@@ -215,7 +214,7 @@ export default function DashboardPage() {
                 </span>
               </div>
               <div className="flex items-center gap-2 text-[11px] text-slate-400">
-                <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                <span className="h-2 w-2 rounded-full bg-[var(--brand-light)]" />
                 <span>Live connection</span>
               </div>
             </div>
@@ -223,7 +222,7 @@ export default function DashboardPage() {
             {/* TOP ROW METRIC CARDS */}
             <div className="grid gap-4 md:grid-cols-3 mb-6">
               {/* Gross revenue */}
-              <div className="rounded-2xl border border-emerald-500/25 bg-slate-950/80 px-4 py-3.5 flex flex-col overflow-hidden">
+              <div className="rounded-2xl border border-[var(--brand-light)]/25 bg-slate-950/80 px-4 py-3.5 flex flex-col overflow-hidden">
                 <div className="flex justify-between mb-2">
                   <div>
                     <p className="text-[11px] text-slate-400">Gross revenue</p>
@@ -236,7 +235,7 @@ export default function DashboardPage() {
                 <p className="text-xl font-semibold text-slate-50 mb-1">
                   $171,610.25
                 </p>
-                <p className="text-[11px] text-emerald-300 mb-2">
+                <p className="text-[11px] text-[var(--brand-light)] mb-2">
                   +5.29%{" "}
                   <span className="text-slate-500">From last month</span>
                 </p>
@@ -251,8 +250,8 @@ export default function DashboardPage() {
                         x2="1"
                         y2="0"
                       >
-                        <stop offset="0%" stopColor="#22c55e" />
-                        <stop offset="100%" stopColor="#22d3ee" />
+                        <stop offset="0%" stopColor="#2664EC" />
+                        <stop offset="100%" stopColor="#38bdf8" />
                       </linearGradient>
                       <linearGradient
                         id="miniGrossFill"
@@ -263,7 +262,7 @@ export default function DashboardPage() {
                       >
                         <stop
                           offset="0%"
-                          stopColor="rgba(34,197,94,0.4)"
+                          stopColor="rgba(38,100,236,0.45)"
                         />
                         <stop
                           offset="100%"
@@ -272,11 +271,11 @@ export default function DashboardPage() {
                       </linearGradient>
                     </defs>
                     <path
-                      d="M0 45 C 20 40, 35 42, 50 35 C 65 28, 80 30, 95 22 C 115 12, 130 18, 140 8 L 140 60 L 0 60 Z"
+                      d="M0 42 C 20 38, 35 40, 50 35 C 65 30, 85 28, 105 24 C 120 22, 130 20, 140 18 L 140 60 L 0 60 Z"
                       fill="url(#miniGrossFill)"
                     />
                     <path
-                      d="M0 45 C 20 40, 35 42, 50 35 C 65 28, 80 30, 95 22 C 115 12, 130 18, 140 8"
+                      d="M0 42 C 20 38, 35 40, 50 35 C 65 30, 85 28, 105 24 C 120 22, 130 20, 140 18"
                       fill="none"
                       stroke="url(#miniGrossLine)"
                       strokeWidth="2.2"
@@ -287,7 +286,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Auto trades */}
-              <div className="rounded-2xl border border-emerald-500/15 bg-slate-950/80 px-4 py-3.5 flex flex-col overflow-hidden">
+              <div className="rounded-2xl border border-[var(--brand-light)]/20 bg-slate-950/80 px-4 py-3.5 flex flex-col overflow-hidden">
                 <div className="flex justify-between mb-2">
                   <div>
                     <p className="text-[11px] text-slate-400">Auto trades</p>
@@ -298,20 +297,20 @@ export default function DashboardPage() {
                   <span className="text-[10px] text-slate-500">30D</span>
                 </div>
                 <p className="text-xl font-semibold text-slate-50 mb-1">3,612</p>
-                <p className="text-[11px] text-emerald-300 mb-2">
+                <p className="text-[11px] text-[var(--brand-light)] mb-2">
                   +1,259{" "}
                   <span className="text-slate-500">From last month</span>
                 </p>
                 <div className="h-16 -mx-2 mt-1">
                   <svg viewBox="0 0 140 60" className="w-full h-full">
                     <path
-                      d="M0 35 C 20 30, 35 40, 50 28 C 65 20, 80 25, 100 15 C 115 10, 130 20, 140 12"
+                      d="M0 40 C 20 36, 35 38, 50 34 C 65 30, 80 26, 100 24 C 115 22, 130 24, 140 22"
                       fill="none"
-                      stroke="#22c55e"
+                      stroke="#2664EC"
                       strokeWidth="2.2"
                       strokeLinecap="round"
                     />
-                    <circle cx="110" cy="17" r="3" fill="#22c55e" />
+                    <circle cx="100" cy="24" r="3" fill="#2664EC" />
                   </svg>
                 </div>
               </div>
@@ -328,7 +327,7 @@ export default function DashboardPage() {
                   <span className="text-[10px] text-slate-500">7D</span>
                 </div>
                 <p className="text-xl font-semibold text-slate-50 mb-1">53</p>
-                <p className="text-[11px] text-emerald-300 mb-2">
+                <p className="text-[11px] text-[var(--brand-light)] mb-2">
                   +21{" "}
                   <span className="text-slate-500">From last month</span>
                 </p>
@@ -342,12 +341,12 @@ export default function DashboardPage() {
                         x2="1"
                         y2="0"
                       >
-                        <stop offset="0%" stopColor="#fb923c" />
-                        <stop offset="100%" stopColor="#facc15" />
+                        <stop offset="0%" stopColor="#f97316" />
+                        <stop offset="100%" stopColor="#fdba74" />
                       </linearGradient>
                     </defs>
                     <path
-                      d="M0 40 C 20 35, 40 32, 60 30 C 80 28, 100 24, 120 18 C 135 12, 145 15, 150 10"
+                      d="M0 44 C 20 40, 40 38, 60 36 C 80 34, 105 30, 130 26"
                       fill="none"
                       stroke="url(#miniNewAssets)"
                       strokeWidth="2.3"
@@ -361,7 +360,7 @@ export default function DashboardPage() {
             {/* MIDDLE: BIG CHART + ASSETS LIST */}
             <div className="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
               {/* Auto Trades Chart */}
-              <div className="rounded-2xl border border-emerald-500/18 bg-slate-950/85 px-5 py-4 flex flex-col">
+              <div className="rounded-2xl border border-[var(--brand-light)]/25 bg-slate-950/85 px-5 py-4 flex flex-col">
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <p className="text-[12px] font-medium text-slate-100">
@@ -389,7 +388,7 @@ export default function DashboardPage() {
                         >
                           <stop
                             offset="0%"
-                            stopColor="rgba(34,197,94,0.45)"
+                            stopColor="rgba(38,100,236,0.45)"
                           />
                           <stop
                             offset="100%"
@@ -403,39 +402,39 @@ export default function DashboardPage() {
                           x2="1"
                           y2="0"
                         >
-                          <stop offset="0%" stopColor="#22c55e" />
-                          <stop offset="100%" stopColor="#22d3ee" />
+                          <stop offset="0%" stopColor="#2664EC" />
+                          <stop offset="100%" stopColor="#38bdf8" />
                         </linearGradient>
                       </defs>
 
                       {/* Area */}
                       <path
-                        d="M0 120 C 15 105, 35 110, 55 95 C 75 80, 95 85, 115 70 C 135 60, 150 65, 165 55 C 180 48, 195 60, 210 50 C 225 42, 240 55, 255 45 C 270 40, 285 55, 300 50 C 315 48, 330 40, 340 38 L 340 160 L 0 160 Z"
+                        d="M0 125 C 40 115, 70 110, 100 100 C 130 90, 160 92, 190 82 C 220 72, 250 70, 280 60 C 305 52, 325 45, 340 40 L 340 160 L 0 160 Z"
                         fill="url(#autoTradesFill)"
                       />
                       {/* Line */}
                       <path
-                        d="M0 120 C 15 105, 35 110, 55 95 C 75 80, 95 85, 115 70 C 135 60, 150 65, 165 55 C 180 48, 195 60, 210 50 C 225 42, 240 55, 255 45 C 270 40, 285 55, 300 50 C 315 48, 330 40, 340 38"
+                        d="M0 125 C 40 115, 70 110, 100 100 C 130 90, 160 92, 190 82 C 220 72, 250 70, 280 60 C 305 52, 325 45, 340 40"
                         fill="none"
                         stroke="url(#autoTradesLine)"
                         strokeWidth="2.6"
                         strokeLinecap="round"
                       />
 
-                      {/* Focus point + label */}
-                      <circle cx="240" cy="52" r="3.5" fill="#22c55e" />
+                      {/* Focus point */}
+                      <circle cx="230" cy="76" r="4" fill="#2664EC" />
                       <circle
-                        cx="240"
-                        cy="52"
-                        r="8"
-                        fill="rgba(34,197,94,0.1)"
-                        stroke="rgba(34,197,94,0.6)"
+                        cx="230"
+                        cy="76"
+                        r="9"
+                        fill="rgba(38,100,236,0.12)"
+                        stroke="rgba(148,163,253,0.7)"
                         strokeWidth="1"
                       />
                     </svg>
 
-                    {/* tooltip price */}
-                    <div className="absolute right-8 top-6 rounded-xl border border-slate-700 bg-slate-950/95 px-3 py-2 text-[11px] text-slate-100 shadow-[0_18px_40px_rgba(0,0,0,0.85)]">
+                    {/* tooltip price (sans ombre) */}
+                    <div className="absolute right-8 top-6 rounded-xl border border-slate-700 bg-slate-950/95 px-3 py-2 text-[11px] text-slate-100">
                       <p className="text-[10px] text-slate-400 mb-0.5">
                         21/01/2024 • 09:32
                       </p>
@@ -448,7 +447,7 @@ export default function DashboardPage() {
                   <div className="space-x-3">
                     <span>
                       AVG{" "}
-                      <span className="text-emerald-300 font-medium">
+                      <span className="text-[var(--brand-light)] font-medium">
                         +5.29%
                       </span>
                     </span>
@@ -462,7 +461,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Assets list */}
-              <div className="rounded-2xl border border-emerald-500/18 bg-slate-950/85 px-5 py-4 flex flex-col">
+              <div className="rounded-2xl border border-[var(--brand-light)]/25 bg-slate-950/85 px-5 py-4 flex flex-col">
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <p className="text-[12px] font-medium text-slate-100">
@@ -533,12 +532,12 @@ export default function DashboardPage() {
                               x2="1"
                               y2="0"
                             >
-                              <stop offset="0%" stopColor="#22c55e" />
-                              <stop offset="100%" stopColor="#22d3ee" />
+                              <stop offset="0%" stopColor="#2664EC" />
+                              <stop offset="100%" stopColor="#38bdf8" />
                             </linearGradient>
                           </defs>
                           <path
-                            d="M0 24 C 10 22, 18 16, 26 18 C 34 19, 42 10, 50 13 C 58 16, 66 8, 80 6"
+                            d="M0 24 C 10 22, 18 18, 26 19 C 34 20, 42 16, 50 17 C 58 18, 68 14, 80 12"
                             fill="none"
                             stroke={`url(#assetLine-${i})`}
                             strokeWidth="2"
@@ -547,27 +546,30 @@ export default function DashboardPage() {
                         </svg>
                       </div>
                       <div className="text-right">
-                        <p className="text-[11px] text-emerald-300">+5.29%</p>
+                        <p className="text-[11px] text-[var(--brand-light)]">
+                          +5.29%
+                        </p>
                         <p className="text-[10px] text-slate-500">AVG</p>
                       </div>
                     </div>
                   ))}
                 </div>
 
-                <div className="mt-4 rounded-2xl border border-emerald-500/25 bg-gradient-to-br from-emerald-500/15 to-emerald-400/10 px-4 py-3 text-[11px] text-emerald-50">
-                  <p className="text-[10px] uppercase tracking-[0.18em] text-emerald-200 mb-1">
+                <div className="mt-4 rounded-2xl border border-[var(--brand-light)]/40 bg-gradient-to-br from-[var(--brand)]/12 to-sky-500/10 px-4 py-3 text-[11px] text-sky-50">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-sky-200 mb-1">
                     Auto-trading quota
                   </p>
                   <div className="flex items-end justify-between">
                     <div>
                       <p className="text-[22px] leading-none font-semibold">
-                        480 <span className="text-[13px] text-emerald-200">/ 500</span>
+                        480{" "}
+                        <span className="text-[13px] text-sky-200">/ 500</span>
                       </p>
-                      <p className="mt-1 text-emerald-100">
+                      <p className="mt-1 text-sky-100">
                         20 auto trades left – be pro!
                       </p>
                     </div>
-                    <div className="h-14 w-14 rounded-full border border-emerald-400/60 flex items-center justify-center text-[12px]">
+                    <div className="h-14 w-14 rounded-full border border-sky-400/60 flex items-center justify-center text-[12px]">
                       <span>96%</span>
                     </div>
                   </div>
