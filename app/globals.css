@@ -17,9 +17,9 @@
 }
 
 @layer components {
-  /* --- Rectangle commun --- */
+  /* --- Rectangle commun (login, onboarding, etc.) --- */
   .mc-card {
-    @apply w-full max-w-[560px] rounded-2xl border; /* â† rÃ©duit ici */
+    @apply w-full max-w-[560px] rounded-2xl border;
     background: linear-gradient(
       180deg,
       rgba(255, 255, 255, 0.035),
@@ -27,6 +27,11 @@
     );
     border-color: var(--card-border);
     box-shadow: none !important;
+  }
+
+  /* --- Variante LARGE uniquement pour le dashboard --- */
+  .mc-card-wide {
+    @apply max-w-6xl lg:max-w-7xl;
   }
 
   .mc-section {
