@@ -15,8 +15,7 @@
     "twilio": "^5.3.0",
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "pdf-lib": "^1.17.1",
-
-    "recharts": "^2.12.7"   ← AJOUTER CETTE LIGNE
+    "recharts": "^2.12.7"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.20",
