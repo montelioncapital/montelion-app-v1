@@ -19,10 +19,9 @@ export default function Mt5AccessPage() {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
 
   // ---------------------------
-  //  AUTH PROTECTION (like other pages)
+  //  AUTH PROTECTION
   // ---------------------------
   useEffect(() => {
     (async () => {
@@ -45,16 +44,13 @@ export default function Mt5AccessPage() {
     })();
   }, [router]);
 
-  // ---------------------------
-  //  FORM INPUT CHANGE
-  // ---------------------------
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   // ---------------------------
-  //  SUBMIT: UPSERT into mt5_accounts
+  //  SUBMIT: mt5_accounts + step 13
   // ---------------------------
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -65,35 +61,49 @@ export default function Mt5AccessPage() {
     }
 
     setIsSubmitting(true);
-    setSubmitted(false);
 
     try {
-      const { error } = await supabase
+      // 1) Sauvegarder / mettre à jour le compte MT5
+      const { error: accountError } = await supabase
         .from("mt5_accounts")
         .upsert(
           {
             user_id: userId,
             login: form.login,
-            password: form.password, // we can encrypt later
+            password: form.password, // à chiffrer plus tard si tu veux
             server: form.server,
             broker_name: form.brokerName,
           },
           { onConflict: "user_id" }
         );
 
-      if (error) {
-        console.error("Error saving MT5 account:", error);
-        alert("An unexpected error occurred. Please try again.");
+      if (accountError) {
+        console.error("Error saving MT5 account:", accountError);
+        alert("An unexpected error occurred while saving your access.");
         return;
       }
 
-      setSubmitted(true);
+      // 2) Passer l’onboarding à la step 13 (Montelion review)
+      const targetStep = 13;
 
-      // OPTION: Advance onboarding step here later (step 13)
-      // await supabase.from("onboarding_state")
-      //   .update({ current_step: 13 })
-      //   .eq("user_id", userId);
+      const { error: stepError } = await supabase
+        .from("onboarding_state")
+        .upsert(
+          {
+            user_id: userId,
+            current_step: targetStep,
+            completed: false,
+          },
+          { onConflict: "user_id" }
+        );
 
+      if (stepError) {
+        console.error("Error updating onboarding_state to step 13:", stepError);
+        // on continue quand même vers la page review
+      }
+
+      // 3) Redirection vers la page “Montelion review”
+      router.push("/get-started/review");
     } catch (err) {
       console.error("Unexpected error:", err);
       alert("An unexpected error occurred. Please try again.");
@@ -102,9 +112,6 @@ export default function Mt5AccessPage() {
     }
   };
 
-  // ---------------------------
-  // LOADING SESSION
-  // ---------------------------
   if (loadingSession) {
     return (
       <div className="mc-card">
@@ -116,9 +123,6 @@ export default function Mt5AccessPage() {
     );
   }
 
-  // ---------------------------
-  //  PAGE CONTENT
-  // ---------------------------
   return (
     <div className="mc-card">
       <div className="mc-section max-w-2xl mx-auto text-left">
@@ -211,18 +215,4 @@ export default function Mt5AccessPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="mc-btn mc-btn-primary min-w-[180px] disabled:opacity-60"
-          >
-            {isSubmitting ? "Saving..." : "Save my trading access"}
-          </button>
-
-          {submitted && (
-            <p className="text-[11px] text-emerald-400 pt-1">
-              Your trading access has been recorded successfully.
-            </p>
-          )}
-        </form>
-      </div>
-    </div>
-  );
-}
+            className="mc-btn mc-btn-
