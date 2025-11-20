@@ -40,10 +40,10 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen w-full bg-page text-slate-50">
-      <div className="mx-auto max-w-7xl flex">
+      {/* ICI : plus de max-w-7xl, plus de mx-auto */}
+      <div className="flex w-full">
         {/* SIDEBAR GAUCHE */}
         <aside className="hidden lg:flex lg:flex-col w-64 border-r border-slate-900/60 bg-slate-950/40">
-          {/* Logo + brand */}
           <div className="px-6 pt-6 pb-4 border-b border-slate-900/60">
             <div className="flex items-center gap-3">
               <div className="h-9 w-9 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center text-xs font-semibold">
@@ -60,7 +60,6 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Search */}
           <div className="px-6 py-4 border-b border-slate-900/60">
             <div className="flex items-center gap-2 rounded-xl bg-slate-900/70 px-3 py-2 text-[13px] text-slate-400 border border-slate-800/70">
               <span className="text-xs opacity-70">⌘K</span>
@@ -68,7 +67,6 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Navigation */}
           <nav className="flex-1 px-4 py-4 space-y-6 text-[13px]">
             <div>
               <p className="px-2 mb-2 text-[11px] uppercase tracking-[0.16em] text-slate-500">
@@ -120,16 +118,15 @@ export default function DashboardPage() {
             </div>
           </nav>
 
-          {/* Footer small */}
           <div className="px-6 py-4 border-t border-slate-900/60 text-[11px] text-slate-500">
             <p>Logged in as</p>
             <p className="text-slate-300">{displayName}</p>
           </div>
         </aside>
 
-        {/* CONTENU PRINCIPAL (FULL PAGE, PAS DE CADRAN GLOBAL) */}
+        {/* CONTENU PRINCIPAL : maintenant il peut prendre TOUT l’espace restant */}
         <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-          {/* BREADCRUMB + BOUTONS TOP DROITE */}
+          {/* BREADCRUMB + ACTIONS */}
           <div className="flex items-center justify-between gap-4 mb-4">
             <div className="flex items-center gap-2 text-[12px] text-slate-500">
               <span>Dashboard</span>
@@ -146,7 +143,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* TITRE + RANGE TABS */}
+          {/* TITRE + TABS */}
           <div className="mb-4">
             <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-3">
               Dashboard
@@ -170,9 +167,9 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* BLOC PRINCIPAL : GRAPH + PANEL DROIT (PAYSAGE) */}
+          {/* BLOC PRINCIPAL : GRAPH + PANEL DROIT */}
           <section className="mt-4 grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
-            {/* TOTAL PORTFOLIO + COURBE */}
+            {/* TOTAL PORTFOLIO */}
             <div className="rounded-2xl border border-slate-800 bg-slate-950/80 px-5 py-4 lg:px-6 lg:py-5 flex flex-col">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
                 <div>
@@ -183,8 +180,7 @@ export default function DashboardPage() {
                     $24,955.00
                   </p>
                   <p className="text-[11px] text-emerald-300 mt-1">
-                    +40%{" "}
-                    <span className="text-slate-500">vs last month</span>
+                    +40% <span className="text-slate-500">vs last month</span>
                   </p>
                 </div>
                 <div className="text-right text-[11px] text-slate-400 space-y-0.5">
@@ -198,7 +194,7 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* COURBE */}
+              {/* Graph */}
               <div className="relative flex-1 min-h-[220px]">
                 <div className="relative rounded-2xl border border-slate-800 bg-slate-950/95 px-4 py-4 h-full overflow-hidden">
                   <svg
@@ -229,7 +225,6 @@ export default function DashboardPage() {
                       </linearGradient>
                     </defs>
 
-                    {/* Grille */}
                     <g stroke="rgba(148,163,184,0.12)" strokeWidth="0.6">
                       <line x1="0" y1="25" x2="340" y2="25" />
                       <line x1="0" y1="70" x2="340" y2="70" />
@@ -239,7 +234,6 @@ export default function DashboardPage() {
                       <line x1="280" y1="0" x2="280" y2="150" />
                     </g>
 
-                    {/* Zone + courbe */}
                     <path
                       d="M0 120 C 40 110, 80 85, 120 95 C 160 105, 200 70, 240 80 C 280 95, 310 60, 340 40 L 340 150 L 0 150 Z"
                       fill="url(#fillGradient)"
@@ -251,7 +245,6 @@ export default function DashboardPage() {
                       strokeWidth="2.4"
                       strokeLinecap="round"
                     />
-                    {/* Point */}
                     <circle cx="230" cy="82" r="3.4" fill="#22d3ee" />
                     <circle
                       cx="230"
@@ -263,7 +256,6 @@ export default function DashboardPage() {
                     />
                   </svg>
 
-                  {/* Tooltip */}
                   <div className="absolute right-6 top-6 rounded-xl border border-slate-700 bg-slate-950/95 px-3 py-2 text-[11px] text-slate-200 shadow-[0_12px_30px_rgba(15,23,42,0.9)]">
                     <p className="text-[10px] text-slate-400 mb-0.5">
                       Today • 12:34
@@ -279,7 +271,6 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Axe temps */}
               <div className="mt-3 flex justify-between text-[10px] text-slate-500 px-1">
                 <span>Jan</span>
                 <span>Feb</span>
@@ -290,7 +281,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* PANEL DROIT : "BITCOIN / COMPTE" */}
+            {/* PANEL DROIT */}
             <div className="rounded-2xl border border-slate-800 bg-slate-950/80 px-5 py-4 lg:px-6 lg:py-5 flex flex-col">
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div>
@@ -349,9 +340,6 @@ export default function DashboardPage() {
               </dl>
             </div>
           </section>
-
-          {/* Placeholder pour la future table en bas (comme Stellar) */}
-          {/* Tu pourras la remplir plus tard avec les trades / positions */}
         </main>
       </div>
     </div>
