@@ -32,76 +32,148 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="w-full min-h-[60vh] flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-page">
         <p className="text-slate-400 text-sm">Loading your dashboard…</p>
       </div>
     );
   }
 
   return (
-    <div className="w-full">
-      {/* container plein écran, pas de mc-card */}
-      <div className="mx-auto max-w-6xl lg:max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
-        {/* GROS BLOC PRINCIPAL = TON DASHBOARD */}
-        <div className="rounded-[32px] border border-slate-800 bg-slate-950/95 px-6 py-6 lg:px-8 lg:py-7 shadow-[0_24px_80px_rgba(15,23,42,0.95)]">
-          {/* HEADER TOP BAR */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500 mb-1">
-                Montelion dashboard
-              </p>
-              <h1 className="text-2xl lg:text-3xl font-semibold text-slate-50 leading-snug">
-                Welcome back,{" "}
-                <span className="block md:inline">{displayName}</span>
-              </h1>
-              <p className="mt-1 text-sm text-slate-400 max-w-xl">
-                Your trading account is active. Montelion is managing positions
-                on your connected MT5 account and monitoring risk in real time.
-              </p>
-            </div>
-
-            <div className="flex flex-col items-start md:items-end gap-2">
-              <span className="inline-flex items-center rounded-full border border-emerald-500/70 bg-emerald-500/10 px-3 py-1 text-[11px] font-medium text-emerald-200">
-                <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_0_3px_rgba(16,185,129,0.25)]" />
-                Account active
-              </span>
-              <p className="text-[11px] text-slate-500">
-                Last sync: a few seconds ago
-              </p>
+    <div className="min-h-screen w-full bg-page text-slate-50">
+      <div className="mx-auto max-w-7xl flex">
+        {/* SIDEBAR GAUCHE */}
+        <aside className="hidden lg:flex lg:flex-col w-64 border-r border-slate-900/60 bg-slate-950/40">
+          {/* Logo + brand */}
+          <div className="px-6 pt-6 pb-4 border-b border-slate-900/60">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center text-xs font-semibold">
+                M
+              </div>
+              <div>
+                <p className="text-sm font-semibold tracking-tight">
+                  Montelion Capital
+                </p>
+                <p className="text-[11px] text-slate-500">
+                  Managed trading dashboard
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* BARRE D’INTERVALLE (Overview / 12M / 6M / etc.) */}
-          <div className="flex items-center justify-between gap-4 mb-5">
-            <div className="flex items-center gap-2 text-[11px] text-slate-500">
-              <span className="text-slate-400/80">Overview</span>
-              <span className="h-1 w-1 rounded-full bg-slate-700" />
-              <span className="text-slate-400/80">Total portfolio</span>
+          {/* Search */}
+          <div className="px-6 py-4 border-b border-slate-900/60">
+            <div className="flex items-center gap-2 rounded-xl bg-slate-900/70 px-3 py-2 text-[13px] text-slate-400 border border-slate-800/70">
+              <span className="text-xs opacity-70">⌘K</span>
+              <span className="truncate">Search</span>
             </div>
-            <div className="flex items-center gap-1.5 text-[11px]">
-              <button className="rounded-full bg-slate-900/80 px-3 py-1 border border-slate-700 text-slate-200">
+          </div>
+
+          {/* Navigation */}
+          <nav className="flex-1 px-4 py-4 space-y-6 text-[13px]">
+            <div>
+              <p className="px-2 mb-2 text-[11px] uppercase tracking-[0.16em] text-slate-500">
+                Main
+              </p>
+              <ul className="space-y-1">
+                <li>
+                  <button className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 bg-slate-900 border border-sky-500/70 text-slate-50 text-sm">
+                    <span className="h-5 w-5 rounded-lg bg-sky-500/20 border border-sky-500/60 flex items-center justify-center text-[11px]">
+                      ■
+                    </span>
+                    <span className="flex-1 text-left">Dashboard</span>
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                  </button>
+                </li>
+                <li>
+                  <button className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-slate-400 hover:bg-slate-900/60">
+                    <span className="h-5 w-5 rounded-lg bg-slate-900/40 flex items-center justify-center text-[11px]">
+                      ₿
+                    </span>
+                    <span className="flex-1 text-left">Trading</span>
+                  </button>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <p className="px-2 mb-2 text-[11px] uppercase tracking-[0.16em] text-slate-500">
+                Account
+              </p>
+              <ul className="space-y-1">
+                <li>
+                  <button className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-slate-400 hover:bg-slate-900/60">
+                    <span className="h-5 w-5 rounded-lg bg-slate-900/40 flex items-center justify-center text-[11px]">
+                      ⚙
+                    </span>
+                    <span className="flex-1 text-left">Settings</span>
+                  </button>
+                </li>
+                <li>
+                  <button className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-slate-400 hover:bg-slate-900/60">
+                    <span className="h-5 w-5 rounded-lg bg-slate-900/40 flex items-center justify-center text-[11px]">
+                      🔔
+                    </span>
+                    <span className="flex-1 text-left">Notifications</span>
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </nav>
+
+          {/* Footer small */}
+          <div className="px-6 py-4 border-t border-slate-900/60 text-[11px] text-slate-500">
+            <p>Logged in as</p>
+            <p className="text-slate-300">{displayName}</p>
+          </div>
+        </aside>
+
+        {/* CONTENU PRINCIPAL (FULL PAGE, PAS DE CADRAN GLOBAL) */}
+        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          {/* BREADCRUMB + BOUTONS TOP DROITE */}
+          <div className="flex items-center justify-between gap-4 mb-4">
+            <div className="flex items-center gap-2 text-[12px] text-slate-500">
+              <span>Dashboard</span>
+              <span>/</span>
+              <span className="text-slate-300">Overview</span>
+            </div>
+            <div className="flex items-center gap-2 text-[12px]">
+              <button className="rounded-lg border border-slate-700 bg-slate-900/70 px-3 py-1.5 text-slate-200 hover:border-slate-500">
+                Import
+              </button>
+              <button className="rounded-lg bg-sky-500 px-3 py-1.5 text-slate-50 hover:bg-sky-600">
+                + Add
+              </button>
+            </div>
+          </div>
+
+          {/* TITRE + RANGE TABS */}
+          <div className="mb-4">
+            <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-3">
+              Dashboard
+            </h1>
+            <div className="flex flex-wrap items-center gap-2 text-[12px]">
+              <button className="rounded-full bg-slate-900/80 px-3 py-1.5 border border-slate-700 text-slate-200">
                 12 months
               </button>
-              <button className="rounded-full bg-slate-900/40 px-3 py-1 border border-slate-800 text-slate-400">
+              <button className="rounded-full bg-slate-900/60 px-3 py-1.5 border border-slate-700 text-slate-100">
                 6 months
               </button>
-              <button className="rounded-full bg-slate-900/40 px-3 py-1 border border-slate-800 text-slate-400">
+              <button className="rounded-full bg-slate-900/40 px-3 py-1.5 border border-slate-800 text-slate-400">
                 30 days
               </button>
-              <button className="rounded-full bg-slate-900/40 px-3 py-1 border border-slate-800 text-slate-400">
+              <button className="rounded-full bg-slate-900/40 px-3 py-1.5 border border-slate-800 text-slate-400">
                 7 days
               </button>
-              <button className="rounded-full bg-slate-900/40 px-3 py-1 border border-slate-800 text-slate-400">
+              <button className="rounded-full bg-slate-900/40 px-3 py-1.5 border border-slate-800 text-slate-400">
                 24 hours
               </button>
             </div>
           </div>
 
-          {/* ZONE PRINCIPALE EN PAYSAGE (graph + infos) */}
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] gap-6">
-            {/* GAUCHE : TOTAL PORTFOLIO + COURBE */}
-            <div className="rounded-3xl border border-slate-800 bg-slate-950/90 px-5 py-4 lg:px-6 lg:py-5 flex flex-col">
-              {/* Header bloc gauche */}
+          {/* BLOC PRINCIPAL : GRAPH + PANEL DROIT (PAYSAGE) */}
+          <section className="mt-4 grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+            {/* TOTAL PORTFOLIO + COURBE */}
+            <div className="rounded-2xl border border-slate-800 bg-slate-950/80 px-5 py-4 lg:px-6 lg:py-5 flex flex-col">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
                 <div>
                   <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500 mb-1">
@@ -112,9 +184,7 @@ export default function DashboardPage() {
                   </p>
                   <p className="text-[11px] text-emerald-300 mt-1">
                     +40%{" "}
-                    <span className="text-slate-500">
-                      vs last month (mock data)
-                    </span>
+                    <span className="text-slate-500">vs last month</span>
                   </p>
                 </div>
                 <div className="text-right text-[11px] text-slate-400 space-y-0.5">
@@ -128,9 +198,8 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* COURBE LARGE HORIZONTALE */}
+              {/* COURBE */}
               <div className="relative flex-1 min-h-[220px]">
-                <div className="absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.18),_transparent_55%),radial-gradient(circle_at_bottom,_rgba(59,130,246,0.18),_transparent_55%)] pointer-events-none" />
                 <div className="relative rounded-2xl border border-slate-800 bg-slate-950/95 px-4 py-4 h-full overflow-hidden">
                   <svg
                     viewBox="0 0 340 150"
@@ -170,26 +239,23 @@ export default function DashboardPage() {
                       <line x1="280" y1="0" x2="280" y2="150" />
                     </g>
 
-                    {/* Zone sous la courbe */}
+                    {/* Zone + courbe */}
                     <path
-                      d="M0 120 C 40 115, 80 90, 120 95 C 160 105, 200 70, 240 80 C 280 95, 310 55, 340 40 L 340 150 L 0 150 Z"
+                      d="M0 120 C 40 110, 80 85, 120 95 C 160 105, 200 70, 240 80 C 280 95, 310 60, 340 40 L 340 150 L 0 150 Z"
                       fill="url(#fillGradient)"
                     />
-
-                    {/* Courbe */}
                     <path
-                      d="M0 120 C 40 115, 80 90, 120 95 C 160 105, 200 70, 240 80 C 280 95, 310 55, 340 40"
+                      d="M0 120 C 40 110, 80 85, 120 95 C 160 105, 200 70, 240 80 C 280 95, 310 60, 340 40"
                       fill="none"
                       stroke="url(#lineGradient)"
                       strokeWidth="2.4"
                       strokeLinecap="round"
                     />
-
-                    {/* Point mis en avant */}
-                    <circle cx="280" cy="95" r="3.4" fill="#22d3ee" />
+                    {/* Point */}
+                    <circle cx="230" cy="82" r="3.4" fill="#22d3ee" />
                     <circle
-                      cx="280"
-                      cy="95"
+                      cx="230"
+                      cy="82"
                       r="8"
                       fill="rgba(34,211,238,0.12)"
                       stroke="rgba(34,211,238,0.4)"
@@ -197,7 +263,7 @@ export default function DashboardPage() {
                     />
                   </svg>
 
-                  {/* Tooltip flottant */}
+                  {/* Tooltip */}
                   <div className="absolute right-6 top-6 rounded-xl border border-slate-700 bg-slate-950/95 px-3 py-2 text-[11px] text-slate-200 shadow-[0_12px_30px_rgba(15,23,42,0.9)]">
                     <p className="text-[10px] text-slate-400 mb-0.5">
                       Today • 12:34
@@ -215,84 +281,78 @@ export default function DashboardPage() {
 
               {/* Axe temps */}
               <div className="mt-3 flex justify-between text-[10px] text-slate-500 px-1">
-                <span>12M ago</span>
-                <span>9M</span>
-                <span>6M</span>
-                <span>3M</span>
-                <span>Now</span>
+                <span>Jan</span>
+                <span>Feb</span>
+                <span>Mar</span>
+                <span>Apr</span>
+                <span>May</span>
+                <span>Jun</span>
               </div>
             </div>
 
-            {/* DROITE : CONNECTED ACCOUNT + SNAPSHOT */}
-            <div className="space-y-4">
-              <div className="rounded-3xl border border-slate-800 bg-slate-950/90 px-5 py-4 lg:px-5 lg:py-4">
-                <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500 mb-1">
-                  Connected account
+            {/* PANEL DROIT : "BITCOIN / COMPTE" */}
+            <div className="rounded-2xl border border-slate-800 bg-slate-950/80 px-5 py-4 lg:px-6 lg:py-5 flex flex-col">
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500 mb-1">
+                    Connected account
+                  </p>
+                  <p className="text-sm font-semibold text-slate-50">
+                    MetaTrader 5 • Live
+                  </p>
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    Your managed MT5 account connected to Montelion.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-2 mb-4">
+                <p className="text-xs text-slate-400 mb-0.5">Account equity</p>
+                <p className="text-2xl font-semibold text-slate-50">
+                  $30,672.15{" "}
+                  <span className="text-[11px] text-emerald-300 align-middle">
+                    +7.3%
+                  </span>
                 </p>
-                <h2 className="text-sm font-semibold text-slate-50 mb-2">
-                  MetaTrader 5 • Live
-                </h2>
-                <dl className="space-y-1.5 text-[11px] text-slate-300">
-                  <div className="flex justify-between gap-4">
-                    <dt className="text-slate-500">Broker</dt>
-                    <dd className="text-slate-100">IC Markets</dd>
-                  </div>
-                  <div className="flex justify-between gap-4">
-                    <dt className="text-slate-500">Server</dt>
-                    <dd className="text-slate-100">ICMarketsSC-Live19</dd>
-                  </div>
-                  <div className="flex justify-between gap-4">
-                    <dt className="text-slate-500">Base currency</dt>
-                    <dd className="text-slate-100">USD</dd>
-                  </div>
-                  <div className="flex justify-between gap-4">
-                    <dt className="text-slate-500">Leverage</dt>
-                    <dd className="text-slate-100">1:100</dd>
-                  </div>
-                  <div className="flex justify-between gap-4">
-                    <dt className="text-slate-500">Risk profile</dt>
-                    <dd className="text-slate-100">Balanced</dd>
-                  </div>
-                </dl>
-                <button
-                  type="button"
-                  className="mt-4 inline-flex items-center justify-center rounded-full border border-slate-700 bg-slate-900/80 px-3 py-1.5 text-[11px] text-slate-200 hover:border-slate-500 hover:bg-slate-900 transition-colors"
-                >
+              </div>
+
+              <div className="flex flex-wrap gap-2 mb-4 text-[11px]">
+                <button className="rounded-lg border border-slate-700 bg-slate-900/70 px-3 py-1.5 text-slate-200">
                   View trading access
+                </button>
+                <button className="rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-1.5 text-slate-300">
+                  Track in dashboard
                 </button>
               </div>
 
-              <div className="rounded-3xl border border-slate-800 bg-slate-950/90 px-5 py-4 text-[11px] text-slate-300">
-                <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500 mb-1">
-                  Snapshot
-                </p>
-                <ul className="space-y-1.5">
-                  <li className="flex justify-between">
-                    <span>Realized PnL (30D)</span>
-                    <span className="text-emerald-300 font-medium">
-                      +$3,120.50
-                    </span>
-                  </li>
-                  <li className="flex justify-between">
-                    <span>Current risk</span>
-                    <span className="text-slate-100 font-medium">2.3%</span>
-                  </li>
-                  <li className="flex justify-between">
-                    <span>Max drawdown (12M)</span>
-                    <span className="text-amber-300 font-medium">-6.8%</span>
-                  </li>
-                  <li className="flex justify-between">
-                    <span>Risk mode</span>
-                    <span className="text-emerald-300 font-medium">
-                      Normal
-                    </span>
-                  </li>
-                </ul>
-              </div>
+              <dl className="space-y-2 text-[11px] text-slate-300">
+                <div className="flex justify-between gap-4">
+                  <dt className="text-slate-500">Broker</dt>
+                  <dd>IC Markets</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-slate-500">Server</dt>
+                  <dd>ICMarketsSC-Live19</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-slate-500">Base currency</dt>
+                  <dd>USD</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-slate-500">Leverage</dt>
+                  <dd>1:100</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-slate-500">Risk mode</dt>
+                  <dd className="text-emerald-300">Normal</dd>
+                </div>
+              </dl>
             </div>
-          </div>
-          {/* FIN DU GROS BLOC */}
-        </div>
+          </section>
+
+          {/* Placeholder pour la future table en bas (comme Stellar) */}
+          {/* Tu pourras la remplir plus tard avec les trades / positions */}
+        </main>
       </div>
     </div>
   );
