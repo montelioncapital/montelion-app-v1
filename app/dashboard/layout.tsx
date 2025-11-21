@@ -3,17 +3,14 @@
 
 import React from "react";
 import Sidebar from "./components/Sidebar";
-import { usePathname } from "next/navigation";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
-
   return (
-    <div className="relative flex min-h-screen items-stretch bg-[#050608] text-slate-50">
+    <div className="flex min-h-screen bg-[#050608] text-slate-50 relative">
       {/* Glow de fond */}
       <div
         className="pointer-events-none fixed inset-0 opacity-40"
@@ -23,11 +20,11 @@ export default function DashboardLayout({
         }}
       />
 
-      {/* Sidebar commune à toutes les pages du /dashboard */}
-      <Sidebar currentPath={pathname ?? ""} />
+      {/* Sidebar (gère desktop + mobile en interne) */}
+      <Sidebar />
 
-      {/* Zone principale où chaque page /dashboard/* va s'afficher */}
-      <main className="relative z-10 flex-1 px-10 pt-8 pb-12">
+      {/* Contenu principal */}
+      <main className="relative z-10 flex-1 px-4 pt-6 pb-10 md:px-10 md:pt-8 md:pb-12">
         {children}
       </main>
     </div>
