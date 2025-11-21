@@ -141,11 +141,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               key={path}
               href={path}
               className={[
-                "flex items-center w-full gap-3 rounded-xl px-3 py-2 text-left text-xs tracking-[0.18em]",
-                "transition-colors",
+                // taille & layout communes (identiques aux gros boutons)
+                "flex items-center w-full gap-3 rounded-xl px-4 py-2 text-left text-sm tracking-[0.18em] transition-colors",
+                // style actif vs inactif
                 isActive
-                  ? "bg-[#0a0f14] border border-white/10 text-white"
-                  : "text-slate-400 hover:bg-white/5",
+                  ? "border border-white/10 bg-[#0c1117] text-white"
+                  : "border border-transparent text-slate-400 hover:bg-white/5",
               ].join(" ")}
               onClick={onClose}
             >
