@@ -1,21 +1,24 @@
 "use client";
 
+import React from "react";
 import Link from "next/link";
 
 const brandBlue = "#2664EC";
 
-type IconProps = { className?: string };
+/* ---------- Types icons ---------- */
+type IconProps = React.SVGProps<SVGSVGElement>;
 
-// ----- SVG ICONS (stroke = currentColor pour suivre la couleur du texte) -----
-const IconDashboard = ({ className }: IconProps) => (
+/* ---------- SVG ICONS (stroke = currentColor) ---------- */
+
+const IconDashboard: React.FC<IconProps> = (props) => (
   <svg
-    className={className}
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
     strokeWidth="1.5"
     strokeLinecap="round"
     strokeLinejoin="round"
+    {...props}
   >
     <path d="M3 13h8V3H3v10Z" />
     <path d="M3 21h8v-6H3v6Z" />
@@ -24,30 +27,30 @@ const IconDashboard = ({ className }: IconProps) => (
   </svg>
 );
 
-const IconUser = ({ className }: IconProps) => (
+const IconUser: React.FC<IconProps> = (props) => (
   <svg
-    className={className}
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
     strokeWidth="1.5"
     strokeLinecap="round"
     strokeLinejoin="round"
+    {...props}
   >
     <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Z" />
     <path d="M5 21a7 7 0 0 1 14 0" />
   </svg>
 );
 
-const IconCommission = ({ className }: IconProps) => (
+const IconCommission: React.FC<IconProps> = (props) => (
   <svg
-    className={className}
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
     strokeWidth="1.5"
     strokeLinecap="round"
     strokeLinejoin="round"
+    {...props}
   >
     <path d="M4 5h16" />
     <path d="M4 12h16" />
@@ -58,15 +61,15 @@ const IconCommission = ({ className }: IconProps) => (
   </svg>
 );
 
-const IconRules = ({ className }: IconProps) => (
+const IconRules: React.FC<IconProps> = (props) => (
   <svg
-    className={className}
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
     strokeWidth="1.5"
     strokeLinecap="round"
     strokeLinejoin="round"
+    {...props}
   >
     <rect x="4" y="3" width="16" height="18" rx="2" />
     <path d="M8 8h8" />
@@ -75,15 +78,15 @@ const IconRules = ({ className }: IconProps) => (
   </svg>
 );
 
-const IconTutorial = ({ className }: IconProps) => (
+const IconTutorial: React.FC<IconProps> = (props) => (
   <svg
-    className={className}
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
     strokeWidth="1.5"
     strokeLinecap="round"
     strokeLinejoin="round"
+    {...props}
   >
     <rect x="4" y="4" width="16" height="16" rx="2" />
     <path d="M4 9h16" />
@@ -91,15 +94,15 @@ const IconTutorial = ({ className }: IconProps) => (
   </svg>
 );
 
-const IconAbout = ({ className }: IconProps) => (
+const IconAbout: React.FC<IconProps> = (props) => (
   <svg
-    className={className}
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
     strokeWidth="1.5"
     strokeLinecap="round"
     strokeLinejoin="round"
+    {...props}
   >
     <circle cx="12" cy="12" r="9" />
     <path d="M12 10v6" />
@@ -107,15 +110,15 @@ const IconAbout = ({ className }: IconProps) => (
   </svg>
 );
 
-// ----- Types & menu -----
+/* ---------- Menu & props ---------- */
 
 type SidebarMenuItem = {
   label: string;
   path: string;
-  Icon: (props: IconProps) => JSX.Element;
+  Icon: React.FC<IconProps>;
 };
 
-type SidebarProps = {
+export type SidebarProps = {
   currentPath: string;
 };
 
@@ -127,6 +130,8 @@ const menu: SidebarMenuItem[] = [
   { label: "Tutorial", path: "/dashboard/tutorial", Icon: IconTutorial },
   { label: "About", path: "/dashboard/about", Icon: IconAbout },
 ];
+
+/* ---------- Component ---------- */
 
 export default function Sidebar({ currentPath }: SidebarProps) {
   const userName = "Demo User";
