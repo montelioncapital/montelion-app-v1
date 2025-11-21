@@ -2,120 +2,137 @@
 @tailwind components;
 @tailwind utilities;
 
-/* --------- VARIABLES --------- */
+/* --- Variables principales --- */
 :root {
-  --brand: #2664ec; /* Bleu Montelion */
+  --brand: #2664EC;           /* Bleu principal */
+  --brand-light: #3B77FF;     /* Bleu plus clair pour bordures */
+  --brand-600: #1F54C8;       /* Hover */
+  --brand-700: #1945A6;       /* Active */
+  --card-border: rgba(255, 255, 255, 0.08);
 }
 
-/* --------- BASE --------- */
+/* Hauteur full screen partout */
+html,
+body {
+  height: 100%;
+}
+
+/* Fond global + typo */
 @layer base {
-  html,
   body {
-    @apply h-full;
-  }
-
-  body {
-    @apply bg-slate-950 text-slate-100 antialiased;
+    @apply min-h-screen bg-page text-slate-100 antialiased;
   }
 }
 
-/* --------- SCROLLBAR DISCRET --------- */
+/* Fond global (même couleur qu’avant) */
+.bg-page {
+  background-color: #050814;
+}
+
+/* Scrollbars invisibles mais scroll OK */
 body::-webkit-scrollbar {
-  width: 6px;
+  width: 0;
+  height: 0;
 }
-body::-webkit-scrollbar-track {
-  background: transparent;
-}
-body::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.35);
-  border-radius: 999px;
+body {
+  scrollbar-width: none;
 }
 
-/* --------- COMPONENTS --------- */
+/* ---- COMPONENTS ---- */
 @layer components {
-  /* SHELL GLOBAL AVEC LÉGER DÉGRADÉ VERTICAL (fond, pas les cartes) */
-  .tp-shell {
-    @apply min-h-screen w-full bg-slate-950 text-slate-100;
-    background:
-      radial-gradient(circle at top left, rgba(37, 99, 235, 0.18), transparent 55%),
-      radial-gradient(circle at top right, rgba(56, 189, 248, 0.12), transparent 50%),
-      radial-gradient(circle at bottom, rgba(15, 23, 42, 0.9), #020617);
+  /* --- Rectangle commun (login / onboarding / etc.) --- */
+  .mc-card {
+    @apply w-full max-w-[560px] rounded-2xl border;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.035),
+      rgba(255, 255, 255, 0.02)
+    );
+    border-color: var(--card-border);
+    box-shadow: none !important;
   }
 
-  /* BARRE LATÉRALE */
-  .tp-sidebar {
-    @apply flex h-screen w-64 flex-col border-r border-white/5 bg-black/40 backdrop-blur-xl;
-    box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.07),
-      0 22px 60px rgba(15, 23, 42, 0.9);
+  .mc-section {
+    @apply p-8 sm:p-10 md:p-12;
   }
 
-  /* HEADER PRINCIPAL EN HAUT DU CONTENU */
-  .tp-header {
-    @apply flex items-center justify-between px-8 pt-6 pb-4;
+  .mc-title {
+    @apply text-3xl md:text-4xl font-semibold tracking-[-0.02em];
   }
 
-  /* CARTE EFFET GLACE (pour tous les cadrans) */
-  .glass-card {
-    @apply relative rounded-2xl border border-white/10 bg-slate-900/60;
-    @apply backdrop-blur-2xl;
-    box-shadow:
-      0 0 0 1px rgba(15, 23, 42, 0.7),
-      0 18px 60px rgba(0, 0, 0, 0.85);
+  /* --- Champs de texte --- */
+  .mc-input {
+    @apply w-full rounded-md bg-white/5 border border-white/10 px-4 py-3 text-slate-200 placeholder:text-slate-400 outline-none transition;
+  }
+  .mc-input:hover {
+    @apply border-white/20;
+  }
+  .mc-input:focus {
+    border-color: var(--brand) !important;
+    box-shadow: 0 0 0 3px rgba(38, 100, 236, 0.35);
+    background: rgba(255, 255, 255, 0.06);
   }
 
-  /* BARRE LATERALE : ITEM */
-  .nav-item {
-    @apply flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-slate-300 transition;
+  /* --- Boutons --- */
+  .mc-btn {
+    @apply inline-flex items-center justify-center text-sm font-medium px-5 py-3 rounded-md;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+    transform: none !important;
+    box-shadow: none !important;
   }
 
-  .nav-item span {
-    @apply text-slate-200;
+  .mc-btn-primary {
+    color: #fff;
+    background: var(--brand);
+    border: 1px solid var(--brand-light);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+  .mc-btn-primary:hover {
+    background: var(--brand-600);
+    border-color: var(--brand-light);
+  }
+  .mc-btn-primary:active {
+    background: var(--brand-700);
+    border-color: var(--brand-light);
   }
 
-  .nav-item-icon {
-    @apply flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900/60 text-[15px];
+  .mc-btn-ghost {
+    color: #E6EAF2;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+  .mc-btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.25);
+  }
+  .mc-btn-ghost:active {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.3);
   }
 
-  .nav-item-active {
-    @apply bg-slate-900/80 text-white;
-    box-shadow:
-      0 0 0 1px rgba(148, 163, 184, 0.3),
-      0 16px 40px rgba(37, 99, 235, 0.6);
+  /* --- Liens (ne rien changer visuellement) --- */
+  a {
+    text-decoration: none !important;
+    transition: color 0.25s ease;
+  }
+  .mc-link-muted {
+    color: inherit !important;
+  }
+  .mc-link-muted:hover {
+    color: inherit !important;
   }
 
-  /* BOUTON PRINCIPAL (bleu Montelion) */
-  .btn-primary {
-    @apply inline-flex items-center justify-center rounded-xl px-5 py-2 text-sm font-medium text-white;
-    background-color: var(--brand);
-    box-shadow:
-      0 0 0 1px rgba(191, 219, 254, 0.35),
-      0 16px 45px rgba(37, 99, 235, 0.9);
-  }
-  .btn-primary:hover {
-    filter: brightness(1.08);
+  /* --- Shell du dashboard full-screen --- */
+  .dashboard-root {
+    @apply flex min-h-screen w-full bg-page;
   }
 
-  /* PETITE BADGE / PASTILLE */
-  .pill {
-    @apply inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-3 py-1 text-xs text-slate-300;
-    @apply backdrop-blur-xl;
+  .dashboard-main {
+    @apply flex-1 min-h-screen;
+    scrollbar-width: none;
   }
-
-  /* CHART WRAPPER (noir, pas de gradient ici) */
-  .chart-frame {
-    @apply glass-card mt-4 flex flex-col justify-between;
-  }
-
-  /* TEXTES */
-  .kpi-label {
-    @apply text-xs uppercase tracking-[0.18em] text-slate-400;
-  }
-
-  .kpi-value {
-    @apply text-2xl font-semibold text-white;
-  }
-
-  .kpi-sub {
-    @apply text-xs text-slate-400;
+  .dashboard-main::-webkit-scrollbar {
+    width: 0;
+    height: 0;
   }
 }
