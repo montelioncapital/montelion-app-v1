@@ -102,7 +102,7 @@ const menuItems: MenuItem[] = [
   { label: "ABOUT", path: "/dashboard/about", Icon: IconAbout },
 ];
 
-export type SidebarProps = {
+type SidebarProps = {
   /** utilisé sur mobile pour ouvrir / fermer le menu */
   isOpen: boolean;
   onClose: () => void;
@@ -116,8 +116,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const userName = "Demo User";
   const initials = "DU";
 
-  const renderSidebarInner = () => (
-    <div className="flex h-full flex-col border-r border-white/5 bg-[#050708]">
+  const SidebarContent = () => (
+    <div className="flex h-full flex-col">
       {/* USER */}
       <div className="px-6 pt-6 pb-6 flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0f171d] border border-white/10 text-sm font-medium">
@@ -170,16 +170,18 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   return (
     <>
-      {/* Desktop sidebar */}
-      <aside className="hidden md:flex w-72 bg-[#050708] border-r border-white/5">
-        {renderSidebarInner()}
+      {/* Desktop sidebar : fixe, même background que le panneau mobile */}
+      <aside className="hidden md:block relative z-20 h-screen w-72 bg-[#050708] border-r border-white/5">
+        <SidebarContent />
       </aside>
 
-      {/* Mobile overlay */}
+      {/* Mobile overlay (inchangé) */}
       {isOpen && (
         <div className="fixed inset-0 z-40 flex md:hidden">
-          {/* panneau */}
-          <div className="w-72 h-full">{renderSidebarInner()}</div>
+          {/* panneau latéral */}
+          <div className="h-full w-72 bg-[#050708] border-r border-white/5 shadow-2xl shadow-black/60">
+            <SidebarContent />
+          </div>
           {/* zone sombre pour fermer */}
           <button
             className="flex-1 bg-black/40"
