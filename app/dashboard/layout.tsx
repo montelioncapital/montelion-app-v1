@@ -4,18 +4,18 @@
 import React, { useState } from "react";
 import Sidebar from "./components/Sidebar";
 
-export default function DashboardLayout({
-  children,
-}: {
+type DashboardLayoutProps = {
   children: React.ReactNode;
-}) {
+};
+
+export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const userName = "Demo User";
   const initials = "DU";
 
   return (
-    <div className="relative flex min-h-screen bg-[#050608] text-slate-50">
+    <div className="relative flex min-h-screen items-stretch bg-[#050608] text-slate-50">
       {/* Glow de fond */}
       <div
         className="pointer-events-none fixed inset-0 opacity-40"
@@ -25,14 +25,14 @@ export default function DashboardLayout({
         }}
       />
 
-      {/* Sidebar (desktop + overlay mobile) */}
+      {/* Sidebar : fixe sur desktop, overlay sur mobile (géré dans le composant) */}
       <Sidebar
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
       />
 
       {/* Colonne principale */}
-      <div className="relative z-10 flex flex-1 flex-col">
+      <div className="relative z-10 flex-1 flex flex-col">
         {/* HEADER MOBILE */}
         <header className="flex items-center justify-between px-4 pt-4 pb-3 md:hidden bg-[#050708]">
           <div className="flex items-center gap-3">
@@ -63,7 +63,8 @@ export default function DashboardLayout({
         </header>
 
         {/* CONTENU PRINCIPAL */}
-        <main className="flex-1 px-4 pt-2 pb-10 md:px-10 md:pt-8 md:pb-12">
+        {/* ↑ ICI : marge augmentée entre le header mobile et le titre (pt-6) */}
+        <main className="flex-1 px-4 pt-6 pb-10 md:px-10 md:pt-8 md:pb-12">
           {children}
         </main>
       </div>
