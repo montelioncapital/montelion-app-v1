@@ -97,39 +97,24 @@ export default function DashboardPage() {
             <SidebarItem label="My Account" icon="👤" />
           </div>
         </nav>
-
-        {/* Bottom circular widget (demi-cercle) */}
-        <div className="relative flex h-32 items-end justify-center overflow-hidden px-6 pb-4">
-          <div className="absolute -bottom-20 h-40 w-40 rounded-full border border-white/10 bg-[#05090d] flex items-center justify-center">
-            <div className="text-center text-xs text-slate-300">
-              <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500 mb-1">
-                Usage
-              </div>
-              <div className="text-sm font-semibold">480 / 500</div>
-              <div className="text-[11px] text-slate-500">
-                Auto Trades Left • Be Pro!
-              </div>
-            </div>
-          </div>
-        </div>
       </aside>
 
       {/* MAIN */}
       <main className="relative z-10 flex-1 overflow-y-auto">
-        <div className="px-10 pt-6 pb-10 space-y-6">
+        <div className="px-10 pt-8 pb-10 space-y-6">
           {/* OVERVIEW TITLE */}
           <section>
             <h1 className="text-2xl font-semibold">Overview</h1>
           </section>
 
-          {/* TOP STATS CARDS (sans mini-graphes) */}
+          {/* TOP STATS CARDS */}
           <section className="grid gap-5 md:grid-cols-3">
             {topStats.map((card) => (
               <div
                 key={card.label}
-                className="relative rounded-3xl border border-white/10 bg-gradient-to-br from-[#070b10] via-[#05080d] to-[#040609] px-6 py-5 shadow-[0_24px_80px_rgba(0,0,0,0.7)] overflow-hidden"
+                className="relative rounded-3xl border border-white/10 bg-gradient-to-br from-[#070b10] via-[#05080d] to-[#040609] px-6 py-5 overflow-hidden"
               >
-                {/* Gradient accent line */}
+                {/* Gradient accent line (bleu Montelion) */}
                 <div
                   className="pointer-events-none absolute inset-x-0 bottom-0 h-1"
                   style={{
@@ -139,16 +124,20 @@ export default function DashboardPage() {
                 />
 
                 <p className="text-sm font-medium">{card.label}</p>
-                <p className="mt-1 text-xs text-slate-400">{card.description}</p>
+                <p className="mt-1 text-xs text-slate-400">
+                  {card.description}
+                </p>
 
                 <div className="mt-6 text-2xl font-semibold">{card.value}</div>
-                <div className="mt-1 text-xs text-emerald-400">{card.change}</div>
+                <div className="mt-1 text-xs text-emerald-400">
+                  {card.change}
+                </div>
               </div>
             ))}
           </section>
 
-          {/* BIG CHART FULL WIDTH */}
-          <section className="rounded-3xl border border-white/10 bg-gradient-to-b from-[#070b10] via-[#05080d] to-[#040609] px-6 py-5 shadow-[0_24px_80px_rgba(0,0,0,0.8)]">
+          {/* BIG CHART SEULE */}
+          <section className="rounded-3xl border border-white/10 bg-gradient-to-b from-[#070b10] via-[#05080d] to-[#040609] px-6 py-5">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium">Auto Trades Chart</p>
@@ -167,8 +156,16 @@ export default function DashboardPage() {
               <svg viewBox="0 0 600 220" className="w-full h-44">
                 <defs>
                   <linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={brandBlue} stopOpacity="0.45" />
-                    <stop offset="100%" stopColor={brandBlue} stopOpacity="0" />
+                    <stop
+                      offset="0%"
+                      stopColor={brandBlue}
+                      stopOpacity="0.45"
+                    />
+                    <stop
+                      offset="100%"
+                      stopColor={brandBlue}
+                      stopOpacity="0"
+                    />
                   </linearGradient>
                 </defs>
 
@@ -208,7 +205,7 @@ export default function DashboardPage() {
                 <circle cx="440" cy="65" r="5" fill="#0f172a" />
                 <circle cx="440" cy="65" r="4" fill={brandBlue} />
 
-                {/* Tooltip */}
+                {/* Tooltip style label */}
                 <rect
                   x="452"
                   y="40"
