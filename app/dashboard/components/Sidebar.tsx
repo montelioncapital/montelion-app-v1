@@ -9,39 +9,75 @@ import { usePathname } from "next/navigation";
 type IconProps = { className?: string };
 
 const IconDashboard = ({ className = "w-4 h-4" }: IconProps) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
+  <svg
+    className={className}
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={1.6}
+  >
     <path d="M3 13h8V3H3v10Zm0 8h8v-6H3v6Zm10 0h8V11h-8v10Zm0-18v6h8V3h-8Z" />
   </svg>
 );
 
 const IconUser = ({ className = "w-4 h-4" }: IconProps) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
+  <svg
+    className={className}
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={1.6}
+  >
     <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm6 8v-1a6 6 0 0 0-12 0v1Z" />
   </svg>
 );
 
 const IconCommission = ({ className = "w-4 h-4" }: IconProps) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
+  <svg
+    className={className}
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={1.6}
+  >
     <path d="M4 5h16M4 12h16M4 19h16" />
   </svg>
 );
 
 const IconRules = ({ className = "w-4 h-4" }: IconProps) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
+  <svg
+    className={className}
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={1.6}
+  >
     <path d="M6 4h11l3 4v12H6z" />
     <path d="M9 9h6M9 13h6M9 17h4" />
   </svg>
 );
 
 const IconTutorial = ({ className = "w-4 h-4" }: IconProps) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
+  <svg
+    className={className}
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={1.6}
+  >
     <path d="M4 5h16v14H4z" />
     <path d="m10 9 4 3-4 3V9z" />
   </svg>
 );
 
 const IconAbout = ({ className = "w-4 h-4" }: IconProps) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
+  <svg
+    className={className}
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={1.6}
+  >
     <circle cx="12" cy="12" r="9" />
     <path d="M12 16v-4M12 8h.01" />
   </svg>
@@ -79,7 +115,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         </div>
         <div className="leading-tight">
           <div className="text-sm font-semibold">{userName}</div>
-          <div className="text-xs text-slate-400">Private investor Montelion</div>
+          <div className="text-xs text-slate-400">
+            Private investor Montelion
+          </div>
         </div>
       </div>
 
@@ -89,7 +127,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       {/* MENU */}
       <nav className="flex-1 px-5 space-y-1">
         {menuItems.map(({ label, path, Icon }) => {
-          const isActive = pathname === path || (label === "DASHBOARD" && pathname === "/dashboard");
+          const isActive =
+            pathname === path ||
+            (label === "DASHBOARD" && pathname === "/dashboard");
 
           return (
             <Link
@@ -110,12 +150,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         })}
       </nav>
 
-      {/* BOTTOM BUTTONS — ONLY HEIGHT REDUCED */}
+      {/* BOTTOM BUTTONS (plus petits : hauteur + police réduites) */}
       <div className="px-5 pb-6 space-y-3">
-        <button className="w-full rounded-xl border border-white/10 bg-[#0c1117] py-[6px] text-sm hover:bg-white/10">
+        <button className="w-full rounded-xl border border-white/10 bg-[#0c1117] py-[6px] text-[12px] hover:bg-white/10">
           Contact Support
         </button>
-        <button className="w-full rounded-xl border border-red-800/30 bg-red-900/20 py-[6px] text-sm text-red-300 hover:bg-red-900/30">
+        <button className="w-full rounded-xl border border-red-800/30 bg-red-900/20 py-[6px] text-[12px] text-red-300 hover:bg-red-900/30">
           Logout
         </button>
       </div>
@@ -135,7 +175,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           <div className="h-full w-72 bg-[#050708] border-r border-white/5 shadow-2xl shadow-black/60">
             <SidebarContent />
           </div>
-          <button className="flex-1 bg-black/40" aria-label="Close navigation" onClick={onClose} />
+          <button
+            className="flex-1 bg_BLACK/40 bg-black/40"
+            aria-label="Close navigation"
+            onClick={onClose}
+          />
         </div>
       )}
     </>
