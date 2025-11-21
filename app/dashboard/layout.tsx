@@ -34,7 +34,7 @@ export default function DashboardLayout({
       {/* Colonne principale */}
       <div className="relative z-10 flex-1 flex flex-col">
         {/* HEADER MOBILE */}
-        <header className="flex items-center justify-between px-4 pt-4 pb-3 md:hidden">
+        <header className="flex items-center justify-between px-4 pt-4 pb-3 md:hidden bg-[#050608] border-b border-white/5">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0f171d] border border-white/10 text-xs font-medium">
               {initials}
@@ -53,7 +53,6 @@ export default function DashboardLayout({
             onClick={() => setIsSidebarOpen(true)}
             className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-black/40"
           >
-            {/* icône burger */}
             <span className="sr-only">Open menu</span>
             <div className="space-y-[3px]">
               <span className="block h-[2px] w-4 rounded bg-slate-200" />
