@@ -102,7 +102,7 @@ const menuItems: MenuItem[] = [
   { label: "ABOUT", path: "/dashboard/about", Icon: IconAbout },
 ];
 
-type SidebarProps = {
+export type SidebarProps = {
   /** utilisé sur mobile pour ouvrir / fermer le menu */
   isOpen: boolean;
   onClose: () => void;
@@ -117,7 +117,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const initials = "DU";
 
   const renderSidebarInner = () => (
-    <div className="flex h-full flex-col border-r border-white/5 bg-[#050608]">
+    <div className="flex h-full flex-col border-r border-white/5 bg-[#050708]">
       {/* USER */}
       <div className="px-6 pt-6 pb-6 flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0f171d] border border-white/10 text-sm font-medium">
@@ -171,7 +171,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex w-72">
+      <aside className="hidden md:flex w-72 bg-[#050708] border-r border-white/5">
         {renderSidebarInner()}
       </aside>
 
