@@ -1,4 +1,3 @@
-// app/dashboard/page.tsx
 "use client";
 
 import React from "react";
@@ -20,13 +19,7 @@ const pnlSummary = {
   day: { value: 210.75, percent: 0.3 },
 };
 
-type MonthlyPoint = {
-  month: string;
-  value: number;
-  percent: number;
-};
-
-const monthlyPnl: MonthlyPoint[] = [
+const monthlyPnl = [
   { month: "Jan", value: 1200, percent: 1.5 },
   { month: "Feb", value: 3100, percent: 3.8 },
   { month: "Mar", value: 5200, percent: 6.2 },
@@ -41,14 +34,8 @@ const monthlyPnl: MonthlyPoint[] = [
   { month: "Dec", value: 13900, percent: 15.1 },
 ];
 
-type DailyPerf = {
-  date: string; // "2025-11-01"
-  value: number;
-  percent: number;
-};
-
-// Exemple : perf sur un mois (mock)
-const dailyPerf: DailyPerf[] = [
+// Exemple de perfs journalières mockées
+const dailyPerf = [
   { date: "2025-11-01", value: 120, percent: 0.15 },
   { date: "2025-11-02", value: -80, percent: -0.1 },
   { date: "2025-11-03", value: 150, percent: 0.2 },
@@ -56,19 +43,20 @@ const dailyPerf: DailyPerf[] = [
   { date: "2025-11-05", value: -25, percent: -0.03 },
   { date: "2025-11-06", value: 90, percent: 0.11 },
   { date: "2025-11-07", value: 230, percent: 0.28 },
-  // ... ajoute autant de jours que tu veux
+  // ... à compléter avec tes vrais jours
 ];
 
 /* -------------------- HELPERS -------------------- */
 
-// Retourne la perf pour une date donnée
-const getPerfForDate = (dateStr: string) =>
-  dailyPerf.find((d) => d.date === dateStr);
+// Retourne la perf pour une date donnée (YYYY-MM-DD)
+function getPerfForDate(dateStr) {
+  return dailyPerf.find((d) => d.date === dateStr);
+}
 
 // Génère toutes les dates du mois donné
-function getMonthDays(year: number, monthIndex: number) {
+function getMonthDays(year, monthIndex) {
   // monthIndex: 0 = Janvier
-  const days: Date[] = [];
+  const days = [];
   const date = new Date(year, monthIndex, 1);
   while (date.getMonth() === monthIndex) {
     days.push(new Date(date));
@@ -78,7 +66,7 @@ function getMonthDays(year: number, monthIndex: number) {
 }
 
 // Couleur de fond en fonction de la perf
-function getPerfColor(value: number) {
+function getPerfColor(value) {
   if (value > 0) {
     if (value > 200) return "bg-emerald-500/70";
     if (value > 100) return "bg-emerald-500/50";
@@ -94,17 +82,7 @@ function getPerfColor(value: number) {
 
 /* -------------------- COMPONENTS -------------------- */
 
-function PnlCard({
-  title,
-  subtitle,
-  value,
-  percent,
-}: {
-  title: string;
-  subtitle: string;
-  value: number;
-  percent: number;
-}) {
+function PnlCard({ title, subtitle, value, percent }) {
   const positive = percent >= 0;
 
   return (
@@ -127,18 +105,18 @@ function PnlCard({
         ].join(" ")}
       >
         {positive ? "+" : ""}
-        {percent.toFixed(2)}%{" "}
+        {percent.toFixed(2)}%
         <span className="text-xs text-slate-500 ml-1">
-          {positive ? "profit" : "loss"}
+          {positive ? " profit" : " loss"}
         </span>
       </div>
     </div>
   );
 }
 
-const CustomLineTooltip = ({ active, payload, label }: any) => {
+function CustomLineTooltip({ active, payload, label }) {
   if (!active || !payload || !payload.length) return null;
-  const data = payload[0].payload as MonthlyPoint;
+  const data = payload[0].payload;
 
   return (
     <div className="rounded-xl border border-white/10 bg-[#05070b] px-3 py-2 text-xs shadow-xl">
@@ -161,12 +139,12 @@ const CustomLineTooltip = ({ active, payload, label }: any) => {
       </div>
     </div>
   );
-};
+}
 
 /* -------------------- MAIN PAGE -------------------- */
 
 export default function DashboardPage() {
-  // Calendrier basé sur Novembre 2025 en exemple
+  // Calendrier basé sur Novembre 2025 (exemple)
   const calendarYear = 2025;
   const calendarMonthIndex = 10; // 0 = Janvier, 10 = Novembre
   const daysOfMonth = getMonthDays(calendarYear, calendarMonthIndex);
@@ -224,7 +202,10 @@ export default function DashboardPage() {
 
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={monthlyPnl} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <LineChart
+                data={monthlyPnl}
+                margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+              >
                 <CartesianGrid
                   stroke="rgba(148, 163, 184, 0.15)"
                   vertical={false}
@@ -269,10 +250,13 @@ export default function DashboardPage() {
           </div>
 
           <div className="text-xs text-slate-400 mb-3">
-            {new Date(calendarYear, calendarMonthIndex).toLocaleString("en-US", {
-              month: "long",
-              year: "numeric",
-            })}
+            {new Date(calendarYear, calendarMonthIndex).toLocaleString(
+              "en-US",
+              {
+                month: "long",
+                year: "numeric",
+              }
+            )}
           </div>
 
           {/* En-tête jours */}
@@ -288,20 +272,19 @@ export default function DashboardPage() {
           <div className="grid grid-cols-7 gap-1 text-[11px]">
             {(() => {
               const firstDay = daysOfMonth[0].getDay(); // 0 = Sunday
-              // On veut commencer à Lundi (=1) dans notre header
-              const leadingEmpty =
-                ((firstDay + 6) % 7); // convert to Monday-start index
+              // On veut commencer à Lundi (=1)
+              const leadingEmpty = (firstDay + 6) % 7;
 
-              const cells: JSX.Element[] = [];
+              const cells = [];
 
-              // Cases vides avant le 1er du mois
+              // Cases vides avant le 1er
               for (let i = 0; i < leadingEmpty; i++) {
                 cells.push(
                   <div key={`empty-${i}`} className="h-8 rounded-lg" />
                 );
               }
 
-              // Les jours du mois
+              // Jours du mois
               for (const date of daysOfMonth) {
                 const day = date.getDate();
                 const key = `${calendarYear}-${String(
@@ -311,7 +294,7 @@ export default function DashboardPage() {
                 const value = perf?.value ?? 0;
                 const percent = perf?.percent ?? 0;
 
-                const hasPerf = perf !== undefined;
+                const hasPerf = !!perf;
                 const bgClass = hasPerf
                   ? getPerfColor(value)
                   : "bg-slate-800/40";
@@ -337,7 +320,9 @@ export default function DashboardPage() {
                         </div>
                         <div
                           className={
-                            percent >= 0 ? "text-emerald-400" : "text-rose-400"
+                            percent >= 0
+                              ? "text-emerald-400"
+                              : "text-rose-400"
                           }
                         >
                           {percent >= 0 ? "+" : ""}
