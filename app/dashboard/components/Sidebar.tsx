@@ -11,45 +11,81 @@ type IconProps = {
 };
 
 const IconDashboard = ({ className = "w-4 h-4" }: IconProps) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
+  <svg
+    className={className}
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={1.6}
+  >
     <path d="M3 13h8V3H3v10Zm0 8h8v-6H3v6Zm10 0h8V11h-8v10Zm0-18v6h8V3h-8Z" />
   </svg>
 );
 
 const IconUser = ({ className = "w-4 h-4" }: IconProps) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
+  <svg
+    className={className}
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={1.6}
+  >
     <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm6 8v-1a6 6 0 0 0-12 0v1Z" />
   </svg>
 );
 
 const IconCommission = ({ className = "w-4 h-4" }: IconProps) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
+  <svg
+    className={className}
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={1.6}
+  >
     <path d="M4 5h16M4 12h16M4 19h16" />
   </svg>
 );
 
 const IconRules = ({ className = "w-4 h-4" }: IconProps) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
+  <svg
+    className={className}
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={1.6}
+  >
     <path d="M6 4h11l3 4v12H6z" />
     <path d="M9 9h6M9 13h6M9 17h4" />
   </svg>
 );
 
 const IconTutorial = ({ className = "w-4 h-4" }: IconProps) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
+  <svg
+    className={className}
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={1.6}
+  >
     <path d="M4 5h16v14H4z" />
     <path d="m10 9 4 3-4 3V9z" />
   </svg>
 );
 
 const IconAbout = ({ className = "w-4 h-4" }: IconProps) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
+  <svg
+    className={className}
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={1.6}
+  >
     <circle cx="12" cy="12" r="9" />
     <path d="M12 16v-4M12 8h.01" />
   </svg>
 );
 
-/* -------------------- DATA -------------------- */
+/* -------------------- TYPES & DATA -------------------- */
 
 type MenuItem = {
   label: string;
@@ -79,9 +115,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const userName = "Demo User";
   const initials = "DU";
 
+  /* --- Sidebar Inner Content --- */
   const SidebarContent = () => (
     <div className="flex h-full flex-col">
-      {/* USER */}
+      {/* USER BLOCK */}
       <div className="px-6 pt-6 pb-6 flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0f171d] border border-white/10 text-sm font-medium">
           {initials}
@@ -92,23 +129,26 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         </div>
       </div>
 
-      {/* MENU */}
-      <nav className="flex-1 px-5 space-y-[6px]">
+      {/* MENU BLOCK */}
+      <nav className="flex-1 px-5 space-y-1">
         {menuItems.map(({ label, path, Icon }) => {
-          const isActive = pathname === path || (label === "DASHBOARD" && pathname === "/dashboard");
+          const isActive =
+            pathname === path ||
+            (label === "DASHBOARD" && pathname === "/dashboard");
 
           return (
             <Link
               key={path}
               href={path}
+              onClick={onClose}
               className={[
-                // Taille réduite ici (TES MODIFS)
-                "flex items-center w-full gap-2.5 rounded-xl px-3 py-1.5 text-left text-[13px] tracking-[0.18em] transition-colors",
+                "flex items-center w-full gap-3 rounded-xl",
+                "px-[15.5px] py-[11.5px]", // << Augmenté +1.5px partout
+                "text-left text-sm tracking-[0.18em] transition-colors",
                 isActive
                   ? "border border-white/10 bg-[#0c1117] text-white"
                   : "border border-transparent text-slate-400 hover:bg-white/5",
               ].join(" ")}
-              onClick={onClose}
             >
               <Icon className="w-4 h-4" />
               <span>{label}</span>
@@ -131,12 +171,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   return (
     <>
-      {/* Desktop sidebar */}
+      {/* Desktop Sidebar */}
       <aside className="hidden md:block relative z-20 h-screen w-72 bg-[#050708] border-r border-white/5">
         <SidebarContent />
       </aside>
 
-      {/* Mobile overlay */}
+      {/* Mobile Overlay */}
       {isOpen && (
         <div className="fixed inset-0 z-40 flex md:hidden">
           <div className="h-full w-72 bg-[#050708] border-r border-white/5 shadow-2xl shadow-black/60">
