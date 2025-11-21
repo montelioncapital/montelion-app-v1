@@ -5,7 +5,7 @@ import Link from "next/link";
 const brandBlue = "#2664EC";
 
 type SidebarProps = {
-  currentPath: string;
+  currentPath: string; // <- requis, on va toujours le passer depuis le layout
 };
 
 /* -------------------- SVG ICONS (couleur = currentColor) -------------------- */
@@ -85,8 +85,6 @@ const IconAbout = () => (
   </svg>
 );
 
-/* -------------------- MENU CONFIG -------------------- */
-
 const menu = [
   { label: "Dashboard", path: "/dashboard", Icon: IconDashboard },
   { label: "Account", path: "/dashboard/account", Icon: IconUser },
@@ -96,10 +94,7 @@ const menu = [
   { label: "About", path: "/dashboard/about", Icon: IconAbout },
 ];
 
-/* -------------------- COMPONENT -------------------- */
-
 function normalizePath(path: string) {
-  if (!path) return "/";
   const [base] = path.split("?", 1);
   if (base.length > 1 && base.endsWith("/")) return base.slice(0, -1);
   return base;
@@ -109,11 +104,11 @@ export default function Sidebar({ currentPath }: SidebarProps) {
   const userName = "Demo User";
   const initials = "DU";
 
-  const normalizedCurrent = normalizePath(currentPath);
+  const normalizedCurrent = normalizePath(currentPath || "/");
 
   return (
     <aside className="relative z-20 flex w-72 flex-col border-r border-white/5 bg-[#050708]">
-      {/* User */}
+      {/* USER */}
       <div className="px-6 pt-6 pb-6 flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0f171d] border border-white/10 text-sm font-semibold">
           {initials}
@@ -124,26 +119,23 @@ export default function Sidebar({ currentPath }: SidebarProps) {
         </div>
       </div>
 
-      {/* Menu */}
+      {/* MENU */}
       <nav className="flex-1 px-5 space-y-1">
         {menu.map(({ label, path, Icon }) => {
           const isActive = normalizePath(path) === normalizedCurrent;
 
-          const baseClasses =
+          const base =
             "flex items-center w-full gap-3 rounded-xl px-3 py-2 text-left text-sm transition-colors";
-          const activeClasses =
-            "bg-[#0a0f14] border border-white/10 text-slate-50";
-          const inactiveClasses = "text-slate-400 hover:bg-white/5";
+          const active = "bg-[#0a0f14] border border-white/10 text-slate-50";
+          const inactive = "text-slate-400 hover:bg-white/5";
 
           return (
             <Link
               key={path}
               href={path}
-              className={`${baseClasses} ${
-                isActive ? activeClasses : inactiveClasses
-              }`}
+              className={`${base} ${isActive ? active : inactive}`}
             >
-              <span className="text-slate-300">
+              <span className="text-current">
                 <Icon />
               </span>
               <span className="tracking-wide uppercase text-[11px]">
@@ -154,7 +146,7 @@ export default function Sidebar({ currentPath }: SidebarProps) {
         })}
       </nav>
 
-      {/* Bottom buttons */}
+      {/* BOTTOM BUTTONS */}
       <div className="px-5 pb-6 space-y-3">
         <button className="w-full rounded-xl border border-white/10 bg-[#0c1117] py-2 text-sm text-slate-100 hover:bg-white/10 transition">
           Contact Support
