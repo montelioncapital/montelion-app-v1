@@ -1,73 +1,193 @@
-// app/dashboard/layout.tsx
 "use client";
 
-import React, { useState } from "react";
-import Sidebar from "./components/Sidebar";
+import React from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+/* -------------------- ICONS -------------------- */
+
+type IconProps = {
+  className?: string;
+};
+
+const IconDashboard = ({ className = "w-4 h-4" }: IconProps) => (
+  <svg
+    className={className}
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={1.6}
+  >
+    <path d="M3 13h8V3H3v10Zm0 8h8v-6H3v6Zm10 0h8V11h-8v10Zm0-18v6h8V3h-8Z" />
+  </svg>
+);
+
+const IconUser = ({ className = "w-4 h-4" }: IconProps) => (
+  <svg
+    className={className}
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={1.6}
+  >
+    <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm6 8v-1a6 6 0 0 0-12 0v1Z" />
+  </svg>
+);
+
+const IconCommission = ({ className = "w-4 h-4" }: IconProps) => (
+  <svg
+    className={className}
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={1.6}
+  >
+    <path d="M4 5h16M4 12h16M4 19h16" />
+  </svg>
+);
+
+const IconRules = ({ className = "w-4 h-4" }: IconProps) => (
+  <svg
+    className={className}
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={1.6}
+  >
+    <path d="M6 4h11l3 4v12H6z" />
+    <path d="M9 9h6M9 13h6M9 17h4" />
+  </svg>
+);
+
+const IconTutorial = ({ className = "w-4 h-4" }: IconProps) => (
+  <svg
+    className={className}
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={1.6}
+  >
+    <path d="M4 5h16v14H4z" />
+    <path d="m10 9 4 3-4 3V9z" />
+  </svg>
+);
+
+const IconAbout = ({ className = "w-4 h-4" }: IconProps) => (
+  <svg
+    className={className}
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={1.6}
+  >
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 16v-4M12 8h.01" />
+  </svg>
+);
+
+/* -------------------- TYPES & DATA -------------------- */
+
+type MenuItem = {
+  label: string;
+  path: string;
+  Icon: React.ComponentType<IconProps>;
+};
+
+const menuItems: MenuItem[] = [
+  { label: "DASHBOARD", path: "/dashboard", Icon: IconDashboard },
+  { label: "ACCOUNT", path: "/dashboard/account", Icon: IconUser },
+  { label: "COMMISSION", path: "/dashboard/commission", Icon: IconCommission },
+  { label: "RULES", path: "/dashboard/rules", Icon: IconRules },
+  { label: "TUTORIAL", path: "/dashboard/tutorial", Icon: IconTutorial },
+  { label: "ABOUT", path: "/dashboard/about", Icon: IconAbout },
+];
+
+type SidebarProps = {
+  /** utilisé sur mobile pour ouvrir / fermer le menu */
+  isOpen: boolean;
+  onClose: () => void;
+};
+
+/* -------------------- COMPONENT -------------------- */
+
+export default function Sidebar({ isOpen, onClose }: SidebarProps) {
+  const pathname = usePathname() ?? "";
 
   const userName = "Demo User";
   const initials = "DU";
 
-  return (
-    // même couleur que la sidebar
-    <div className="flex min-h-screen bg-[#050708] text-slate-50">
-      {/* SIDEBAR (desktop visible / mobile overlay géré dans le composant) */}
-      <Sidebar
-        isOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
-      />
+  const renderSidebarInner = () => (
+    <div className="flex h-full flex-col border-r border-white/5 bg-[#050708]">
+      {/* USER */}
+      <div className="px-6 pt-6 pb-6 flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0f171d] border border-white/10 text-sm font-medium">
+          {initials}
+        </div>
+        <div className="leading-tight">
+          <div className="text-sm font-semibold">{userName}</div>
+          <div className="text-xs text-slate-400">Private investor Montelion</div>
+        </div>
+      </div>
 
-      {/* COLONNE PRINCIPALE */}
-      <div className="relative flex-1 flex flex-col overflow-hidden">
-        {/* Glow uniquement derrière le contenu, PAS derrière la sidebar */}
-        <div
-          className="pointer-events-none absolute inset-0 opacity-40"
-          style={{
-            background:
-              "radial-gradient(circle at 0% 0%, rgba(38,100,236,0.35), transparent 60%), radial-gradient(circle at 100% 0%, rgba(38,100,236,0.2), transparent 55%)",
-          }}
-        />
+      {/* MENU */}
+      <nav className="flex-1 px-5 space-y-1">
+        {menuItems.map(({ label, path, Icon }) => {
+          const isActive =
+            pathname === path ||
+            (label === "DASHBOARD" && pathname === "/dashboard");
 
-        {/* HEADER MOBILE */}
-        <header className="relative z-10 flex items-center justify-between px-4 pt-4 pb-3 md:hidden bg-[#050708]">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0f171d] border border-white/10 text-xs font-medium">
-              {initials}
-            </div>
-            <div className="leading-tight">
-              <div className="text-sm font-semibold">{userName}</div>
-              <div className="text-[11px] text-slate-400">
-                Private investor Montelion
-              </div>
-            </div>
-          </div>
+          return (
+            <Link
+              key={path}
+              href={path}
+              className={[
+                "flex items-center w-full gap-3 rounded-xl px-3 py-2 text-left text-xs tracking-[0.18em]",
+                "transition-colors",
+                isActive
+                  ? "bg-[#0a0f14] border border-white/10 text-white"
+                  : "text-slate-400 hover:bg-white/5",
+              ].join(" ")}
+              onClick={onClose}
+            >
+              <Icon className="w-4 h-4" />
+              <span>{label}</span>
+            </Link>
+          );
+        })}
+      </nav>
 
-          <button
-            type="button"
-            aria-label="Open navigation"
-            onClick={() => setIsSidebarOpen(true)}
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-black/40"
-          >
-            <span className="sr-only">Open menu</span>
-            <div className="space-y-[3px]">
-              <span className="block h-[2px] w-4 rounded bg-slate-200" />
-              <span className="block h-[2px] w-4 rounded bg-slate-200" />
-              <span className="block h-[2px] w-4 rounded bg-slate-200" />
-            </div>
-          </button>
-        </header>
-
-        {/* CONTENU PRINCIPAL */}
-        <main className="relative z-10 flex-1 px-4 pt-2 pb-10 md:px-10 md:pt-8 md:pb-12">
-          {children}
-        </main>
+      {/* BOTTOM BUTTONS */}
+      <div className="px-5 pb-6 space-y-3">
+        <button className="w-full rounded-xl border border-white/10 bg-[#0c1117] py-2 text-sm hover:bg-white/10">
+          Contact Support
+        </button>
+        <button className="w-full rounded-xl border border-red-800/30 bg-red-900/20 py-2 text-sm text-red-300 hover:bg-red-900/30">
+          Logout
+        </button>
       </div>
     </div>
+  );
+
+  return (
+    <>
+      {/* Desktop sidebar — même background que mobile */}
+      <aside className="hidden md:flex w-72 bg-[#050708]">
+        {renderSidebarInner()}
+      </aside>
+
+      {/* Mobile overlay (inchangé) */}
+      {isOpen && (
+        <div className="fixed inset-0 z-40 flex md:hidden">
+          {/* panneau */}
+          <div className="w-72 h-full">{renderSidebarInner()}</div>
+          {/* zone sombre pour fermer */}
+          <button
+            className="flex-1 bg-black/40"
+            aria-label="Close navigation"
+            onClick={onClose}
+          />
+        </div>
+      )}
+    </>
   );
 }
