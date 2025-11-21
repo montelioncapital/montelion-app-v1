@@ -3,14 +3,6 @@
 
 const brandBlue = "#2664EC";
 
-// Infos user (tu peux brancher ça plus tard sur ton auth)
-const userName = "Demo User";
-const userInitials = userName
-  .split(" ")
-  .map((n) => n[0])
-  .join("")
-  .toUpperCase();
-
 const topStats = [
   {
     label: "Gross Revenue",
@@ -32,7 +24,25 @@ const topStats = [
   },
 ];
 
+const sidebarItems = [
+  { label: "Dashboard", icon: "📊", active: true },
+  { label: "Tutorial", icon: "🎓" },
+  { label: "Account", icon: "👤" },
+  { label: "Fees", icon: "💵" },
+  { label: "Rules", icon: "📜" },
+  { label: "Support", icon: "💬" },
+  { label: "About", icon: "ℹ️" },
+];
+
 export default function DashboardPage() {
+  // Fake user pour l’affichage (initiales + nom)
+  const user = {
+    firstName: "Demo",
+    lastName: "User",
+  };
+
+  const initials = `${user.firstName[0] ?? ""}${user.lastName[0] ?? ""}`.toUpperCase();
+
   return (
     <div className="flex min-h-screen bg-[#050608] text-slate-50">
       {/* BACKGROUND GLOW */}
@@ -47,59 +57,35 @@ export default function DashboardPage() {
 
       {/* SIDEBAR */}
       <aside className="relative z-10 flex w-72 flex-col border-r border-white/5 bg-gradient-to-b from-[#050708] via-[#050708] to-[#020304]">
-        {/* Logo + user */}
+        {/* User header */}
         <div className="px-6 pt-6 pb-5">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#0f171d] border border-white/10 text-sm font-semibold">
-              {userInitials}
+              {initials}
             </div>
             <div className="leading-tight">
-              <div className="text-sm font-semibold">{userName}</div>
-              <div className="text-xs text-slate-400">
-                Private investor Montelion
+              <div className="text-sm font-semibold">
+                {user.firstName} {user.lastName}
               </div>
+              <div className="text-xs text-slate-400">Private investor Montelion</div>
             </div>
           </div>
         </div>
 
-        {/* Nav */}
+        {/* MENU */}
         <nav className="flex-1 overflow-y-auto px-5 pb-6">
-          {/* General */}
           <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-            General
+            Menu
           </div>
           <div className="space-y-1 text-sm">
-            <SidebarItem label="Home Page" icon="🏠" />
-            <SidebarItem
-              label="Dashboard"
-              icon="📊"
-              active
-              withDot
-              dotColor={brandBlue}
-            />
-            <SidebarItem label="Database" icon="🗄️" />
-          </div>
-
-          {/* Files */}
-          <div className="mt-6 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-            Files
-          </div>
-          <div className="mt-2 space-y-1 text-sm text-slate-400">
-            <SidebarSubItem label="pricing_2024.pdf" />
-            <SidebarSubItem label="publish.docx" />
-            <SidebarSubItem label="summary.pdf" />
-            <SidebarSubItem label="whop.pdf" />
-          </div>
-
-          {/* Account */}
-          <div className="mt-8 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-            Account
-          </div>
-          <div className="mt-2 space-y-1 text-sm">
-            <SidebarItem label="Messages" icon="💬" />
-            <SidebarItem label="Groups" icon="👥" />
-            <SidebarItem label="Settings" icon="⚙️" />
-            <SidebarItem label="My Account" icon="👤" />
+            {sidebarItems.map((item) => (
+              <SidebarItem
+                key={item.label}
+                label={item.label}
+                icon={item.icon}
+                active={item.active}
+              />
+            ))}
           </div>
         </nav>
       </aside>
@@ -119,9 +105,9 @@ export default function DashboardPage() {
                 key={card.label}
                 className="relative rounded-3xl border border-white/10 bg-gradient-to-br from-[#070b10] via-[#05080d] to-[#040609] px-6 py-5 overflow-hidden"
               >
-                {/* Ligne d’accent bleu plus fine */}
+                {/* Fine gradient accent line en bas */}
                 <div
-                  className="pointer-events-none absolute inset-x-0 bottom-0 h-px"
+                  className="pointer-events-none absolute inset-x-0 bottom-0 h-[2px]"
                   style={{
                     background: `linear-gradient(90deg, transparent, ${brandBlue}, transparent)`,
                   }}
@@ -133,30 +119,7 @@ export default function DashboardPage() {
 
                 <div className="mt-6 text-2xl font-semibold">{card.value}</div>
                 <div className="mt-1 text-xs text-emerald-400">{card.change}</div>
-
-                {/* Petite ligne décorative */}
-                <div className="mt-4 h-10 w-full rounded-xl bg-black/40 border border-white/5 flex items-end justify-center px-3 pb-1.5">
-                  <svg viewBox="0 0 160 32" className="h-full w-full">
-                    <polyline
-                      fill="none"
-                      stroke={brandBlue}
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeOpacity="0.7"
-                      points="
-                        0,24
-                        20,22
-                        40,18
-                        60,20
-                        80,16
-                        100,14
-                        120,12
-                        140,8
-                        160,10
-                      "
-                    />
-                  </svg>
-                </div>
+                {/* plus de mini-graphique ici */}
               </div>
             ))}
           </section>
@@ -219,10 +182,10 @@ export default function DashboardPage() {
                 />
 
                 {/* Highlight point */}
-                <circle cx="440" cy="65" r="5" fill="#020617" />
+                <circle cx="440" cy="65" r="5" fill="#0f172a" />
                 <circle cx="440" cy="65" r="4" fill={brandBlue} />
 
-                {/* Tooltip */}
+                {/* Tooltip style label */}
                 <rect
                   x="452"
                   y="40"
@@ -253,9 +216,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="text-right">
                   <div className="text-xs text-slate-400">AVG</div>
-                  <div className="text-sm text-emerald-400 font-medium">
-                    +5.29%
-                  </div>
+                  <div className="text-sm text-emerald-400 font-medium">+5.29%</div>
                 </div>
               </div>
             </div>
@@ -266,9 +227,9 @@ export default function DashboardPage() {
   );
 }
 
-/* --- Small helpers --- */
+/* --- Sidebar helper --- */
 
-function SidebarItem({ label, icon, active, withDot, dotColor }) {
+function SidebarItem({ label, icon, active }) {
   return (
     <button
       className={[
@@ -280,23 +241,10 @@ function SidebarItem({ label, icon, active, withDot, dotColor }) {
     >
       <span className="flex items-center gap-2">
         <span className="w-5 text-sm">{icon}</span>
-        <span className="text-sm">{label}</span>
+        <span className="text-sm tracking-wide uppercase">
+          {label}
+        </span>
       </span>
-      {withDot && (
-        <span
-          className="h-1.5 w-3 rounded-full"
-          style={{ backgroundColor: dotColor || "#22c55e" }}
-        />
-      )}
     </button>
-  );
-}
-
-function SidebarSubItem({ label }) {
-  return (
-    <div className="flex items-center gap-2 rounded-xl px-2 py-1 text-xs hover:bg-white/5 cursor-pointer">
-      <span className="text-[10px] text-slate-500">•</span>
-      <span className="truncate">{label}</span>
-    </div>
   );
 }
