@@ -5,108 +5,101 @@ const brandBlue = "#2664EC";
 
 export default function DashboardPage() {
   return (
-    <div className="flex min-h-screen bg-[#05060a] text-slate-100">
+    <div className="flex min-h-screen bg-[#050816] text-slate-100">
       {/* SIDEBAR */}
-      <aside className="w-64 bg-[#020308] border-r border-slate-800 flex flex-col justify-between">
-        {/* User / profile */}
-        <div>
-          <div className="px-5 pt-5 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-slate-900 flex items-center justify-center text-sm font-semibold">
-                DU
-              </div>
-              <div className="leading-tight">
-                <div className="text-sm font-semibold">Demo User</div>
-                <div className="text-xs text-slate-400">
-                  demo.user@example.com
-                </div>
-              </div>
-            </div>
+      <aside className="flex w-64 flex-col border-r border-white/5 bg-[#040712]">
+        {/* User header */}
+        <div className="flex items-center gap-3 px-5 pt-5 pb-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold">
+            DU
           </div>
-
-          {/* Nav */}
-          <nav className="px-3 pt-2 pb-4 text-sm">
-            {[
-              { label: "Dashboard", icon: "📊", active: true },
-              { label: "Assets", icon: "💰" },
-              { label: "Market", icon: "📈" },
-              { label: "Trade", icon: "⚡️" },
-              { label: "Analytics", icon: "📊" },
-            ].map((item) => (
-              <button
-                key={item.label}
-                className={[
-                  "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors",
-                  item.active
-                    ? "bg-[#050812] text-slate-50 border border-slate-700"
-                    : "text-slate-400 hover:bg-[#050812]",
-                ].join(" ")}
-              >
-                <span className="text-base">{item.icon}</span>
-                <span>{item.label}</span>
-              </button>
-            ))}
-
-            <div className="mt-6 mb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-              Account
-            </div>
-
-            {[
-              { label: "Profile", icon: "👤" },
-              { label: "Settings", icon: "⚙️" },
-            ].map((item) => (
-              <button
-                key={item.label}
-                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-slate-400 hover:bg-[#050812] transition-colors"
-              >
-                <span className="text-base">{item.icon}</span>
-                <span>{item.label}</span>
-              </button>
-            ))}
-          </nav>
+          <div className="leading-tight">
+            <div className="text-sm font-medium">Demo User</div>
+            <div className="text-xs text-slate-400">demo.user@example.com</div>
+          </div>
         </div>
 
-        {/* Logout */}
-        <div className="px-3 pb-4 pt-2">
-          <button className="w-full rounded-xl border border-red-500/70 px-3 py-2 text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors">
+        {/* Nav */}
+        <nav className="mt-4 flex-1 px-3 text-sm">
+          <button className="mb-1 flex w-full items-center gap-3 rounded-xl bg-[#08101f] px-3 py-2.5 text-left text-slate-50 border border-white/5">
+            <span className="text-base">📊</span>
+            <span>Dashboard</span>
+          </button>
+
+          {[
+            { label: "Assets", icon: "💰" },
+            { label: "Market", icon: "📈" },
+            { label: "Trade", icon: "⚡️" },
+            { label: "Analytics", icon: "📊" },
+          ].map((item) => (
+            <button
+              key={item.label}
+              className="mb-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-slate-400 hover:bg-[#070d1b] transition-colors"
+            >
+              <span className="text-base">{item.icon}</span>
+              <span>{item.label}</span>
+            </button>
+          ))}
+
+          <div className="mt-5 mb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+            Account
+          </div>
+
+          {[
+            { label: "Profile", icon: "👤" },
+            { label: "Settings", icon: "⚙️" },
+          ].map((item) => (
+            <button
+              key={item.label}
+              className="mb-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-slate-400 hover:bg-[#070d1b] transition-colors"
+            >
+              <span className="text-base">{item.icon}</span>
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </nav>
+
+        {/* Logout button */}
+        <div className="px-3 py-4 border-t border-white/5">
+          <button className="flex w-full items-center justify-center rounded-xl border border-red-500/60 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors">
             Log out
           </button>
         </div>
       </aside>
 
-      {/* MAIN */}
-      <main className="flex-1 flex flex-col">
+      {/* MAIN AREA */}
+      <main className="flex flex-1 flex-col">
         {/* Header */}
-        <header className="px-10 pt-8 pb-5 border-b border-slate-800">
-          <h1 className="text-2xl font-semibold">Dashboard</h1>
+        <header className="px-10 pt-7 pb-5">
+          <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
         </header>
 
         {/* CONTENT */}
-        <div className="flex-1 px-10 py-8 space-y-8">
-          {/* Top stat cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="rounded-2xl border border-slate-800 bg-[#0b0f19] px-5 py-4">
-              <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+        <div className="flex-1 px-10 pb-10 space-y-7">
+          {/* Top metric cards */}
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+            <div className="rounded-2xl border border-white/5 bg-[#0b1220] px-5 py-4">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                 Balance
               </div>
               <div className="mt-3 text-2xl font-semibold">€22,193.05</div>
-              <div className="mt-1 text-xs" style={{ color: brandBlue }}>
+              <div className="mt-1 text-xs text-emerald-400">
                 +47.3% vs last period
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-800 bg-[#0b0f19] px-5 py-4">
-              <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+            <div className="rounded-2xl border border-white/5 bg-[#0b1220] px-5 py-4">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                 Invested capital
               </div>
               <div className="mt-3 text-2xl font-semibold">€15,400.00</div>
-              <div className="mt-1 text-xs" style={{ color: brandBlue }}>
+              <div className="mt-1 text-xs text-emerald-400">
                 +12.1% vs last period
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-800 bg-[#0b0f19] px-5 py-4">
-              <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+            <div className="rounded-2xl border border-white/5 bg-[#0b1220] px-5 py-4">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                 Available
               </div>
               <div className="mt-3 text-2xl font-semibold">€6,793.05</div>
@@ -116,30 +109,27 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Chart + quick swap */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          {/* Chart + quick swap row */}
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
             {/* Chart card */}
-            <div className="xl:col-span-2 rounded-2xl border border-slate-800 bg-[#0b0f19] px-5 py-4 flex flex-col">
-              <div className="flex items-center justify-between mb-4">
+            <section className="xl:col-span-2 rounded-2xl border border-white/5 bg-[#0b1220] px-5 py-4">
+              <div className="mb-4 flex items-center justify-between">
                 <div>
-                  <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                     Balance
                   </div>
-                  <div className="mt-1 text-xs text-slate-400">
+                  <p className="mt-1 text-xs text-slate-400">
                     Account value performance over time
-                  </div>
+                  </p>
                 </div>
                 <div className="text-xs text-slate-400">
                   YTD{" "}
-                  <span className="font-medium" style={{ color: brandBlue }}>
-                    +47.3%
-                  </span>
+                  <span className="font-medium text-emerald-400">+47.3%</span>
                 </div>
               </div>
 
-              <div className="flex-1 rounded-xl bg-[#050812] px-4 py-4">
-                <svg viewBox="0 0 400 160" className="w-full h-40">
-                  <rect x="0" y="0" width="400" height="160" fill="transparent" />
+              <div className="rounded-xl bg-[#050815] px-4 py-4">
+                <svg viewBox="0 0 400 160" className="h-40 w-full">
                   <polyline
                     fill="none"
                     stroke={brandBlue}
@@ -150,11 +140,11 @@ export default function DashboardPage() {
                       10,120
                       60,115
                       110,108
-                      160,102
-                      210,96
+                      160,103
+                      210,95
                       260,88
                       310,78
-                      360,68
+                      360,70
                     "
                   />
                 </svg>
@@ -169,18 +159,18 @@ export default function DashboardPage() {
                   <span>Aug</span>
                 </div>
               </div>
-            </div>
+            </section>
 
-            {/* Quick swap (design only) */}
-            <div className="rounded-2xl border border-slate-800 bg-[#0b0f19] px-5 py-4 flex flex-col gap-4">
-              <div className="flex items-center justify-between">
+            {/* Quick swap card */}
+            <section className="rounded-2xl border border-white/5 bg-[#0b1220] px-5 py-4">
+              <div className="mb-4 flex items-center justify-between">
                 <div>
-                  <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                     Quick swap
                   </div>
-                  <div className="mt-1 text-xs text-slate-400">
+                  <p className="mt-1 text-xs text-slate-400">
                     Convert assets instantly
-                  </div>
+                  </p>
                 </div>
                 <span className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300">
                   Live quotes
@@ -190,9 +180,9 @@ export default function DashboardPage() {
               <div className="space-y-3 text-xs">
                 <div>
                   <div className="mb-1 text-slate-400">You sell</div>
-                  <div className="flex items-center justify-between rounded-xl bg-[#050812] px-3 py-2">
-                    <span className="text-slate-200">0.018162</span>
-                    <span className="rounded-full border border-slate-700 px-2 py-0.5 text-[11px]">
+                  <div className="flex items-center justify-between rounded-xl bg-[#050815] px-3 py-2">
+                    <span className="text-slate-100">0.018162</span>
+                    <span className="rounded-full border border-slate-600 px-2 py-0.5 text-[11px]">
                       BTC ▼
                     </span>
                   </div>
@@ -200,9 +190,9 @@ export default function DashboardPage() {
 
                 <div>
                   <div className="mb-1 text-slate-400">You buy</div>
-                  <div className="flex items-center justify-between rounded-xl bg-[#050812] px-3 py-2">
-                    <span className="text-slate-200">923.42</span>
-                    <span className="rounded-full border border-slate-700 px-2 py-0.5 text-[11px]">
+                  <div className="flex items-center justify-between rounded-xl bg-[#050815] px-3 py-2">
+                    <span className="text-slate-100">923.42</span>
+                    <span className="rounded-full border border-slate-600 px-2 py-0.5 text-[11px]">
                       USDT ▼
                     </span>
                   </div>
@@ -210,15 +200,12 @@ export default function DashboardPage() {
               </div>
 
               <button
-                className="mt-auto inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium"
-                style={{
-                  backgroundColor: brandBlue,
-                  color: "#ffffff",
-                }}
+                className="mt-5 flex w-full items-center justify-center rounded-xl px-4 py-2 text-sm font-medium"
+                style={{ backgroundColor: brandBlue, color: "#ffffff" }}
               >
                 Visualize swap →
               </button>
-            </div>
+            </section>
           </div>
         </div>
       </main>
