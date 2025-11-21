@@ -1,12 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const brandBlue = "#2664EC";
-
-type SidebarProps = {
-  currentPath: string; // <- requis, on va toujours le passer depuis le layout
-};
 
 /* -------------------- SVG ICONS (couleur = currentColor) -------------------- */
 
@@ -100,11 +97,12 @@ function normalizePath(path: string) {
   return base;
 }
 
-export default function Sidebar({ currentPath }: SidebarProps) {
+export default function Sidebar() {
+  const pathname = usePathname();
+  const normalizedCurrent = normalizePath(pathname || "/");
+
   const userName = "Demo User";
   const initials = "DU";
-
-  const normalizedCurrent = normalizePath(currentPath || "/");
 
   return (
     <aside className="relative z-20 flex w-72 flex-col border-r border-white/5 bg-[#050708]">
