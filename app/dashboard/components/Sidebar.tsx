@@ -102,22 +102,14 @@ const menuItems: MenuItem[] = [
   { label: "ABOUT", path: "/dashboard/about", Icon: IconAbout },
 ];
 
-type SidebarProps = {
-  /** utilisé sur mobile pour ouvrir / fermer le menu */
-  isOpen: boolean;
-  onClose: () => void;
-};
-
-/* -------------------- COMPONENT -------------------- */
-
-export default function Sidebar({ isOpen, onClose }: SidebarProps) {
+export default function Sidebar() {
   const pathname = usePathname() ?? "";
 
   const userName = "Demo User";
   const initials = "DU";
 
-  const SidebarContent = () => (
-    <div className="flex h-full flex-col">
+  const renderSidebarInner = () => (
+    <div className="flex h-full flex-col border-r border-white/5 bg-[#050608]">
       {/* USER */}
       <div className="px-6 pt-6 pb-6 flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0f171d] border border-white/10 text-sm font-medium">
@@ -130,27 +122,25 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       </div>
 
       {/* MENU */}
-      <nav className="flex-1 px-5 space-y-1">
+      <nav className="flex-1 px-5 space-y-2">
         {menuItems.map(({ label, path, Icon }) => {
           const isActive =
             pathname === path ||
             (label === "DASHBOARD" && pathname === "/dashboard");
 
+          const baseClasses =
+            "flex items-center w-full gap-3 rounded-xl border px-4 py-2.5 text-sm transition-colors";
+
+          const stateClasses = isActive
+            ? "bg-[#0c1117] border-white/10 text-white"
+            : "border-transparent text-slate-400 hover:bg-white/5 hover:border-white/5";
+
           return (
-            <Link
-              key={path}
-              href={path}
-              className={[
-                "flex items-center w-full gap-3 rounded-xl px-3 py-2 text-left text-xs tracking-[0.18em]",
-                "transition-colors",
-                isActive
-                  ? "bg-[#0a0f14] border border-white/10 text-white"
-                  : "text-slate-400 hover:bg-white/5",
-              ].join(" ")}
-              onClick={onClose}
-            >
+            <Link key={path} href={path} className={`${baseClasses} ${stateClasses}`}>
               <Icon className="w-4 h-4" />
-              <span>{label}</span>
+              <span className="tracking-[0.18em] text-[11px]">
+                {label}
+              </span>
             </Link>
           );
         })}
@@ -158,10 +148,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
       {/* BOTTOM BUTTONS */}
       <div className="px-5 pb-6 space-y-3">
-        <button className="w-full rounded-xl border border-white/10 bg-[#0c1117] py-2 text-sm hover:bg-white/10">
+        <button className="w-full rounded-xl border border-white/10 bg-[#0c1117] px-4 py-2.5 text-sm hover:bg-white/10">
           Contact Support
         </button>
-        <button className="w-full rounded-xl border border-red-800/30 bg-red-900/20 py-2 text-sm text-red-300 hover:bg-red-900/30">
+        <button className="w-full rounded-xl border border-red-800/30 bg-red-900/20 px-4 py-2.5 text-sm text-red-300 hover:bg-red-900/30">
           Logout
         </button>
       </div>
@@ -169,27 +159,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   );
 
   return (
-    <>
-      {/* Desktop sidebar : fixe, même background que le panneau mobile */}
-      <aside className="hidden md:block relative z-20 h-screen w-72 bg-[#050708] border-r border-white/5">
-        <SidebarContent />
-      </aside>
-
-      {/* Mobile overlay (inchangé) */}
-      {isOpen && (
-        <div className="fixed inset-0 z-40 flex md:hidden">
-          {/* panneau latéral */}
-          <div className="h-full w-72 bg-[#050708] border-r border-white/5 shadow-2xl shadow-black/60">
-            <SidebarContent />
-          </div>
-          {/* zone sombre pour fermer */}
-          <button
-            className="flex-1 bg-black/40"
-            aria-label="Close navigation"
-            onClick={onClose}
-          />
-        </div>
-      )}
-    </>
+    <aside className="hidden md:flex w-72">
+      {renderSidebarInner()}
+    </aside>
   );
 }
