@@ -3,212 +3,414 @@
 
 const brandBlue = "#2664EC";
 
+const topStats = [
+  {
+    label: "Gross Revenue",
+    description: "Your revenue from last month",
+    value: "$171,610.25",
+    change: "+5.29% From last month",
+  },
+  {
+    label: "Auto Trades",
+    description: "Amount of bot-trades",
+    value: "3,612",
+    change: "+1,259 From last month",
+  },
+  {
+    label: "New Assets",
+    description: "New assets in portfolio",
+    value: "53",
+    change: "+21 From last month",
+  },
+];
+
+const assets = [
+  { name: "Bitcoin", symbol: "BTC" },
+  { name: "Ethereum", symbol: "ETH" },
+  { name: "Serum", symbol: "SRM" },
+  { name: "Kadena", symbol: "KDA" },
+  { name: "BNB", symbol: "BNB" },
+];
+
 export default function DashboardPage() {
   return (
-    <div className="flex min-h-screen bg-[#050816] text-slate-100">
+    <div className="flex min-h-screen bg-[#050608] text-slate-50">
+      {/* BACKGROUND GLOW */}
+      <div
+        className="pointer-events-none fixed inset-0 opacity-40"
+        aria-hidden="true"
+        style={{
+          background:
+            "radial-gradient(circle at 0% 0%, rgba(38,100,236,0.4), transparent 60%), radial-gradient(circle at 100% 0%, rgba(38,100,236,0.25), transparent 55%)",
+        }}
+      />
+
       {/* SIDEBAR */}
-      <aside className="flex w-64 flex-col border-r border-white/5 bg-[#040712]">
-        {/* User header */}
-        <div className="flex items-center gap-3 px-5 pt-5 pb-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold">
-            DU
+      <aside className="relative z-10 flex w-72 flex-col border-r border-white/5 bg-gradient-to-b from-[#050708] via-[#050708] to-[#020304]">
+        {/* Logo + search */}
+        <div className="px-6 pt-6 pb-5">
+          <div className="mb-6 flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#0f171d] border border-white/10 text-sm font-semibold">
+              17
+            </div>
+            <div className="leading-tight">
+              <div className="text-sm font-semibold">SevenTeen®</div>
+              <div className="text-xs text-slate-400">Finance Panel</div>
+            </div>
           </div>
-          <div className="leading-tight">
-            <div className="text-sm font-medium">Demo User</div>
-            <div className="text-xs text-slate-400">demo.user@example.com</div>
+
+          <div className="rounded-2xl border border-white/10 bg-[#05090d] px-3 py-2 text-xs text-slate-400 flex items-center gap-2">
+            <span className="text-slate-500">🔍</span>
+            <span>Search</span>
           </div>
         </div>
 
         {/* Nav */}
-        <nav className="mt-4 flex-1 px-3 text-sm">
-          <button className="mb-1 flex w-full items-center gap-3 rounded-xl bg-[#08101f] px-3 py-2.5 text-left text-slate-50 border border-white/5">
-            <span className="text-base">📊</span>
-            <span>Dashboard</span>
-          </button>
-
-          {[
-            { label: "Assets", icon: "💰" },
-            { label: "Market", icon: "📈" },
-            { label: "Trade", icon: "⚡️" },
-            { label: "Analytics", icon: "📊" },
-          ].map((item) => (
-            <button
-              key={item.label}
-              className="mb-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-slate-400 hover:bg-[#070d1b] transition-colors"
-            >
-              <span className="text-base">{item.icon}</span>
-              <span>{item.label}</span>
-            </button>
-          ))}
-
-          <div className="mt-5 mb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-            Account
+        <nav className="flex-1 overflow-y-auto px-5 pb-6">
+          {/* General */}
+          <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+            General
+          </div>
+          <div className="space-y-1 text-sm">
+            <SidebarItem label="Home Page" icon="🏠" />
+            <SidebarItem
+              label="Dashboard"
+              icon="📊"
+              active
+              withDot
+              dotColor={brandBlue}
+            />
+            <SidebarItem label="Database" icon="🗄️" />
           </div>
 
-          {[
-            { label: "Profile", icon: "👤" },
-            { label: "Settings", icon: "⚙️" },
-          ].map((item) => (
-            <button
-              key={item.label}
-              className="mb-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-slate-400 hover:bg-[#070d1b] transition-colors"
-            >
-              <span className="text-base">{item.icon}</span>
-              <span>{item.label}</span>
-            </button>
-          ))}
+          {/* Files */}
+          <div className="mt-6 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+            Files
+          </div>
+          <div className="mt-2 space-y-1 text-sm text-slate-400">
+            <SidebarSubItem label="pricing_2024.pdf" />
+            <SidebarSubItem label="publish.docx" />
+            <SidebarSubItem label="summary.pdf" />
+            <SidebarSubItem label="whop.pdf" />
+          </div>
+
+          {/* Account */}
+          <div className="mt-8 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+            Account
+          </div>
+          <div className="mt-2 space-y-1 text-sm">
+            <SidebarItem label="Messages" icon="💬" />
+            <SidebarItem label="Groups" icon="👥" />
+            <SidebarItem label="Settings" icon="⚙️" />
+            <SidebarItem label="My Account" icon="👤" />
+          </div>
         </nav>
 
-        {/* Logout button */}
-        <div className="px-3 py-4 border-t border-white/5">
-          <button className="flex w-full items-center justify-center rounded-xl border border-red-500/60 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors">
-            Log out
-          </button>
+        {/* Bottom circular widget (demi-cercle) */}
+        <div className="relative flex h-32 items-end justify-center overflow-hidden px-6 pb-4">
+          <div className="absolute -bottom-20 h-40 w-40 rounded-full border border-white/10 bg-[#05090d] flex items-center justify-center">
+            <div className="text-center text-xs text-slate-300">
+              <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500 mb-1">
+                Usage
+              </div>
+              <div className="text-sm font-semibold">480 / 500</div>
+              <div className="text-[11px] text-slate-500">
+                Auto Trades Left • Be Pro!
+              </div>
+            </div>
+          </div>
         </div>
       </aside>
 
-      {/* MAIN AREA */}
-      <main className="flex flex-1 flex-col">
-        {/* Header */}
-        <header className="px-10 pt-7 pb-5">
-          <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
-        </header>
-
-        {/* CONTENT */}
-        <div className="flex-1 px-10 pb-10 space-y-7">
-          {/* Top metric cards */}
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-            <div className="rounded-2xl border border-white/5 bg-[#0b1220] px-5 py-4">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                Balance
-              </div>
-              <div className="mt-3 text-2xl font-semibold">€22,193.05</div>
-              <div className="mt-1 text-xs text-emerald-400">
-                +47.3% vs last period
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-white/5 bg-[#0b1220] px-5 py-4">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                Invested capital
-              </div>
-              <div className="mt-3 text-2xl font-semibold">€15,400.00</div>
-              <div className="mt-1 text-xs text-emerald-400">
-                +12.1% vs last period
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-white/5 bg-[#0b1220] px-5 py-4">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                Available
-              </div>
-              <div className="mt-3 text-2xl font-semibold">€6,793.05</div>
-              <div className="mt-1 text-xs text-slate-400">
-                Cash ready to deploy
-              </div>
-            </div>
-          </div>
-
-          {/* Chart + quick swap row */}
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-            {/* Chart card */}
-            <section className="xl:col-span-2 rounded-2xl border border-white/5 bg-[#0b1220] px-5 py-4">
-              <div className="mb-4 flex items-center justify-between">
+      {/* MAIN */}
+      <main className="relative z-10 flex-1 overflow-y-auto">
+        <div className="px-10 pt-6 pb-10 space-y-6">
+          {/* HEADER CARD */}
+          <section className="rounded-3xl border border-white/10 bg-[#05090e]/95 px-7 py-5 shadow-[0_24px_80px_rgba(0,0,0,0.6)]">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-black/50 border border-white/10 text-lg">
+                  📈
+                </div>
                 <div>
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                    Balance
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-lg font-semibold">Dashboard</h1>
+                    <span className="flex items-center gap-1 rounded-full bg-[#071419] px-2 py-[2px] text-[11px] text-emerald-300">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                      3
+                    </span>
                   </div>
-                  <p className="mt-1 text-xs text-slate-400">
-                    Account value performance over time
+                  <p className="text-xs text-slate-400 mt-1">
+                    Track and learn about your assets
                   </p>
                 </div>
-                <div className="text-xs text-slate-400">
-                  YTD{" "}
-                  <span className="font-medium text-emerald-400">+47.3%</span>
-                </div>
               </div>
 
-              <div className="rounded-xl bg-[#050815] px-4 py-4">
-                <svg viewBox="0 0 400 160" className="h-40 w-full">
-                  <polyline
+              <div className="flex items-center gap-2 text-xs text-slate-400">
+                <button className="rounded-full bg-black/40 border border-white/10 px-3 py-1">
+                  7 days
+                </button>
+              </div>
+            </div>
+          </section>
+
+          {/* OVERVIEW TITLE */}
+          <section>
+            <h2 className="text-2xl font-semibold">Overview</h2>
+          </section>
+
+          {/* TOP STATS CARDS */}
+          <section className="grid gap-5 md:grid-cols-3">
+            {topStats.map((card) => (
+              <div
+                key={card.label}
+                className="relative rounded-3xl border border-white/10 bg-gradient-to-br from-[#070b10] via-[#05080d] to-[#040609] px-6 py-5 shadow-[0_24px_80px_rgba(0,0,0,0.7)] overflow-hidden"
+              >
+                {/* Gradient accent line */}
+                <div
+                  className="pointer-events-none absolute inset-x-0 bottom-0 h-1"
+                  style={{
+                    background: `linear-gradient(90deg, transparent, ${brandBlue}, transparent)`,
+                  }}
+                  aria-hidden="true"
+                />
+
+                <p className="text-sm font-medium">{card.label}</p>
+                <p className="mt-1 text-xs text-slate-400">{card.description}</p>
+
+                <div className="mt-6 text-2xl font-semibold">{card.value}</div>
+                <div className="mt-1 text-xs text-emerald-400">{card.change}</div>
+
+                {/* Mini line accent */}
+                <div className="mt-4 h-12 w-full rounded-xl bg-black/40 border border-white/5 flex items-end justify-center px-3 pb-2">
+                  <svg viewBox="0 0 160 40" className="h-full w-full">
+                    <defs>
+                      <linearGradient id="miniLine" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stopColor={brandBlue} stopOpacity="0" />
+                        <stop
+                          offset="50%"
+                          stopColor={brandBlue}
+                          stopOpacity="0.9"
+                        />
+                        <stop offset="100%" stopColor={brandBlue} stopOpacity="0" />
+                      </linearGradient>
+                    </defs>
+                    <path
+                      d="M0 30 L20 28 L40 24 L60 26 L80 20 L100 18 L120 16 L140 10 L160 8"
+                      fill="none"
+                      stroke="url(#miniLine)"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </div>
+              </div>
+            ))}
+          </section>
+
+          {/* MIDDLE ROW: CHART + ASSETS */}
+          <section className="grid gap-5 lg:grid-cols-3">
+            {/* BIG CHART */}
+            <div className="lg:col-span-2 rounded-3xl border border-white/10 bg-gradient-to-b from-[#070b10] via-[#05080d] to-[#040609] px-6 py-5 shadow-[0_24px_80px_rgba(0,0,0,0.8)]">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium">Auto Trades Chart</p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    Chart of your auto-bot trades in last{" "}
+                    <span className="text-slate-200 font-medium">14 days</span>
+                  </p>
+                </div>
+                <button className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-black/40 text-lg text-slate-300">
+                  +
+                </button>
+              </div>
+
+              <div className="rounded-2xl border border-white/5 bg-black/40 px-4 pt-4 pb-3">
+                {/* BIG AREA CHART */}
+                <svg viewBox="0 0 600 220" className="w-full h-44">
+                  <defs>
+                    <linearGradient
+                      id="areaFill"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop offset="0%" stopColor={brandBlue} stopOpacity="0.45" />
+                      <stop offset="100%" stopColor={brandBlue} stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+
+                  {/* Area */}
+                  <path
+                    d="
+                      M10 180
+                      C 60 170, 90 130, 130 140
+                      C 170 150, 200 110, 240 120
+                      C 280 130, 310 95, 340 90
+                      C 380 85, 410 60, 440 65
+                      C 470 70, 500 110, 530 115
+                      C 560 120, 580 105, 590 100
+                      L 590 210 L 10 210 Z
+                    "
+                    fill="url(#areaFill)"
+                  />
+
+                  {/* Line */}
+                  <path
+                    d="
+                      M10 180
+                      C 60 170, 90 130, 130 140
+                      C 170 150, 200 110, 240 120
+                      C 280 130, 310 95, 340 90
+                      C 380 85, 410 60, 440 65
+                      C 470 70, 500 110, 530 115
+                      C 560 120, 580 105, 590 100
+                    "
                     fill="none"
                     stroke={brandBlue}
                     strokeWidth="3"
                     strokeLinecap="round"
-                    strokeLinejoin="round"
-                    points="
-                      10,120
-                      60,115
-                      110,108
-                      160,103
-                      210,95
-                      260,88
-                      310,78
-                      360,70
-                    "
                   />
+
+                  {/* Highlight point */}
+                  <circle cx="440" cy="65" r="5" fill="#0f172a" />
+                  <circle cx="440" cy="65" r="4" fill={brandBlue} />
+
+                  {/* Tooltip style label */}
+                  <rect
+                    x="452"
+                    y="40"
+                    rx="6"
+                    ry="6"
+                    width="90"
+                    height="26"
+                    fill="#020617"
+                    opacity="0.95"
+                  />
+                  <text
+                    x="462"
+                    y="57"
+                    fill="#e5e7eb"
+                    fontSize="11"
+                    fontFamily="system-ui, -apple-system, BlinkMacSystemFont"
+                  >
+                    $3,928.00
+                  </text>
                 </svg>
-                <div className="mt-2 flex justify-between text-[11px] text-slate-500">
-                  <span>Jan</span>
-                  <span>Feb</span>
-                  <span>Mar</span>
-                  <span>Apr</span>
-                  <span>May</span>
-                  <span>Jun</span>
-                  <span>Jul</span>
-                  <span>Aug</span>
-                </div>
-              </div>
-            </section>
 
-            {/* Quick swap card */}
-            <section className="rounded-2xl border border-white/5 bg-[#0b1220] px-5 py-4">
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                    Quick swap
+                {/* X axis + AVG */}
+                <div className="mt-3 flex items-center justify-between text-[11px] text-slate-500">
+                  <div className="flex gap-6">
+                    <span>07.01.2024</span>
+                    <span>—</span>
+                    <span>21.01.2024</span>
                   </div>
-                  <p className="mt-1 text-xs text-slate-400">
-                    Convert assets instantly
-                  </p>
-                </div>
-                <span className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300">
-                  Live quotes
-                </span>
-              </div>
-
-              <div className="space-y-3 text-xs">
-                <div>
-                  <div className="mb-1 text-slate-400">You sell</div>
-                  <div className="flex items-center justify-between rounded-xl bg-[#050815] px-3 py-2">
-                    <span className="text-slate-100">0.018162</span>
-                    <span className="rounded-full border border-slate-600 px-2 py-0.5 text-[11px]">
-                      BTC ▼
-                    </span>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="mb-1 text-slate-400">You buy</div>
-                  <div className="flex items-center justify-between rounded-xl bg-[#050815] px-3 py-2">
-                    <span className="text-slate-100">923.42</span>
-                    <span className="rounded-full border border-slate-600 px-2 py-0.5 text-[11px]">
-                      USDT ▼
-                    </span>
+                  <div className="text-right">
+                    <div className="text-xs text-slate-400">AVG</div>
+                    <div className="text-sm text-emerald-400 font-medium">
+                      +5.29%
+                    </div>
                   </div>
                 </div>
               </div>
+            </div>
 
-              <button
-                className="mt-5 flex w-full items-center justify-center rounded-xl px-4 py-2 text-sm font-medium"
-                style={{ backgroundColor: brandBlue, color: "#ffffff" }}
-              >
-                Visualize swap →
-              </button>
-            </section>
-          </div>
+            {/* ASSETS CARD */}
+            <div className="rounded-3xl border border-white/10 bg-gradient-to-b from-[#070b10] via-[#05080d] to-[#040609] px-6 py-5 shadow-[0_24px_80px_rgba(0,0,0,0.8)]">
+              <div className="mb-4">
+                <p className="text-sm font-medium">Assets</p>
+                <p className="mt-1 text-xs text-slate-400">
+                  Best assets from your portfolio
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                {assets.map((asset) => (
+                  <div
+                    key={asset.symbol}
+                    className="flex items-center justify-between rounded-2xl bg-black/40 border border-white/5 px-3 py-2.5"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="flex h-8 w-8 items-center justify-center rounded-full"
+                        style={{
+                          background: `radial-gradient(circle at 30% 20%, ${brandBlue}, #020617)`,
+                        }}
+                      >
+                        <span className="text-xs font-semibold">
+                          {asset.symbol[0]}
+                        </span>
+                      </div>
+                      <div className="leading-tight">
+                        <div className="text-sm">{asset.name}</div>
+                        <div className="text-[11px] text-slate-500">
+                          {asset.symbol}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Mini sparkline */}
+                    <svg
+                      viewBox="0 0 80 30"
+                      className="h-8 w-20"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M0 20 L10 22 L20 18 L30 12 L40 15 L50 10 L60 16 L70 8 L80 12"
+                        fill="none"
+                        stroke={brandBlue}
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-4 flex items-center justify-between text-xs text-slate-400">
+                <span>AVG</span>
+                <span className="text-emerald-400 font-medium">+5.29%</span>
+              </div>
+            </div>
+          </section>
         </div>
       </main>
+    </div>
+  );
+}
+
+/* --- Small helpers --- */
+
+function SidebarItem({ label, icon, active, withDot, dotColor }) {
+  return (
+    <button
+      className={[
+        "flex w-full items-center justify-between rounded-2xl px-3 py-2 text-left transition-colors",
+        active
+          ? "bg-[#050b0f] border border-white/15 text-slate-50"
+          : "text-slate-400 hover:bg-white/5",
+      ].join(" ")}
+    >
+      <span className="flex items-center gap-2">
+        <span className="w-5 text-sm">{icon}</span>
+        <span className="text-sm">{label}</span>
+      </span>
+      {withDot && (
+        <span
+          className="h-1.5 w-3 rounded-full"
+          style={{ backgroundColor: dotColor || "#22c55e" }}
+        />
+      )}
+    </button>
+  );
+}
+
+function SidebarSubItem({ label }) {
+  return (
+    <div className="flex items-center gap-2 rounded-xl px-2 py-1 text-xs hover:bg-white/5 cursor-pointer">
+      <span className="text-[10px] text-slate-500">•</span>
+      <span className="truncate">{label}</span>
     </div>
   );
 }
