@@ -3,6 +3,14 @@
 
 const brandBlue = "#2664EC";
 
+// Infos user (tu peux brancher ça plus tard sur ton auth)
+const userName = "Demo User";
+const userInitials = userName
+  .split(" ")
+  .map((n) => n[0])
+  .join("")
+  .toUpperCase();
+
 const topStats = [
   {
     label: "Gross Revenue",
@@ -39,21 +47,18 @@ export default function DashboardPage() {
 
       {/* SIDEBAR */}
       <aside className="relative z-10 flex w-72 flex-col border-r border-white/5 bg-gradient-to-b from-[#050708] via-[#050708] to-[#020304]">
-        {/* Logo + search */}
+        {/* Logo + user */}
         <div className="px-6 pt-6 pb-5">
-          <div className="mb-6 flex items-center gap-3">
+          <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#0f171d] border border-white/10 text-sm font-semibold">
-              17
+              {userInitials}
             </div>
             <div className="leading-tight">
-              <div className="text-sm font-semibold">SevenTeen®</div>
-              <div className="text-xs text-slate-400">Finance Panel</div>
+              <div className="text-sm font-semibold">{userName}</div>
+              <div className="text-xs text-slate-400">
+                Private investor Montelion
+              </div>
             </div>
-          </div>
-
-          <div className="rounded-2xl border border-white/10 bg-[#05090d] px-3 py-2 text-xs text-slate-400 flex items-center gap-2">
-            <span className="text-slate-500">🔍</span>
-            <span>Search</span>
           </div>
         </div>
 
@@ -101,7 +106,7 @@ export default function DashboardPage() {
 
       {/* MAIN */}
       <main className="relative z-10 flex-1 overflow-y-auto">
-        <div className="px-10 pt-8 pb-10 space-y-6">
+        <div className="px-10 pt-6 pb-10 space-y-6">
           {/* OVERVIEW TITLE */}
           <section>
             <h1 className="text-2xl font-semibold">Overview</h1>
@@ -114,9 +119,9 @@ export default function DashboardPage() {
                 key={card.label}
                 className="relative rounded-3xl border border-white/10 bg-gradient-to-br from-[#070b10] via-[#05080d] to-[#040609] px-6 py-5 overflow-hidden"
               >
-                {/* Gradient accent line (bleu Montelion) */}
+                {/* Ligne d’accent bleu plus fine */}
                 <div
-                  className="pointer-events-none absolute inset-x-0 bottom-0 h-1"
+                  className="pointer-events-none absolute inset-x-0 bottom-0 h-px"
                   style={{
                     background: `linear-gradient(90deg, transparent, ${brandBlue}, transparent)`,
                   }}
@@ -124,19 +129,39 @@ export default function DashboardPage() {
                 />
 
                 <p className="text-sm font-medium">{card.label}</p>
-                <p className="mt-1 text-xs text-slate-400">
-                  {card.description}
-                </p>
+                <p className="mt-1 text-xs text-slate-400">{card.description}</p>
 
                 <div className="mt-6 text-2xl font-semibold">{card.value}</div>
-                <div className="mt-1 text-xs text-emerald-400">
-                  {card.change}
+                <div className="mt-1 text-xs text-emerald-400">{card.change}</div>
+
+                {/* Petite ligne décorative */}
+                <div className="mt-4 h-10 w-full rounded-xl bg-black/40 border border-white/5 flex items-end justify-center px-3 pb-1.5">
+                  <svg viewBox="0 0 160 32" className="h-full w-full">
+                    <polyline
+                      fill="none"
+                      stroke={brandBlue}
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeOpacity="0.7"
+                      points="
+                        0,24
+                        20,22
+                        40,18
+                        60,20
+                        80,16
+                        100,14
+                        120,12
+                        140,8
+                        160,10
+                      "
+                    />
+                  </svg>
                 </div>
               </div>
             ))}
           </section>
 
-          {/* BIG CHART SEULE */}
+          {/* BIG CHART */}
           <section className="rounded-3xl border border-white/10 bg-gradient-to-b from-[#070b10] via-[#05080d] to-[#040609] px-6 py-5">
             <div className="mb-4 flex items-center justify-between">
               <div>
@@ -156,16 +181,8 @@ export default function DashboardPage() {
               <svg viewBox="0 0 600 220" className="w-full h-44">
                 <defs>
                   <linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop
-                      offset="0%"
-                      stopColor={brandBlue}
-                      stopOpacity="0.45"
-                    />
-                    <stop
-                      offset="100%"
-                      stopColor={brandBlue}
-                      stopOpacity="0"
-                    />
+                    <stop offset="0%" stopColor={brandBlue} stopOpacity="0.45" />
+                    <stop offset="100%" stopColor={brandBlue} stopOpacity="0" />
                   </linearGradient>
                 </defs>
 
@@ -202,10 +219,10 @@ export default function DashboardPage() {
                 />
 
                 {/* Highlight point */}
-                <circle cx="440" cy="65" r="5" fill="#0f172a" />
+                <circle cx="440" cy="65" r="5" fill="#020617" />
                 <circle cx="440" cy="65" r="4" fill={brandBlue} />
 
-                {/* Tooltip style label */}
+                {/* Tooltip */}
                 <rect
                   x="452"
                   y="40"
