@@ -164,8 +164,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   return (
     <>
-      {/* Desktop */}
-      <aside className="hidden md:block relative z-20 h-screen w-72 bg-[#050708] border-r border-white/5">
+      {/* Desktop : FIXED */}
+      <aside className="hidden md:block fixed inset-y-0 left-0 z-20 w-72 bg-[#050708] border-r border-white/5">
         <SidebarContent />
       </aside>
 
@@ -176,7 +176,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             <SidebarContent />
           </div>
           <button
-            className="flex-1 bg_BLACK/40 bg-black/40"
+            className="flex-1 bg-black/40"
             aria-label="Close navigation"
             onClick={onClose}
           />
