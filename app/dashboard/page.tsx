@@ -1,7 +1,6 @@
-// app/dashboard/page.tsx
 "use client";
 
-import React from "react";
+import React, { useMemo, useState } from "react";
 import {
   LineChart,
   Line,
@@ -14,8 +13,9 @@ import {
 
 /* -------------------- MOCK DATA -------------------- */
 
+// KPI mock
 const pnlSummary = {
-  balance: { value: 250_000.75 }, // balance seule
+  balance: 250000.75,
   day: { value: 210.75, percent: 0.3 },
   month: { value: 3250.43, percent: 4.7 },
   allTime: { value: 42650.32, percent: 38.4 },
@@ -43,12 +43,12 @@ const monthlyPnl: MonthlyPoint[] = [
 ];
 
 type DailyPerf = {
-  date: string; // "2025-11-01"
+  date: string; // "YYYY-MM-DD"
   value: number;
   percent: number;
 };
 
-// Exemple : perf sur un mois (mock)
+// Exemple : perfs uniquement sur un mois (mock)
 const dailyPerf: DailyPerf[] = [
   { date: "2025-11-01", value: 120, percent: 0.15 },
   { date: "2025-11-02", value: -80, percent: -0.1 },
@@ -57,13 +57,18 @@ const dailyPerf: DailyPerf[] = [
   { date: "2025-11-05", value: -25, percent: -0.03 },
   { date: "2025-11-06", value: 90, percent: 0.11 },
   { date: "2025-11-07", value: 230, percent: 0.28 },
-  // ... complète si tu veux plus de jours
 ];
+
+const dailyPerfMap: Record<string, DailyPerf> = dailyPerf.reduce(
+  (acc, d) => ({ ...acc, [d.date]: d }),
+  {}
+);
 
 /* -------------------- HELPERS -------------------- */
 
-const getPerfForDate = (dateStr: string) =>
-  dailyPerf.find((d) => d.date === dateStr);
+function getPerfForDate(dateStr: string) {
+  return dailyPerfMap[dateStr];
+}
 
 function getMonthDays(year: number, monthIndex: number) {
   const days: Date[] = [];
@@ -86,7 +91,7 @@ function getPerfColor(value: number) {
     if (value < -100) return "bg-rose-500/50";
     return "bg-rose-500/30";
   }
-  return "bg-slate-700/40";
+  return "bg-slate-800/40";
 }
 
 /* -------------------- COMPONENTS -------------------- */
@@ -96,32 +101,37 @@ type PnlCardProps = {
   subtitle: string;
   value: number;
   percent?: number;
+  isBalance?: boolean;
 };
 
-function PnlCard({ title, subtitle, value, percent }: PnlCardProps) {
-  const hasPercent = typeof percent === "number";
+function PnlCard({ title, subtitle, value, percent, isBalance }: PnlCardProps) {
   const positive = (percent ?? 0) >= 0;
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-white/5 bg-[#05070b] px-6 py-5 shadow-[0_0_0_1px_rgba(15,23,42,0.6)]">
-      {/* Ligne bleue style Montelion */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[2px]">
-        <div className="h-full w-full bg-[linear-gradient(to_right,rgba(0,0,0,0)_0%,#2564ec_45%,#2564ec_55%,rgba(0,0,0,0)_100%)]" />
-      </div>
-
+      {/* Ligne bleue comme sur l'ancien design */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[2px] bg-[radial-gradient(circle_at_0%_50%,rgba(0,0,0,0)_0,rgba(0,0,0,0.85)_40%,#2564ec_90%),radial-gradient(circle_at_100%_50%,rgba(0,0,0,0)_0,rgba(0,0,0,0.85)_40%,#2564ec_90%)]" />
       <div className="text-sm font-medium text-slate-300">{title}</div>
       <div className="mt-1 text-xs text-slate-500">{subtitle}</div>
-
       <div className="mt-4 text-3xl font-semibold tracking-tight">
-        {value >= 0 ? "+" : "-"}
-        {Math.abs(value).toLocaleString("en-US", {
-          style: "currency",
-          currency: "USD",
-          maximumFractionDigits: 2,
-        })}
+        {isBalance ? (
+          value.toLocaleString("en-US", {
+            style: "currency",
+            currency: "USD",
+            maximumFractionDigits: 2,
+          })
+        ) : (
+          <>
+            {value >= 0 ? "+" : "-"}
+            {Math.abs(value).toLocaleString("en-US", {
+              style: "currency",
+              currency: "USD",
+              maximumFractionDigits: 2,
+            })}
+          </>
+        )}
       </div>
-
-      {hasPercent && (
+      {percent !== undefined && (
         <div
           className={[
             "mt-1 text-sm font-medium",
@@ -129,7 +139,7 @@ function PnlCard({ title, subtitle, value, percent }: PnlCardProps) {
           ].join(" ")}
         >
           {positive ? "+" : ""}
-          {percent!.toFixed(2)}%{" "}
+          {percent.toFixed(2)}%{" "}
           <span className="text-xs text-slate-500 ml-1">
             {positive ? "profit" : "loss"}
           </span>
@@ -139,7 +149,7 @@ function PnlCard({ title, subtitle, value, percent }: PnlCardProps) {
   );
 }
 
-const CustomLineTooltip: React.FC<any> = ({ active, payload, label }) => {
+const CustomLineTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload || !payload.length) return null;
   const data = payload[0].payload as MonthlyPoint;
 
@@ -168,18 +178,56 @@ const CustomLineTooltip: React.FC<any> = ({ active, payload, label }) => {
 
 /* -------------------- MAIN PAGE -------------------- */
 
-export default function DashboardPage() {
-  // Calendrier basé sur Novembre 2025 en exemple
-  const calendarYear = 2025;
-  const calendarMonthIndex = 10; // 0 = Janvier, 10 = Novembre
-  const daysOfMonth = getMonthDays(calendarYear, calendarMonthIndex);
+const weekDayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-  const weekDayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+export default function DashboardPage() {
+  // Mois actuel par défaut
+  const now = useMemo(() => new Date(), []);
+  const [year, setYear] = useState(now.getFullYear());
+  const [monthIndex, setMonthIndex] = useState(now.getMonth()); // 0-11
+
+  const daysOfMonth = useMemo(
+    () => getMonthDays(year, monthIndex),
+    [year, monthIndex]
+  );
+
+  const monthLabel = useMemo(
+    () =>
+      new Date(year, monthIndex).toLocaleString("en-US", {
+        month: "long",
+        year: "numeric",
+      }),
+    [year, monthIndex]
+  );
+
+  const todayKey = `${now.getFullYear()}-${String(
+    now.getMonth() + 1
+  ).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+
+  const handlePrevMonth = () => {
+    setMonthIndex((prev) => {
+      if (prev === 0) {
+        setYear((y) => y - 1);
+        return 11;
+      }
+      return prev - 1;
+    });
+  };
+
+  const handleNextMonth = () => {
+    setMonthIndex((prev) => {
+      if (prev === 11) {
+        setYear((y) => y + 1);
+        return 0;
+      }
+      return prev + 1;
+    });
+  };
 
   return (
     <div className="relative z-10 flex flex-col gap-8">
       {/* Titre */}
-      <div className="mt-4 md:mt-0">
+      <div className="mt-6 md:mt-0">
         <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
           Dashboard
         </h1>
@@ -193,7 +241,8 @@ export default function DashboardPage() {
         <PnlCard
           title="BALANCE"
           subtitle="Current total account balance"
-          value={pnlSummary.balance.value}
+          value={pnlSummary.balance}
+          isBalance
         />
         <PnlCard
           title="PNL Today"
@@ -215,8 +264,8 @@ export default function DashboardPage() {
         />
       </section>
 
-      {/* Graph + Calendrier */}
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+      {/* Graph + Calendrier empilés */}
+      <section className="flex flex-col gap-6">
         {/* Graphique PNL mensuel */}
         <div className="relative overflow-hidden rounded-2xl border border-white/5 bg-[#05070b] p-6">
           <div className="flex items-center justify-between mb-4">
@@ -256,7 +305,7 @@ export default function DashboardPage() {
                 <Line
                   type="monotone"
                   dataKey="value"
-                  stroke="#2564ec"
+                  stroke="#3b82f6"
                   strokeWidth={2}
                   dot={{ r: 3, strokeWidth: 1 }}
                   activeDot={{ r: 5 }}
@@ -277,16 +326,23 @@ export default function DashboardPage() {
                 Each day shows your daily PNL. Hover to see exact numbers.
               </p>
             </div>
-          </div>
-
-          <div className="text-xs text-slate-400 mb-3">
-            {new Date(calendarYear, calendarMonthIndex).toLocaleString(
-              "en-US",
-              {
-                month: "long",
-                year: "numeric",
-              }
-            )}
+            <div className="flex items-center gap-2 text-xs text-slate-300">
+              <button
+                type="button"
+                onClick={handlePrevMonth}
+                className="h-7 w-7 flex items-center justify-center rounded-lg border border-white/10 bg-black/40 hover:bg-white/10"
+              >
+                ‹
+              </button>
+              <span className="min-w-[110px] text-center">{monthLabel}</span>
+              <button
+                type="button"
+                onClick={handleNextMonth}
+                className="h-7 w-7 flex items-center justify-center rounded-lg border border-white/10 bg-black/40 hover:bg-white/10"
+              >
+                ›
+              </button>
+            </div>
           </div>
 
           {/* En-tête jours */}
@@ -302,41 +358,53 @@ export default function DashboardPage() {
           <div className="grid grid-cols-7 gap-1 text-[11px]">
             {(() => {
               const firstDay = daysOfMonth[0].getDay(); // 0 = Sunday
-              const leadingEmpty = (firstDay + 6) % 7; // Monday-start index
+              const leadingEmpty = (firstDay + 6) % 7; // Monday start
 
               const cells: React.ReactNode[] = [];
 
-              // Cases vides avant le 1er du mois
+              // Cases vides avant le 1er
               for (let i = 0; i < leadingEmpty; i++) {
                 cells.push(
-                  <div key={`empty-${i}`} className="h-8 rounded-lg" />
+                  <div key={`empty-${i}`} className="h-10 rounded-lg" />
                 );
               }
 
               // Les jours du mois
               for (const date of daysOfMonth) {
                 const day = date.getDate();
-                const key = `${calendarYear}-${String(
-                  calendarMonthIndex + 1
-                ).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+                const key = `${year}-${String(monthIndex + 1).padStart(
+                  2,
+                  "0"
+                )}-${String(day).padStart(2, "0")}`;
                 const perf = getPerfForDate(key);
                 const value = perf?.value ?? 0;
                 const percent = perf?.percent ?? 0;
 
                 const hasPerf = perf !== undefined;
-                const bgClass = hasPerf
-                  ? getPerfColor(value)
-                  : "bg-slate-800/40";
+                const bgClass = hasPerf ? getPerfColor(value) : "bg-slate-800/40";
+                const isToday = key === todayKey;
 
                 cells.push(
                   <div
                     key={key}
                     className={[
-                      "group relative flex h-8 items-center justify-center rounded-lg border border-white/5",
+                      "group relative flex h-10 flex-col items-center justify-center rounded-lg border text-center px-1",
                       bgClass,
+                      isToday
+                        ? "border-emerald-300/70 shadow-[0_0_0_1px_rgba(16,185,129,0.7)]"
+                        : "border-white/5",
                     ].join(" ")}
                   >
-                    <span className="text-[11px] text-slate-100">{day}</span>
+                    <div className="flex w-full items-center justify-between text-[10px] text-slate-100">
+                      <span>{day}</span>
+                      {hasPerf && (
+                        <span className="font-medium">
+                          {value >= 0 ? "+" : "-"}$
+                          {Math.abs(value).toFixed(0)}
+                        </span>
+                      )}
+                    </div>
+
                     {hasPerf && (
                       <div className="pointer-events-none absolute -top-2 left-1/2 z-20 hidden -translate-y-full -translate-x-1/2 whitespace-nowrap rounded-lg border border-white/10 bg-[#05070b] px-2 py-1 text-[11px] text-slate-100 shadow-xl group-hover:block">
                         <div>
