@@ -1,9 +1,8 @@
-// app/dashboard/layout.tsx
 "use client";
 
 import React, { useState } from "react";
-import Image from "next/image";
 import Sidebar from "./components/Sidebar";
+import Image from "next/image";
 
 type DashboardLayoutProps = {
   children: React.ReactNode;
@@ -23,7 +22,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         }}
       />
 
-      {/* Sidebar : fixe sur desktop, overlay sur mobile (géré dans le composant) */}
+      {/* Sidebar */}
       <Sidebar
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
@@ -31,28 +30,28 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Colonne principale */}
       <div className="relative z-10 flex-1 flex flex-col">
+
         {/* HEADER MOBILE */}
         <header className="flex items-center justify-between px-4 pt-4 pb-3 md:hidden bg-[#050708]">
-          {/* Logo Montelion (mobile) */}
+
+          {/* --- LOGO MONTELION --- */}
           <div className="flex items-center">
             <Image
-              src="/logo-montelion.svg"
-              alt="Montelion Capital"
+              src="/logo-montelion-02.svg"
+              alt="Montelion Logo"
               width={140}
-              height={24}
+              height={40}
               priority
-              className="h-6 w-auto"
             />
           </div>
 
-          {/* Bouton menu burger */}
+          {/* Bouton ouverture menu */}
           <button
             type="button"
             aria-label="Open navigation"
             onClick={() => setIsSidebarOpen(true)}
             className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-black/40"
           >
-            <span className="sr-only">Open menu</span>
             <div className="space-y-[3px]">
               <span className="block h-[2px] w-4 rounded bg-slate-200" />
               <span className="block h-[2px] w-4 rounded bg-slate-200" />
@@ -62,7 +61,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </header>
 
         {/* CONTENU PRINCIPAL */}
-        {/* Marge entre le header mobile et le titre (pt-6) */}
         <main className="flex-1 px-4 pt-6 pb-10 md:px-10 md:pt-8 md:pb-12">
           {children}
         </main>
