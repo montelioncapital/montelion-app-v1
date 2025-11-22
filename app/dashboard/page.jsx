@@ -1,4 +1,4 @@
-// app/dashboard/page.tsx
+// app/dashboard/page.jsx
 "use client";
 
 import React from "react";
@@ -21,13 +21,7 @@ const pnlSummary = {
   allTime: { value: 42650.32, percent: 38.4 },
 };
 
-type MonthlyPoint = {
-  month: string;
-  value: number;
-  percent: number;
-};
-
-const monthlyPnl: MonthlyPoint[] = [
+const monthlyPnl = [
   { month: "Jan", value: 1200, percent: 1.5 },
   { month: "Feb", value: 3100, percent: 3.8 },
   { month: "Mar", value: 5200, percent: 6.2 },
@@ -42,14 +36,8 @@ const monthlyPnl: MonthlyPoint[] = [
   { month: "Dec", value: 13900, percent: 15.1 },
 ];
 
-type DailyPerf = {
-  date: string; // "2025-11-01"
-  value: number;
-  percent: number;
-};
-
 // Exemple : perf sur un mois (mock)
-const dailyPerf: DailyPerf[] = [
+const dailyPerf = [
   { date: "2025-11-01", value: 120, percent: 0.15 },
   { date: "2025-11-02", value: -80, percent: -0.1 },
   { date: "2025-11-03", value: 150, percent: 0.2 },
@@ -63,13 +51,13 @@ const dailyPerf: DailyPerf[] = [
 /* -------------------- HELPERS -------------------- */
 
 // Retourne la perf pour une date donnée
-const getPerfForDate = (dateStr: string) =>
+const getPerfForDate = (dateStr) =>
   dailyPerf.find((d) => d.date === dateStr);
 
 // Génère toutes les dates du mois donné
-function getMonthDays(year: number, monthIndex: number) {
+function getMonthDays(year, monthIndex) {
   // monthIndex: 0 = Janvier
-  const days: Date[] = [];
+  const days = [];
   const date = new Date(year, monthIndex, 1);
   while (date.getMonth() === monthIndex) {
     days.push(new Date(date));
@@ -79,7 +67,7 @@ function getMonthDays(year: number, monthIndex: number) {
 }
 
 // Couleur de fond en fonction de la perf
-function getPerfColor(value: number) {
+function getPerfColor(value) {
   if (value > 0) {
     if (value > 200) return "bg-emerald-500/70";
     if (value > 100) return "bg-emerald-500/50";
@@ -95,7 +83,7 @@ function getPerfColor(value: number) {
 
 /* -------------------- COMPONENTS -------------------- */
 
-function BalanceCard({ value }: { value: number }) {
+function BalanceCard({ value }) {
   return (
     <div className="relative overflow-hidden rounded-2xl border border-white/5 bg-[#05070b] px-6 py-5 shadow-[0_0_0_1px_rgba(15,23,42,0.6)]">
       {/* ligne bleue en bas */}
@@ -116,22 +104,12 @@ function BalanceCard({ value }: { value: number }) {
   );
 }
 
-function PnlCard({
-  title,
-  subtitle,
-  value,
-  percent,
-}: {
-  title: string;
-  subtitle: string;
-  value: number;
-  percent: number;
-}) {
+function PnlCard({ title, subtitle, value, percent }) {
   const positive = percent >= 0;
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-white/5 bg-[#05070b] px-6 py-5 shadow-[0_0_0_1px_rgba(15,23,42,0.6)]">
-      {/* ligne bleue en bas (comme sur ton ancien design) */}
+      {/* ligne bleue en bas */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-blue-500/60 via-indigo-500/60 to-blue-500/60" />
 
       <div className="text-sm font-medium text-slate-300">{title}</div>
@@ -160,9 +138,9 @@ function PnlCard({
   );
 }
 
-const CustomLineTooltip = ({ active, payload, label }: any) => {
+const CustomLineTooltip = ({ active, payload, label }) => {
   if (!active || !payload || !payload.length) return null;
-  const data = payload[0].payload as MonthlyPoint;
+  const data = payload[0].payload;
 
   return (
     <div className="rounded-xl border border-white/10 bg-[#05070b] px-3 py-2 text-xs shadow-xl">
@@ -322,7 +300,7 @@ export default function DashboardPage() {
               // On veut commencer à Lundi (=1) dans notre header
               const leadingEmpty = (firstDay + 6) % 7; // convert to Monday-start index
 
-              const cells: JSX.Element[] = [];
+              const cells = [];
 
               // Cases vides avant le 1er du mois
               for (let i = 0; i < leadingEmpty; i++) {
