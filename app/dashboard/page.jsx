@@ -1,3 +1,4 @@
+// app/dashboard/page.tsx
 "use client";
 
 import React from "react";
@@ -13,13 +14,22 @@ import {
 
 /* -------------------- MOCK DATA -------------------- */
 
+// Balance totale du compte (mock)
+const balance = 250_000.75;
+
 const pnlSummary = {
-  allTime: { value: 42650.32, percent: 38.4 },
-  month: { value: 3250.43, percent: 4.7 },
   day: { value: 210.75, percent: 0.3 },
+  month: { value: 3250.43, percent: 4.7 },
+  allTime: { value: 42650.32, percent: 38.4 },
 };
 
-const monthlyPnl = [
+type MonthlyPoint = {
+  month: string;
+  value: number;
+  percent: number;
+};
+
+const monthlyPnl: MonthlyPoint[] = [
   { month: "Jan", value: 1200, percent: 1.5 },
   { month: "Feb", value: 3100, percent: 3.8 },
   { month: "Mar", value: 5200, percent: 6.2 },
@@ -34,8 +44,14 @@ const monthlyPnl = [
   { month: "Dec", value: 13900, percent: 15.1 },
 ];
 
-// Exemple de perfs journalières mockées
-const dailyPerf = [
+type DailyPerf = {
+  date: string; // "2025-11-01"
+  value: number;
+  percent: number;
+};
+
+// Exemple : perf sur un mois (mock)
+const dailyPerf: DailyPerf[] = [
   { date: "2025-11-01", value: 120, percent: 0.15 },
   { date: "2025-11-02", value: -80, percent: -0.1 },
   { date: "2025-11-03", value: 150, percent: 0.2 },
@@ -43,20 +59,16 @@ const dailyPerf = [
   { date: "2025-11-05", value: -25, percent: -0.03 },
   { date: "2025-11-06", value: 90, percent: 0.11 },
   { date: "2025-11-07", value: 230, percent: 0.28 },
-  // ... à compléter avec tes vrais jours
+  // ... ajoute autant de jours que tu veux
 ];
 
 /* -------------------- HELPERS -------------------- */
 
-// Retourne la perf pour une date donnée (YYYY-MM-DD)
-function getPerfForDate(dateStr) {
-  return dailyPerf.find((d) => d.date === dateStr);
-}
+const getPerfForDate = (dateStr: string) =>
+  dailyPerf.find((d) => d.date === dateStr);
 
-// Génère toutes les dates du mois donné
-function getMonthDays(year, monthIndex) {
-  // monthIndex: 0 = Janvier
-  const days = [];
+function getMonthDays(year: number, monthIndex: number) {
+  const days: Date[] = [];
   const date = new Date(year, monthIndex, 1);
   while (date.getMonth() === monthIndex) {
     days.push(new Date(date));
@@ -66,7 +78,7 @@ function getMonthDays(year, monthIndex) {
 }
 
 // Couleur de fond en fonction de la perf
-function getPerfColor(value) {
+function getPerfColor(value: number) {
   if (value > 0) {
     if (value > 200) return "bg-emerald-500/70";
     if (value > 100) return "bg-emerald-500/50";
@@ -82,12 +94,48 @@ function getPerfColor(value) {
 
 /* -------------------- COMPONENTS -------------------- */
 
-function PnlCard({ title, subtitle, value, percent }) {
-  const positive = percent >= 0;
-
+function CardShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative overflow-hidden rounded-2xl border border-white/5 bg-[#05070b] px-6 py-5 shadow-[0_0_0_1px_rgba(15,23,42,0.6)]">
       <div className="absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-blue-500/60 via-indigo-500/60 to-blue-500/60" />
+      {children}
+    </div>
+  );
+}
+
+function BalanceCard({ value }: { value: number }) {
+  return (
+    <CardShell>
+      <div className="text-sm font-medium text-slate-300">BALANCE</div>
+      <div className="mt-1 text-xs text-slate-500">
+        Current total account balance
+      </div>
+      <div className="mt-4 text-3xl font-semibold tracking-tight">
+        {value.toLocaleString("en-US", {
+          style: "currency",
+          currency: "USD",
+          maximumFractionDigits: 2,
+        })}
+      </div>
+    </CardShell>
+  );
+}
+
+function PnlCard({
+  title,
+  subtitle,
+  value,
+  percent,
+}: {
+  title: string;
+  subtitle: string;
+  value: number;
+  percent: number;
+}) {
+  const positive = percent >= 0;
+
+  return (
+    <CardShell>
       <div className="text-sm font-medium text-slate-300">{title}</div>
       <div className="mt-1 text-xs text-slate-500">{subtitle}</div>
       <div className="mt-4 text-3xl font-semibold tracking-tight">
@@ -105,18 +153,18 @@ function PnlCard({ title, subtitle, value, percent }) {
         ].join(" ")}
       >
         {positive ? "+" : ""}
-        {percent.toFixed(2)}%
+        {percent.toFixed(2)}%{" "}
         <span className="text-xs text-slate-500 ml-1">
-          {positive ? " profit" : " loss"}
+          {positive ? "profit" : "loss"}
         </span>
       </div>
-    </div>
+    </CardShell>
   );
 }
 
-function CustomLineTooltip({ active, payload, label }) {
+const CustomLineTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload || !payload.length) return null;
-  const data = payload[0].payload;
+  const data = payload[0].payload as MonthlyPoint;
 
   return (
     <div className="rounded-xl border border-white/10 bg-[#05070b] px-3 py-2 text-xs shadow-xl">
@@ -139,12 +187,12 @@ function CustomLineTooltip({ active, payload, label }) {
       </div>
     </div>
   );
-}
+};
 
 /* -------------------- MAIN PAGE -------------------- */
 
 export default function DashboardPage() {
-  // Calendrier basé sur Novembre 2025 (exemple)
+  // Calendrier basé sur Novembre 2025 en exemple
   const calendarYear = 2025;
   const calendarMonthIndex = 10; // 0 = Janvier, 10 = Novembre
   const daysOfMonth = getMonthDays(calendarYear, calendarMonthIndex);
@@ -154,7 +202,7 @@ export default function DashboardPage() {
   return (
     <div className="relative z-10 flex flex-col gap-8">
       {/* Titre */}
-      <div className="mt-6 md:mt-0">
+      <div className="mt-3 md:mt-0">
         <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
           Dashboard
         </h1>
@@ -164,12 +212,13 @@ export default function DashboardPage() {
       </div>
 
       {/* KPI */}
-      <section className="grid gap-4 md:grid-cols-3">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <BalanceCard value={balance} />
         <PnlCard
-          title="PNL All Time"
-          subtitle="Performance since the beginning"
-          value={pnlSummary.allTime.value}
-          percent={pnlSummary.allTime.percent}
+          title="PNL Today"
+          subtitle="Performance of the current day"
+          value={pnlSummary.day.value}
+          percent={pnlSummary.day.percent}
         />
         <PnlCard
           title="PNL This Month"
@@ -178,10 +227,10 @@ export default function DashboardPage() {
           percent={pnlSummary.month.percent}
         />
         <PnlCard
-          title="PNL Today"
-          subtitle="Performance of the current day"
-          value={pnlSummary.day.value}
-          percent={pnlSummary.day.percent}
+          title="PNL All Time"
+          subtitle="Performance since the beginning"
+          value={pnlSummary.allTime.value}
+          percent={pnlSummary.allTime.percent}
         />
       </section>
 
@@ -272,19 +321,18 @@ export default function DashboardPage() {
           <div className="grid grid-cols-7 gap-1 text-[11px]">
             {(() => {
               const firstDay = daysOfMonth[0].getDay(); // 0 = Sunday
-              // On veut commencer à Lundi (=1)
-              const leadingEmpty = (firstDay + 6) % 7;
+              const leadingEmpty = (firstDay + 6) % 7; // Monday-start index
 
-              const cells = [];
+              const cells: JSX.Element[] = [];
 
-              // Cases vides avant le 1er
+              // Cases vides avant le 1er du mois
               for (let i = 0; i < leadingEmpty; i++) {
                 cells.push(
                   <div key={`empty-${i}`} className="h-8 rounded-lg" />
                 );
               }
 
-              // Jours du mois
+              // Les jours du mois
               for (const date of daysOfMonth) {
                 const day = date.getDate();
                 const key = `${calendarYear}-${String(
@@ -294,7 +342,7 @@ export default function DashboardPage() {
                 const value = perf?.value ?? 0;
                 const percent = perf?.percent ?? 0;
 
-                const hasPerf = !!perf;
+                const hasPerf = perf !== undefined;
                 const bgClass = hasPerf
                   ? getPerfColor(value)
                   : "bg-slate-800/40";
