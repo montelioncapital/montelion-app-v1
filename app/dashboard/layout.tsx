@@ -58,7 +58,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </header>
 
         {/* CONTENU PRINCIPAL */}
-        <main className="flex-1 px-4 pt-6 pb-10 md:px-10 md:pt-8 md:pb-12">
+        <main className="flex-1 px-4 pt-3 pb-10 md:px-10 md:pt-6 md:pb-12">
           {children}
         </main>
       </div>
