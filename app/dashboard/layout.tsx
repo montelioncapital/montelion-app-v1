@@ -3,16 +3,14 @@
 
 import React, { useState } from "react";
 import Sidebar from "./components/Sidebar";
+import Image from "next/image";
 
-type DashboardLayoutProps = {
+export default function DashboardLayout({
+  children,
+}: {
   children: React.ReactNode;
-};
-
-export default function DashboardLayout({ children }: DashboardLayoutProps) {
+}) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  const userName = "Demo User";
-  const initials = "DU";
 
   return (
     <div className="relative flex min-h-screen items-stretch bg-[#050608] text-slate-50">
@@ -32,21 +30,23 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       />
 
       {/* Colonne principale */}
-      <div className="relative z-10 flex-1 flex flex-col">
+      <div className="relative z-10 flex flex-1 flex-col">
         {/* HEADER MOBILE */}
-        <header className="flex items-center justify-between px-4 pt-4 pb-3 md:hidden bg-[#050708]">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0f171d] border border-white/10 text-xs font-medium">
-              {initials}
-            </div>
-            <div className="leading-tight">
-              <div className="text-sm font-semibold">{userName}</div>
-              <div className="text-[11px] text-slate-400">
-                Private investor Montelion
-              </div>
+        <header className="flex items-center justify-between px-4 pt-4 pb-3 md:hidden">
+          {/* Logo Montelion (version blanche, recadrée sur la partie droite du SVG) */}
+          <div className="flex items-center">
+            <div className="relative h-7 w-40 overflow-hidden">
+              <Image
+                src="/logo-montelion.svg"
+                alt="Montelion Capital"
+                fill
+                priority
+                className="object-contain object-right"
+              />
             </div>
           </div>
 
+          {/* Bouton burger pour ouvrir le menu */}
           <button
             type="button"
             aria-label="Open navigation"
@@ -63,8 +63,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </header>
 
         {/* CONTENU PRINCIPAL */}
-        {/* ↑ ICI : marge augmentée entre le header mobile et le titre (pt-6) */}
-        <main className="flex-1 px-4 pt-6 pb-10 md:px-10 md:pt-8 md:pb-12">
+        <main className="flex-1 px-4 pt-4 pb-10 md:px-10 md:pt-8 md:pb-12">
           {children}
         </main>
       </div>
