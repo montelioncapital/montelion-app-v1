@@ -2,14 +2,14 @@
 "use client";
 
 import React, { useState } from "react";
-import Sidebar from "./components/Sidebar";
 import Image from "next/image";
+import Sidebar from "./components/Sidebar";
 
-export default function DashboardLayout({
-  children,
-}: {
+type DashboardLayoutProps = {
   children: React.ReactNode;
-}) {
+};
+
+export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
@@ -30,23 +30,22 @@ export default function DashboardLayout({
       />
 
       {/* Colonne principale */}
-      <div className="relative z-10 flex flex-1 flex-col">
+      <div className="relative z-10 flex-1 flex flex-col">
         {/* HEADER MOBILE */}
-        <header className="flex items-center justify-between px-4 pt-4 pb-3 md:hidden">
-          {/* Logo Montelion (version blanche, recadrée sur la partie droite du SVG) */}
+        <header className="flex items-center justify-between px-4 pt-4 pb-3 md:hidden bg-[#050708]">
+          {/* Logo Montelion (mobile) */}
           <div className="flex items-center">
-            <div className="relative h-7 w-40 overflow-hidden">
-              <Image
-                src="/logo-montelion.svg"
-                alt="Montelion Capital"
-                fill
-                priority
-                className="object-contain object-right"
-              />
-            </div>
+            <Image
+              src="/logo-montelion.svg"
+              alt="Montelion Capital"
+              width={140}
+              height={24}
+              priority
+              className="h-6 w-auto"
+            />
           </div>
 
-          {/* Bouton burger pour ouvrir le menu */}
+          {/* Bouton menu burger */}
           <button
             type="button"
             aria-label="Open navigation"
@@ -63,7 +62,8 @@ export default function DashboardLayout({
         </header>
 
         {/* CONTENU PRINCIPAL */}
-        <main className="flex-1 px-4 pt-4 pb-10 md:px-10 md:pt-8 md:pb-12">
+        {/* Marge entre le header mobile et le titre (pt-6) */}
+        <main className="flex-1 px-4 pt-6 pb-10 md:px-10 md:pt-8 md:pb-12">
           {children}
         </main>
       </div>
