@@ -14,18 +14,8 @@ import {
 
 /* -------------------- MOCK DATA -------------------- */
 
-type PnlValue = {
-  value: number;
-  percent: number;
-};
-
-const kpiData: {
-  balance: number;
-  day: PnlValue;
-  month: PnlValue;
-  allTime: PnlValue;
-} = {
-  balance: 250000.75,
+const pnlSummary = {
+  balance: { value: 250_000.75 }, // balance seule
   day: { value: 210.75, percent: 0.3 },
   month: { value: 3250.43, percent: 4.7 },
   allTime: { value: 42650.32, percent: 38.4 },
@@ -67,18 +57,15 @@ const dailyPerf: DailyPerf[] = [
   { date: "2025-11-05", value: -25, percent: -0.03 },
   { date: "2025-11-06", value: 90, percent: 0.11 },
   { date: "2025-11-07", value: 230, percent: 0.28 },
-  // ... ajoute autant de jours que tu veux
+  // ... complète si tu veux plus de jours
 ];
 
 /* -------------------- HELPERS -------------------- */
 
-// Retourne la perf pour une date donnée
-const getPerfForDate = (dateStr: string): DailyPerf | undefined =>
+const getPerfForDate = (dateStr: string) =>
   dailyPerf.find((d) => d.date === dateStr);
 
-// Génère toutes les dates du mois donné
-function getMonthDays(year: number, monthIndex: number): Date[] {
-  // monthIndex: 0 = Janvier
+function getMonthDays(year: number, monthIndex: number) {
   const days: Date[] = [];
   const date = new Date(year, monthIndex, 1);
   while (date.getMonth() === monthIndex) {
@@ -88,8 +75,7 @@ function getMonthDays(year: number, monthIndex: number): Date[] {
   return days;
 }
 
-// Couleur de fond en fonction de la perf
-function getPerfColor(value: number): string {
+function getPerfColor(value: number) {
   if (value > 0) {
     if (value > 200) return "bg-emerald-500/70";
     if (value > 100) return "bg-emerald-500/50";
@@ -105,59 +91,27 @@ function getPerfColor(value: number): string {
 
 /* -------------------- COMPONENTS -------------------- */
 
-type BalanceCardProps = {
-  value: number;
-};
-
-const BalanceCard: React.FC<BalanceCardProps> = ({ value }) => {
-  return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/5 bg-[#05070b] px-6 py-5 shadow-[0_0_0_1px_rgba(15,23,42,0.6)]">
-      {/* Ligne bleue façon Montelion */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0">
-        <div className="h-[1px] bg-[#2564ec]" />
-        <div className="h-[6px] bg-gradient-to-r from-black/0 via-[#2564ec]/40 to-black/0" />
-      </div>
-
-      <div className="text-sm font-medium text-slate-300">BALANCE</div>
-      <div className="mt-1 text-xs text-slate-500">
-        Current total account balance
-      </div>
-      <div className="mt-4 text-3xl font-semibold tracking-tight">
-        {value.toLocaleString("en-US", {
-          style: "currency",
-          currency: "USD",
-          maximumFractionDigits: 2,
-        })}
-      </div>
-    </div>
-  );
-};
-
 type PnlCardProps = {
   title: string;
   subtitle: string;
   value: number;
-  percent: number;
+  percent?: number;
 };
 
-const PnlCard: React.FC<PnlCardProps> = ({
-  title,
-  subtitle,
-  value,
-  percent,
-}) => {
-  const positive = percent >= 0;
+function PnlCard({ title, subtitle, value, percent }: PnlCardProps) {
+  const hasPercent = typeof percent === "number";
+  const positive = (percent ?? 0) >= 0;
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-white/5 bg-[#05070b] px-6 py-5 shadow-[0_0_0_1px_rgba(15,23,42,0.6)]">
-      {/* Ligne bleue façon Montelion */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0">
-        <div className="h-[1px] bg-[#2564ec]" />
-        <div className="h-[6px] bg-gradient-to-r from-black/0 via-[#2564ec]/40 to-black/0" />
+      {/* Ligne bleue style Montelion */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[2px]">
+        <div className="h-full w-full bg-[linear-gradient(to_right,rgba(0,0,0,0)_0%,#2564ec_45%,#2564ec_55%,rgba(0,0,0,0)_100%)]" />
       </div>
 
       <div className="text-sm font-medium text-slate-300">{title}</div>
       <div className="mt-1 text-xs text-slate-500">{subtitle}</div>
+
       <div className="mt-4 text-3xl font-semibold tracking-tight">
         {value >= 0 ? "+" : "-"}
         {Math.abs(value).toLocaleString("en-US", {
@@ -166,21 +120,24 @@ const PnlCard: React.FC<PnlCardProps> = ({
           maximumFractionDigits: 2,
         })}
       </div>
-      <div
-        className={[
-          "mt-1 text-sm font-medium",
-          positive ? "text-emerald-400" : "text-rose-400",
-        ].join(" ")}
-      >
-        {positive ? "+" : ""}
-        {percent.toFixed(2)}%{" "}
-        <span className="text-xs text-slate-500 ml-1">
-          {positive ? "profit" : "loss"}
-        </span>
-      </div>
+
+      {hasPercent && (
+        <div
+          className={[
+            "mt-1 text-sm font-medium",
+            positive ? "text-emerald-400" : "text-rose-400",
+          ].join(" ")}
+        >
+          {positive ? "+" : ""}
+          {percent!.toFixed(2)}%{" "}
+          <span className="text-xs text-slate-500 ml-1">
+            {positive ? "profit" : "loss"}
+          </span>
+        </div>
+      )}
     </div>
   );
-};
+}
 
 const CustomLineTooltip: React.FC<any> = ({ active, payload, label }) => {
   if (!active || !payload || !payload.length) return null;
@@ -211,7 +168,7 @@ const CustomLineTooltip: React.FC<any> = ({ active, payload, label }) => {
 
 /* -------------------- MAIN PAGE -------------------- */
 
-const DashboardPage: React.FC = () => {
+export default function DashboardPage() {
   // Calendrier basé sur Novembre 2025 en exemple
   const calendarYear = 2025;
   const calendarMonthIndex = 10; // 0 = Janvier, 10 = Novembre
@@ -222,7 +179,7 @@ const DashboardPage: React.FC = () => {
   return (
     <div className="relative z-10 flex flex-col gap-8">
       {/* Titre */}
-      <div className="mt-2 md:mt-0">
+      <div className="mt-4 md:mt-0">
         <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
           Dashboard
         </h1>
@@ -233,24 +190,28 @@ const DashboardPage: React.FC = () => {
 
       {/* KPI */}
       <section className="grid gap-4 md:grid-cols-4">
-        <BalanceCard value={kpiData.balance} />
+        <PnlCard
+          title="BALANCE"
+          subtitle="Current total account balance"
+          value={pnlSummary.balance.value}
+        />
         <PnlCard
           title="PNL Today"
           subtitle="Performance of the current day"
-          value={kpiData.day.value}
-          percent={kpiData.day.percent}
+          value={pnlSummary.day.value}
+          percent={pnlSummary.day.percent}
         />
         <PnlCard
           title="PNL This Month"
           subtitle="Performance in the current month"
-          value={kpiData.month.value}
-          percent={kpiData.month.percent}
+          value={pnlSummary.month.value}
+          percent={pnlSummary.month.percent}
         />
         <PnlCard
           title="PNL All Time"
           subtitle="Performance since the beginning"
-          value={kpiData.allTime.value}
-          percent={kpiData.allTime.percent}
+          value={pnlSummary.allTime.value}
+          percent={pnlSummary.allTime.percent}
         />
       </section>
 
@@ -295,7 +256,7 @@ const DashboardPage: React.FC = () => {
                 <Line
                   type="monotone"
                   dataKey="value"
-                  stroke="#3b82f6"
+                  stroke="#2564ec"
                   strokeWidth={2}
                   dot={{ r: 3, strokeWidth: 1 }}
                   activeDot={{ r: 5 }}
@@ -341,8 +302,7 @@ const DashboardPage: React.FC = () => {
           <div className="grid grid-cols-7 gap-1 text-[11px]">
             {(() => {
               const firstDay = daysOfMonth[0].getDay(); // 0 = Sunday
-              // On veut commencer à Lundi (=1) dans notre header
-              const leadingEmpty = (firstDay + 6) % 7; // convert to Monday-start index
+              const leadingEmpty = (firstDay + 6) % 7; // Monday-start index
 
               const cells: React.ReactNode[] = [];
 
@@ -408,6 +368,4 @@ const DashboardPage: React.FC = () => {
       </section>
     </div>
   );
-};
-
-export default DashboardPage;
+}
