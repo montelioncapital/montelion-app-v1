@@ -1,4 +1,4 @@
-// app/dashboard/page.jsx
+// app/dashboard/page.tsx
 "use client";
 
 import React from "react";
@@ -15,13 +15,19 @@ import {
 /* -------------------- MOCK DATA -------------------- */
 
 const pnlSummary = {
-  balance: { value: 250000.75 }, // Balance totale
+  balance: 250000.75,
   day: { value: 210.75, percent: 0.3 },
   month: { value: 3250.43, percent: 4.7 },
   allTime: { value: 42650.32, percent: 38.4 },
 };
 
-const monthlyPnl = [
+type MonthlyPoint = {
+  month: string;
+  value: number;
+  percent: number;
+};
+
+const monthlyPnl: MonthlyPoint[] = [
   { month: "Jan", value: 1200, percent: 1.5 },
   { month: "Feb", value: 3100, percent: 3.8 },
   { month: "Mar", value: 5200, percent: 6.2 },
@@ -36,8 +42,14 @@ const monthlyPnl = [
   { month: "Dec", value: 13900, percent: 15.1 },
 ];
 
+type DailyPerf = {
+  date: string; // "2025-11-01"
+  value: number;
+  percent: number;
+};
+
 // Exemple : perf sur un mois (mock)
-const dailyPerf = [
+const dailyPerf: DailyPerf[] = [
   { date: "2025-11-01", value: 120, percent: 0.15 },
   { date: "2025-11-02", value: -80, percent: -0.1 },
   { date: "2025-11-03", value: 150, percent: 0.2 },
@@ -51,12 +63,13 @@ const dailyPerf = [
 /* -------------------- HELPERS -------------------- */
 
 // Retourne la perf pour une date donnée
-const getPerfForDate = (dateStr) => dailyPerf.find((d) => d.date === dateStr);
+const getPerfForDate = (dateStr: string) =>
+  dailyPerf.find((d) => d.date === dateStr);
 
 // Génère toutes les dates du mois donné
-function getMonthDays(year, monthIndex) {
+function getMonthDays(year: number, monthIndex: number) {
   // monthIndex: 0 = Janvier
-  const days = [];
+  const days: Date[] = [];
   const date = new Date(year, monthIndex, 1);
   while (date.getMonth() === monthIndex) {
     days.push(new Date(date));
@@ -66,7 +79,7 @@ function getMonthDays(year, monthIndex) {
 }
 
 // Couleur de fond en fonction de la perf
-function getPerfColor(value) {
+function getPerfColor(value: number) {
   if (value > 0) {
     if (value > 200) return "bg-emerald-500/70";
     if (value > 100) return "bg-emerald-500/50";
@@ -82,17 +95,47 @@ function getPerfColor(value) {
 
 /* -------------------- COMPONENTS -------------------- */
 
-function PnlCard({ title, subtitle, value, percent, showPercent = true }) {
-  const positive = (percent ?? 0) >= 0;
+function BalanceCard({ value }: { value: number }) {
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-white/5 bg-[#05070b] px-6 py-5 shadow-[0_0_0_1px_rgba(15,23,42,0.6)]">
+      {/* ligne bleue en bas */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-blue-500/60 via-indigo-500/60 to-blue-500/60" />
+
+      <div className="text-sm font-medium text-slate-300">BALANCE</div>
+      <div className="mt-1 text-xs text-slate-500">
+        Current total account balance
+      </div>
+      <div className="mt-4 text-3xl font-semibold tracking-tight">
+        {value.toLocaleString("en-US", {
+          style: "currency",
+          currency: "USD",
+          maximumFractionDigits: 2,
+        })}
+      </div>
+    </div>
+  );
+}
+
+function PnlCard({
+  title,
+  subtitle,
+  value,
+  percent,
+}: {
+  title: string;
+  subtitle: string;
+  value: number;
+  percent: number;
+}) {
+  const positive = percent >= 0;
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-white/5 bg-[#05070b] px-6 py-5 shadow-[0_0_0_1px_rgba(15,23,42,0.6)]">
-      {/* LIGNE BLEUE (design original) */}
-      <div className="absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-blue-500/60 via-indigo-500/60 to-blue-500/60" />
+      {/* ligne bleue en bas (comme sur ton ancien design) */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-blue-500/60 via-indigo-500/60 to-blue-500/60" />
 
       <div className="text-sm font-medium text-slate-300">{title}</div>
       <div className="mt-1 text-xs text-slate-500">{subtitle}</div>
-
       <div className="mt-4 text-3xl font-semibold tracking-tight">
         {value >= 0 ? "+" : "-"}
         {Math.abs(value).toLocaleString("en-US", {
@@ -101,28 +144,25 @@ function PnlCard({ title, subtitle, value, percent, showPercent = true }) {
           maximumFractionDigits: 2,
         })}
       </div>
-
-      {showPercent && typeof percent === "number" && (
-        <div
-          className={[
-            "mt-1 text-sm font-medium",
-            positive ? "text-emerald-400" : "text-rose-400",
-          ].join(" ")}
-        >
-          {positive ? "+" : ""}
-          {percent.toFixed(2)}%{" "}
-          <span className="text-xs text-slate-500 ml-1">
-            {positive ? "profit" : "loss"}
-          </span>
-        </div>
-      )}
+      <div
+        className={[
+          "mt-1 text-sm font-medium",
+          positive ? "text-emerald-400" : "text-rose-400",
+        ].join(" ")}
+      >
+        {positive ? "+" : ""}
+        {percent.toFixed(2)}%{" "}
+        <span className="text-xs text-slate-500 ml-1">
+          {positive ? "profit" : "loss"}
+        </span>
+      </div>
     </div>
   );
 }
 
-const CustomLineTooltip = ({ active, payload, label }) => {
+const CustomLineTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload || !payload.length) return null;
-  const data = payload[0].payload;
+  const data = payload[0].payload as MonthlyPoint;
 
   return (
     <div className="rounded-xl border border-white/10 bg-[#05070b] px-3 py-2 text-xs shadow-xl">
@@ -160,7 +200,7 @@ export default function DashboardPage() {
   return (
     <div className="relative z-10 flex flex-col gap-8">
       {/* Titre */}
-      <div className="mt-4 md:mt-0">
+      <div className="mt-6 md:mt-0">
         <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
           Dashboard
         </h1>
@@ -170,13 +210,8 @@ export default function DashboardPage() {
       </div>
 
       {/* KPI */}
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <PnlCard
-          title="BALANCE"
-          subtitle="Current total account balance"
-          value={pnlSummary.balance.value}
-          showPercent={false}
-        />
+      <section className="grid gap-4 md:grid-cols-4">
+        <BalanceCard value={pnlSummary.balance} />
         <PnlCard
           title="PNL Today"
           subtitle="Performance of the current day"
@@ -287,7 +322,7 @@ export default function DashboardPage() {
               // On veut commencer à Lundi (=1) dans notre header
               const leadingEmpty = (firstDay + 6) % 7; // convert to Monday-start index
 
-              const cells = [];
+              const cells: JSX.Element[] = [];
 
               // Cases vides avant le 1er du mois
               for (let i = 0; i < leadingEmpty; i++) {
@@ -332,9 +367,7 @@ export default function DashboardPage() {
                         </div>
                         <div
                           className={
-                            percent >= 0
-                              ? "text-emerald-400"
-                              : "text-rose-400"
+                            percent >= 0 ? "text-emerald-400" : "text-rose-400"
                           }
                         >
                           {percent >= 0 ? "+" : ""}
