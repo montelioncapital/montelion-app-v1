@@ -1,8 +1,8 @@
+// app/dashboard/layout.tsx
 "use client";
 
 import React, { useState } from "react";
 import Sidebar from "./components/Sidebar";
-import Image from "next/image";
 
 type DashboardLayoutProps = {
   children: React.ReactNode;
@@ -22,7 +22,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         }}
       />
 
-      {/* Sidebar */}
+      {/* Sidebar : fixe sur desktop, overlay sur mobile (géré dans le composant) */}
       <Sidebar
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
@@ -30,28 +30,25 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Colonne principale */}
       <div className="relative z-10 flex-1 flex flex-col">
-
         {/* HEADER MOBILE */}
         <header className="flex items-center justify-between px-4 pt-4 pb-3 md:hidden bg-[#050708]">
-
-          {/* --- LOGO MONTELION --- */}
+          {/* Logo Montelion */}
           <div className="flex items-center">
-            <Image
+            <img
               src="/logo-montelion-02.svg"
-              alt="Montelion Logo"
-              width={140}
-              height={40}
-              priority
+              alt="Montelion Capital"
+              className="h-6 w-auto"
             />
           </div>
 
-          {/* Bouton ouverture menu */}
+          {/* Bouton burger pour ouvrir le menu (Sidebar garde le Demo User, etc.) */}
           <button
             type="button"
             aria-label="Open navigation"
             onClick={() => setIsSidebarOpen(true)}
             className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-black/40"
           >
+            <span className="sr-only">Open menu</span>
             <div className="space-y-[3px]">
               <span className="block h-[2px] w-4 rounded bg-slate-200" />
               <span className="block h-[2px] w-4 rounded bg-slate-200" />
