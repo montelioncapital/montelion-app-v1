@@ -5,33 +5,33 @@ import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabaseClient";
 
 /**
- * Mapping EXACT de ton tableau current_step :
+ * Exact mapping of current_step (from your spreadsheet) to frontend routes:
  *
- * 0  -> get started
- * 1  -> nom prénom
- * 2  -> adresse postale
- * 3  -> numéro de téléphone
- * 4  -> validation téléphone
- * 5  -> kyc identité
- * 6  -> kyc adresse
- * 7  -> get started avancé
- * 8  -> signature du contrat
- * 9  -> validation du contrat + téléchargement
- * 10 -> get started avancé
- * 11 -> start exchange create
- * 12 -> donner les codes de connexion MT5
- * 13 -> get started review (account pending for Montelion verification)
- * 14 -> ACTIF = DASHBOARD
- * 15 -> DISABLE = page compte désactivé
- * 16 -> SUSPENDU = page compte suspendu
+ * 0  -> get started                          -> /get-started
+ * 1  -> nom prénom                           -> /onboarding
+ * 2  -> adresse postale                      -> /onboarding
+ * 3  -> numéro de téléphone                  -> /onboarding
+ * 4  -> validation téléphone                 -> /onboarding
+ * 5  -> kyc identité                         -> /onboarding
+ * 6  -> kyc adresse                          -> /onboarding
+ * 7  -> get started avancé                   -> /get-started/advanced
+ * 8  -> signature du contrat                 -> /contract
+ * 9  -> validation du contrat + téléchargement -> /contract/signed
+ * 10 -> get started avancé                   -> /get-started/advanced
+ * 11 -> start exchange create                -> /account/setup
+ * 12 -> donner les codes de connexion MT5    -> /account/mt5
+ * 13 -> get started review (pending)         -> /get-started/review
+ * 14 -> ACTIF = DASHBOARD                    -> /dashboard
+ * 15 -> DISABLED (compte désactivé)          -> /disabled
+ * 16 -> SUSPENDED (compte suspendu)          -> /suspended
  */
 function getRedirectForStep(step) {
   switch (step) {
-    // 0 = première page de démarrage
+    // 0 = first “get started” page
     case 0:
       return "/get-started";
 
-    // 1–6 : tout l’onboarding (nom, adresse, téléphone, KYC, etc.)
+    // 1–6 : full onboarding (name, address, phone, KYC, etc.)
     case 1:
     case 2:
     case 3:
@@ -40,42 +40,42 @@ function getRedirectForStep(step) {
     case 6:
       return "/onboarding";
 
-    // 7 & 10 : pages "get started avancé" (timeline avancée)
+    // 7 & 10 : advanced get started timeline
     case 7:
     case 10:
       return "/get-started/advanced";
 
-    // 8 = signature du contrat
+    // 8 = contract signature
     case 8:
       return "/contract";
 
-    // 9 = validation du contrat & téléchargement
+    // 9 = contract validated & download
     case 9:
       return "/contract/signed";
 
-    // 11 = création du compte sur l’exchange
+    // 11 = exchange account setup
     case 11:
-      return "/exchange/start";
+      return "/account/setup";
 
-    // 12 = donner les codes / connexion MT5
+    // 12 = provide MT5 access
     case 12:
-      return "/exchange/mt5";
+      return "/account/mt5";
 
-    // 13 = revue Montelion (compte en attente de validation)
+    // 13 = Montelion review (pending)
     case 13:
       return "/get-started/review";
 
-    // 14 = compte actif -> dashboard
+    // 14 = active account -> dashboard
     case 14:
       return "/dashboard";
 
-    // 15 = compte désactivé
+    // 15 = disabled account
     case 15:
-      return "/account-disabled";
+      return "/disabled";
 
-    // 16 = compte suspendu
+    // 16 = suspended account
     case 16:
-      return "/account-suspended";
+      return "/suspended";
 
     // fallback
     default:
@@ -98,7 +98,7 @@ export default function LoginForm() {
     setOk("");
     setLoading(true);
 
-    // 1) Connexion Supabase
+    // 1) Supabase sign-in
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password: pwd,
@@ -125,7 +125,7 @@ export default function LoginForm() {
     const userId = user.id;
 
     try {
-      // 2) Récupérer l'état d'onboarding
+      // 2) Fetch onboarding_state
       const { data: onboarding, error: onboardingErr } = await supabase
         .from("onboarding_state")
         .select("current_step, completed")
@@ -136,7 +136,7 @@ export default function LoginForm() {
         console.error("onboarding_state error:", onboardingErr);
       }
 
-      // 3) Si aucune ligne -> on initialise à step 1 et on envoie vers /onboarding
+      // 3) If no row -> init at step 1 and redirect to /onboarding
       if (!onboarding) {
         const { error: insertErr } = await supabase
           .from("onboarding_state")
@@ -170,7 +170,7 @@ export default function LoginForm() {
 
   return (
     <>
-      {/* Titre */}
+      {/* Title */}
       <div className="mb-8 text-left">
         <h1 className="mc-title">Sign in</h1>
       </div>
@@ -181,7 +181,7 @@ export default function LoginForm() {
         <div className="mb-4 text-sm text-emerald-400">{ok}</div>
       ) : null}
 
-      {/* Formulaire */}
+      {/* Form */}
       <form className="space-y-4" onSubmit={onSubmit}>
         <label className="block text-sm text-slate-300">
           Email
@@ -208,7 +208,7 @@ export default function LoginForm() {
             </a>
           </div>
 
-          {/* Champ mot de passe + œil */}
+          {/* Password field + eye toggle */}
           <div className="relative mt-2">
             <input
               type={show ? "text" : "password"}
