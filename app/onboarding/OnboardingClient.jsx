@@ -273,9 +273,19 @@ export default function OnboardingClient() {
         status: "code_sent",
       });
 
+            // Récupère la session actuelle pour avoir le JWT
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const token = session?.access_token;
+
       const res = await fetch("/api/phone/send-code", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ phone: full }),
       });
 
