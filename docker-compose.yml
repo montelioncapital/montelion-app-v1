@@ -9,10 +9,14 @@ services:
       - "3000:3000"
     restart: unless-stopped
     environment:
-      # 🔹 Identifiants Twilio (backend /api/phone/send-code & /verify-code)
-      TWILIO_ACCOUNT_SID: "SK0df31b795d885c8a93fc9daa1356c65b"
-      TWILIO_AUTH_TOKEN: "GMblu5VP6Pcub87jfYgbfZJkuxXLszrm"
-      TWILIO_VERIFY_SERVICE_SID: "VAe1918edb66615c56354bc83751dbda7"
+      NEXT_PUBLIC_SUPABASE_URL: https://aztcrdlygnexrpbscuhe.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6dGNyZGx5Z25leHJwYnNjdWhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgxODU2MTgsImV4cCI6MjA3Mzc2MTYxOH0.ZLecfR8tLeCXx5zsEKKvdFiNJ2wdyH-3cm-Ca9v9-UY
+      SUPABASE_SERVICE_ROLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6dGNyZGx5Z25leHJwYnNjdWhlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODE4NTYxOCwiZXhwIjoyMDczNzYxNjE4fQ.l0V3HfB6Eov15Ku2TTgDOsXTxrjq-H2beBLwes_F9uA
+
+      # === TWILIO VERIFY (correct) ===
+      TWILIO_ACCOUNT_SID: ACd421634cc5bf93a7c2f0a607473936ef
+      TWILIO_AUTH_TOKEN: 7fd118f2090267287e9210a979a0c902
+      TWILIO_VERIFY_SERVICE_SID: VAe1918edb66615c56354bc83751dbda7f
 
   caddy:
     image: caddy:2
