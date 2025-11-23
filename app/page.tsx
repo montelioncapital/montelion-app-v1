@@ -1,184 +1,148 @@
 // app/page.jsx
 "use client";
 
-import React from "react";
+import Link from "next/link";
 
 export default function LandingPage() {
   return (
-    <div className="relative min-h-screen flex flex-col">
-      {/* Glow spécifique au hero (par-dessus le fond global) */}
-      <div className="pointer-events-none absolute inset-x-0 -top-40 h-[420px] opacity-70">
-        <div className="h-full w-full bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.6),transparent_60%)]" />
-      </div>
+    <main className="relative min-h-screen overflow-hidden bg-[#020617] text-slate-50">
+      {/* BACKGROUND GRADIENTS (inspiré de VaultX mais custom) */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-80"
+        style={{
+          backgroundImage: `
+            radial-gradient(circle at 15% 0%, rgba(88,101,242,0.32), transparent 55%),
+            radial-gradient(circle at 85% 0%, rgba(56,189,248,0.26), transparent 55%),
+            radial-gradient(circle at 50% 100%, rgba(15,23,42,0.9), #020617)
+          `,
+        }}
+      />
 
-      {/* HEADER */}
-      <header className="relative z-20 border-b border-white/5/40 bg-black/20 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 md:px-6">
-          {/* Logo */}
+      {/* Lignes légères diagonales */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.18] mix-blend-soft-light"
+        style={{
+          backgroundImage:
+            "repeating-linear-gradient(135deg, rgba(148,163,184,0.18) 0, rgba(148,163,184,0.18) 1px, transparent 1px, transparent 12px)",
+        }}
+      />
+
+      {/* CONTENU */}
+      <div className="relative z-10 flex min-h-screen flex-col">
+        {/* HEADER */}
+        <header className="flex items-center justify-between px-6 py-4 md:px-16 md:py-6">
+          {/* Logo + nom */}
           <div className="flex items-center gap-3">
-            <img
-              src="/logo-montelion-02.svg"
-              alt="Montelion Capital"
-              className="h-6 w-auto"
-            />
-            <span className="hidden text-xs uppercase tracking-[0.2em] text-slate-400 md:inline">
-              CAPITAL
-            </span>
+            <Link href="/" className="flex items-center gap-2">
+              <img
+                src="/logo-montelion-02.svg"
+                alt="Montelion Capital"
+                className="h-6 w-auto"
+              />
+            </Link>
           </div>
 
-          {/* Nav */}
-          <nav className="hidden items-center gap-8 text-sm text-slate-300 md:flex">
-            <button className="hover:text-white transition-colors">Product</button>
-            <button className="hover:text-white transition-colors">How it works</button>
-            <button className="hover:text-white transition-colors">Performance</button>
-            <button className="hover:text-white transition-colors">Security</button>
-            <button className="hover:text-white transition-colors">Pricing</button>
-            <button className="hover:text-white transition-colors">FAQ</button>
+          {/* NAV */}
+          <nav className="hidden gap-8 text-sm text-slate-200/70 md:flex">
+            <Link
+              href="#features"
+              className="transition-colors hover:text-slate-50"
+            >
+              Features
+            </Link>
+            <Link
+              href="#pricing"
+              className="transition-colors hover:text-slate-50"
+            >
+              Pricing
+            </Link>
+            <Link
+              href="#performance"
+              className="transition-colors hover:text-slate-50"
+            >
+              Performance
+            </Link>
+            <Link
+              href="#security"
+              className="transition-colors hover:text-slate-50"
+            >
+              Security
+            </Link>
+            <Link href="#faq" className="transition-colors hover:text-slate-50">
+              FAQ
+            </Link>
           </nav>
 
           {/* CTA droite */}
           <div className="flex items-center gap-3">
-            <a
+            <Link
               href="/dashboard"
-              className="hidden rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs font-medium text-slate-100 hover:bg-white/10 md:inline"
+              className="hidden rounded-full border border-slate-500/40 px-4 py-1.5 text-xs font-medium text-slate-100/80 shadow-[0_0_0_1px_rgba(15,23,42,0.8)] transition-colors hover:border-slate-300/70 hover:text-slate-50 md:inline-block"
             >
-              Launch app
-            </a>
-            <button className="rounded-full bg-[#2563eb] px-4 py-1.5 text-xs font-semibold text-white shadow-[0_0_35px_rgba(37,99,235,0.7)] hover:bg-[#1d4ed8]">
-              Request access
-            </button>
+              Launch App
+            </Link>
+            <Link
+              href="#request"
+              className="rounded-full bg-gradient-to-r from-[#4f46e5] via-[#6366f1] to-[#38bdf8] px-4 py-1.5 text-xs font-semibold text-slate-50 shadow-[0_10px_35px_rgba(56,189,248,0.35)] transition-transform hover:translate-y-[1px]"
+            >
+              Request a Call
+            </Link>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* CONTENU */}
-      <main className="relative z-10 flex-1">
-        <section className="mx-auto flex max-w-6xl flex-col px-4 pt-16 pb-20 md:px-6 md:pt-24 md:pb-28">
-          {/* Badge */}
-          <div className="mx-auto mb-6 flex items-center justify-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-black/40 px-4 py-1 text-xs text-emerald-300 shadow-[0_0_25px_rgba(16,185,129,0.35)]">
+        {/* HERO SECTION */}
+        <section className="flex flex-1 items-center justify-center px-6 pb-20 pt-6 md:px-16 md:pt-10">
+          <div className="mx-auto flex w-full max-w-4xl flex-col items-center text-center">
+            {/* Badge */}
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-slate-500/40 bg-slate-900/60 px-4 py-1 text-xs text-slate-300/80 shadow-[0_0_0_1px_rgba(15,23,42,0.8)]">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
               <span>Live trading infrastructure for private investors</span>
             </div>
-          </div>
 
-          {/* Hero text centré */}
-          <div className="mx-auto max-w-3xl text-center">
-            <h1 className="text-4xl font-semibold tracking-tight text-slate-50 sm:text-5xl md:text-6xl">
+            {/* Titre */}
+            <h1 className="max-w-3xl text-4xl font-semibold leading-tight tracking-tight text-slate-50 md:text-6xl">
               Put your{" "}
-              <span className="bg-gradient-to-r from-[#60a5ff] via-[#3b82f6] to-[#a5b4fc] bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-[#60a5fa] via-[#818cf8] to-[#38bdf8] bg-clip-text text-transparent">
                 capital on autopilot
               </span>{" "}
               with institutional-grade strategies.
             </h1>
-            <p className="mt-5 text-sm leading-relaxed text-slate-300 md:text-base">
+
+            {/* Sous-titre */}
+            <p className="mt-6 max-w-2xl text-sm text-slate-300 md:text-base">
               Montelion connects your exchange account to an automated and
-              monitored trading engine. You keep custody — we manage the
-              execution, strategy and risk.
+              monitored trading engine. You keep custody — we manage execution,
+              risk, and strategy.
             </p>
 
-            {/* CTA */}
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-              <button className="rounded-full bg-[#2563eb] px-6 py-2 text-sm font-semibold text-white shadow-[0_0_40px_rgba(37,99,235,0.75)] hover:bg-[#1d4ed8]">
-                Request a call
-              </button>
-              <a
-                href="/dashboard"
-                className="rounded-full border border-white/15 bg-white/5 px-6 py-2 text-sm font-medium text-slate-100 hover:bg-white/10"
+            {/* CTA buttons */}
+            <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+              <Link
+                href="#request"
+                className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#4f46e5] via-[#6366f1] to-[#38bdf8] px-8 py-3 text-sm font-semibold text-slate-50 shadow-[0_15px_40px_rgba(56,189,248,0.45)] transition-transform hover:translate-y-[1px]"
               >
-                View demo dashboard
-              </a>
+                Request a Call
+              </Link>
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center justify-center rounded-full border border-slate-500/40 bg-slate-950/50 px-8 py-3 text-sm font-medium text-slate-100/80 shadow-[0_0_0_1px_rgba(15,23,42,0.9)] transition-colors hover:border-slate-300/70 hover:text-slate-50"
+              >
+                View Demo Dashboard
+              </Link>
             </div>
-          </div>
 
-          {/* Small stats ligne (AUM / Fees) */}
-          <div className="mt-12 grid gap-8 text-left text-xs uppercase tracking-[0.22em] text-slate-400 sm:grid-cols-2 sm:text-[11px]">
-            <div>
-              <div>AUM PROTECTED</div>
-              <div className="mt-2 text-sm normal-case tracking-normal text-slate-100">
-                Your assets stay on your exchange
+            {/* Mini social proof */}
+            <div className="mt-10 flex flex-col items-center gap-3 text-xs text-slate-400 sm:flex-row sm:gap-4">
+              <div className="flex -space-x-2">
+                <div className="h-8 w-8 rounded-full border border-slate-900 bg-slate-600/70" />
+                <div className="h-8 w-8 rounded-full border border-slate-900 bg-slate-500/80" />
+                <div className="h-8 w-8 rounded-full border border-slate-900 bg-slate-400/80" />
               </div>
-            </div>
-            <div>
-              <div>FEES</div>
-              <div className="mt-2 text-sm normal-case tracking-normal text-slate-100">
-                Performance-based only
-              </div>
-            </div>
-          </div>
-
-          {/* Bloc demo dashboard centré comme sur VaultX */}
-          <div className="mt-16 flex justify-center">
-            <div className="w-full max-w-4xl rounded-3xl border border-white/10 bg-black/40 px-6 py-5 shadow-[0_40px_120px_rgba(0,0,0,0.9)]">
-              {/* Top bar */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-800 text-xs font-semibold">
-                    DU
-                  </div>
-                  <div className="text-xs">
-                    <div className="font-medium text-slate-100">
-                      Demo Investor
-                    </div>
-                    <div className="text-slate-400">
-                      Connected exchange: Bybit
-                    </div>
-                  </div>
-                </div>
-                <div className="rounded-full bg-emerald-900/30 px-3 py-1 text-[11px] font-medium text-emerald-300">
-                  Strategy: Active PNL
-                </div>
-              </div>
-
-              {/* KPIs */}
-              <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                  <div className="text-[11px] text-slate-400">BALANCE</div>
-                  <div className="mt-1 text-xl font-semibold text-slate-50">
-                    $206,190
-                  </div>
-                  <div className="mt-1 text-[11px] text-emerald-400">
-                    + $3,240 today
-                  </div>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                  <div className="text-[11px] text-slate-400">PNL TODAY</div>
-                  <div className="mt-1 text-xl font-semibold text-slate-50">
-                    +$210
-                  </div>
-                  <div className="mt-1 text-[11px] text-emerald-400">
-                    +0.32%
-                  </div>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                  <div className="text-[11px] text-slate-400">
-                    PNL THIS MONTH
-                  </div>
-                  <div className="mt-1 text-xl font-semibold text-slate-50">
-                    +$3,250
-                  </div>
-                  <div className="mt-1 text-[11px] text-emerald-400">
-                    +4.7%
-                  </div>
-                </div>
-              </div>
-
-              {/* Equity curve placeholder */}
-              <div className="mt-6 rounded-2xl border border-white/10 bg-gradient-to-r from-[#1d2951] via-[#1f3a7a] to-[#1b2550] px-4 py-4">
-                <div className="flex items-center justify-between text-[11px] text-slate-300">
-                  <span>Equity curve (last 12 months)</span>
-                  <span className="text-emerald-300">+38.4% net</span>
-                </div>
-                <div className="mt-4 h-28 rounded-xl bg-[radial-gradient(circle_at_20%_0,rgba(148,163,253,0.9),transparent_55%),radial-gradient(circle_at_80%_100%,rgba(59,130,246,0.9),transparent_60%)] opacity-90" />
-                <div className="mt-3 flex items-center justify-between text-[11px] text-slate-400">
-                  <span>Non-custodial · Disconnect anytime</span>
-                  <span>Made for private investors</span>
-                </div>
-              </div>
+              <p>Early private investors already trade with Montelion.</p>
             </div>
           </div>
         </section>
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }
