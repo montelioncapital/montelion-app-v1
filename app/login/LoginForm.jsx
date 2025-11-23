@@ -4,26 +4,64 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabaseClient";
 
-// Helper pour savoir où envoyer l'utilisateur selon l'onboarding
-function getRedirectForStep(step, completed) {
-  if (!step || step <= 0) return "/get-started";
+/**
+ * Routing EXACT selon ton tableau current_step
+ *
+ * 0   -> get started
+ * 1-6 -> onboarding
+ * 7   -> get started avancé
+ * 8   -> bridge "ready to sign"
+ * 9   -> page de signature
+ * 10  -> get started avancé
+ * 11  -> start exchange create
+ * 12  -> donner les codes MT5
+ * 13  -> get started avancé
+ * 14  -> dashboard actif
+ * 15  -> compte désactivé
+ * 16  -> compte suspendu
+ */
+function getRedirectForStep(step) {
+  switch (step) {
+    case 0:
+      return "/get-started";
 
-  if (!completed) {
-    if (step >= 1 && step <= 5) return "/onboarding";
-    if (step === 6) return "/onboarding";        // proof of address est dans l'onboarding
-    if (step === 7) return "/contract/ready";    // page "bridge"
-    if (step === 8) return "/contract";          // page de signature
-    if (step === 9) return "/contract/signed";   // page de confirmation
-    if (step >= 10) return "/get-started/advanced"; // étape avancée une fois le contrat signé
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+    case 6:
+      return "/onboarding";
+
+    case 7:
+    case 10:
+    case 13:
+      return "/get-started/advanced";
+
+    case 8:
+      return "/contract/ready";
+
+    case 9:
+      return "/contract";
+
+    case 11:
+      return "/exchange/start";
+
+    case 12:
+      return "/exchange/mt5";
+
+    case 14:
+      return "/dashboard";
+
+    case 15:
+      return "/account-disabled";
+
+    case 16:
+      return "/account-suspended";
+
+    default:
+      return "/get-started";
   }
-
-  // Si tout est terminé OU step inconnu mais élevé → on envoie vers la partie avancée
-  if (step >= 10) {
-    return "/get-started/advanced";
-  }
-
-  // fallback : home
-  return "/";
 }
 
 export default function LoginForm() {
@@ -41,6 +79,7 @@ export default function LoginForm() {
     setOk("");
     setLoading(true);
 
+    // 1) Connexion Supabase
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password: pwd,
@@ -56,59 +95,56 @@ export default function LoginForm() {
       return;
     }
 
-    // connecté ✅
-    if (data?.user) {
-      setOk("Connexion réussie.");
+    const user = data?.user;
+    if (!user) {
+      setLoading(false);
+      setErr("Impossible de récupérer votre session.");
+      return;
+    }
 
-      const userId = data.user.id;
+    setOk("Connexion réussie.");
+    const userId = user.id;
 
-      try {
-        // 1) On regarde l'état d'onboarding pour cet utilisateur
-        const { data: onboarding, error: onboardingErr } = await supabase
+    try {
+      // 2) Récupérer l'état d'onboarding
+      const { data: onboarding, error: onboardingErr } = await supabase
+        .from("onboarding_state")
+        .select("current_step, completed")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (onboardingErr && onboardingErr.code !== "PGRST116") {
+        console.error("onboarding_state error:", onboardingErr);
+      }
+
+      // 3) Si aucune ligne -> on initialise à step 1 et on envoie vers /onboarding
+      if (!onboarding) {
+        const { error: insertErr } = await supabase
           .from("onboarding_state")
-          .select("current_step, completed")
-          .eq("user_id", userId)
-          .maybeSingle();
+          .insert({
+            user_id: userId,
+            current_step: 1,
+            completed: false,
+          });
 
-        if (onboardingErr && onboardingErr.code !== "PGRST116") {
-          console.error("onboarding_state error:", onboardingErr);
-        }
-
-        // 2) Si pas de ligne → on en crée une (step 1) et on envoie vers /onboarding
-        if (!onboarding) {
-          const { error: insertErr } = await supabase
-            .from("onboarding_state")
-            .insert({
-              user_id: userId,
-              current_step: 1,
-              completed: false,
-            });
-
-          if (insertErr) {
-            console.error("onboarding_state insert error:", insertErr);
-            // on ne bloque pas la connexion, on envoie juste sur la home
-            router.push("/");
-            return;
-          }
-
-          router.push("/onboarding");
+        if (insertErr) {
+          console.error("onboarding_state insert error:", insertErr);
+          router.push("/get-started");
           return;
         }
 
-        // 3) Sinon, on calcule la bonne route en fonction du step + completed
-        const redirectTo = getRedirectForStep(
-          onboarding.current_step,
-          onboarding.completed
-        );
-
-        router.push(redirectTo);
-      } catch (e) {
-        console.error(e);
-        router.push("/"); // fallback
-      } finally {
-        setLoading(false);
+        router.push("/onboarding");
+        return;
       }
-    } else {
+
+      const step = onboarding.current_step ?? 0;
+      const redirectTo = getRedirectForStep(step);
+
+      router.push(redirectTo);
+    } catch (e) {
+      console.error("Login redirect error:", e);
+      router.push("/get-started");
+    } finally {
       setLoading(false);
     }
   }
