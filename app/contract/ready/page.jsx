@@ -38,12 +38,12 @@ const STEPS = [
   },
   {
     id: 4,
-    title: "Exchange setup",
-    subtitle: "Connect your trading account",
+    title: "Broker account",
+    subtitle: "Create, fund and connect your MT5 account",
     bullets: [
-      "Tutorial for the chosen exchange",
-      "Deposit funds on your own account",
-      "Create a read-only API key (no withdrawals)",
+      "Open your trading account with the selected broker",
+      "Deposit funds on your own MT5 account",
+      "Share your MT5 login details so Montelion can trade for you",
     ],
   },
   {
@@ -52,7 +52,7 @@ const STEPS = [
     subtitle: "Final checks & activation",
     bullets: [
       "Compliance review of your file",
-      "Verification of your API connection",
+      "Verification of your trading connection",
       "Your account goes live once validated",
     ],
   },
@@ -132,10 +132,12 @@ export default function ContractReadyPage() {
     router.push("/contract");
   }
 
+  /* ---------------- LOADING ---------------- */
+
   if (loading) {
     return (
-      <div className="w-full flex justify-center px-4 md:px-0 py-10 md:py-16">
-        <div className="mc-card max-w-3xl w-full">
+      <div className="w-full flex justify-center px-4 py-10">
+        <div className="mc-card">
           <div className="mc-section text-left">
             <h1 className="mc-title mb-2">Your contract is almost ready</h1>
             <p className="text-slate-400">Loading your progress…</p>
@@ -145,26 +147,28 @@ export default function ContractReadyPage() {
     );
   }
 
+  /* ---------------- PAGE ---------------- */
+
   return (
-    <div className="w-full flex justify-center px-4 md:px-0 py-10 md:py-16">
-      <div className="mc-card max-w-3xl w-full">
-        <div className="mc-section text-left max-w-2xl mx-auto">
+    <div className="w-full flex justify-center px-4 py-10">
+      <div className="mc-card">
+        <div className="mc-section text-left">
           <h1 className="mc-title mb-3">Your contract is almost ready</h1>
           <p className="text-slate-400 mb-10">
-            Review the timeline below before continuing.
+            Review the timeline below to see where you are in your onboarding
+            before you access and sign your management mandate.
           </p>
 
-          <div className="space-y-5 mb-10">
+          {/* TIMELINE */}
+          <div className="space-y-5 mb-8">
             {STEPS.map((step, index) => {
               const isCurrent = step.id === CURRENT_STEP_ID;
               const isCompleted = step.id < CURRENT_STEP_ID;
               const isLast = index === STEPS.length - 1;
 
               return (
-                <div
-                  key={step.id}
-                  className="grid grid-cols-[32px,1fr] gap-4 items-stretch"
-                >
+                <div key={step.id} className="grid grid-cols-[32px,1fr] gap-4">
+                  {/* Left column */}
                   <div className="flex flex-col items-center">
                     <div
                       className={[
@@ -180,10 +184,11 @@ export default function ContractReadyPage() {
                     </div>
 
                     {!isLast && (
-                      <div className="flex-1 w-px bg-gradient-to-b from-slate-700/80 via-slate-800/80 to-slate-900 mt-1" />
+                      <div className="flex-1 w-px bg-gradient-to-b from-slate-700 via-slate-800 to-slate-900 mt-1" />
                     )}
                   </div>
 
+                  {/* Step card */}
                   <div
                     className={[
                       "rounded-2xl border px-5 py-4 sm:py-5 bg-slate-900/40",
@@ -194,10 +199,10 @@ export default function ContractReadyPage() {
                         : "border-slate-800/80",
                     ].join(" ")}
                   >
-                    <div className="flex items-center justify-between gap-3 mb-1.5">
-                      <div className="text-sm font-semibold text-slate-50">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <p className="text-sm font-semibold text-slate-50">
                         {step.title}
-                      </div>
+                      </p>
 
                       {isCurrent && (
                         <span className="inline-flex items-center rounded-full bg-[#2564ec]/10 border border-[#2564ec]/60 px-2.5 py-[3px] text-[10px] font-medium text-[#7ea3ff]">
@@ -212,13 +217,13 @@ export default function ContractReadyPage() {
                       )}
                     </div>
 
-                    <div className="text-sm text-slate-300 mb-3">
+                    <p className="text-sm text-slate-300 mb-3">
                       {step.subtitle}
-                    </div>
+                    </p>
 
                     <ul className="text-[11px] text-slate-500 space-y-1.5">
-                      {step.bullets.map((b) => (
-                        <li key={b}>• {b}</li>
+                      {step.bullets.map((b, i) => (
+                        <li key={i}>• {b}</li>
                       ))}
                     </ul>
                   </div>
@@ -227,15 +232,14 @@ export default function ContractReadyPage() {
             })}
           </div>
 
-          <div className="space-y-4">
-            <button
-              type="button"
-              onClick={handleContinue}
-              className="mc-btn mc-btn-primary inline-flex items-center justify-center"
-            >
-              Continue
-            </button>
-          </div>
+          {/* BUTTON */}
+          <button
+            type="button"
+            onClick={handleContinue}
+            className="mc-btn mc-btn-primary inline-flex items-center justify-center"
+          >
+            Continue
+          </button>
         </div>
       </div>
     </div>
