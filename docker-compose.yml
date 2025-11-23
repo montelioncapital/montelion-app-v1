@@ -8,9 +8,9 @@ services:
     restart: unless-stopped
     environment:
       # 🔹 Twilio – utilisé par l’API /api/phone/send-code
-      TWILIO_ACCOUNT_SID: "ACd421634cc5bf93a7c2f0a607473936ef"
-      TWILIO_AUTH_TOKEN: "986552dd3d241b5774f5bc7ff083f900"
-      TWILIO_VERIFY_SERVICE_SID: "VAe1918edb66615c56354bc83751dbda7f"
+      TWILIO_ACCOUNT_SID=ACd421634cc5bf93a7c2f0a607473936ef
+      TWILIO_AUTH_TOKEN=7fd118f2090267287e9210a979a0c902
+      TWILIO_VERIFY_SERVICE_SID=VAe1918edb66615c56354bc83751dbda7f
 
   caddy:
     image: caddy:2
