@@ -5,13 +5,17 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 
+/* -------------------------------------------------------
+   LISTE DES SECTIONS (texte uniquement)
+-------------------------------------------------------- */
+
 const SECTIONS = [
   {
     id: 1,
     title: "Create Your KuCoin Account",
     items: [
       <>
-        Click your personal referral link:&nbsp;
+        Click your referral link:&nbsp;
         <a
           href="https://www.kucoin.com/r/rf/QBAA2LND"
           target="_blank"
@@ -22,9 +26,9 @@ const SECTIONS = [
         </a>
       </>,
       "Choose to register using your email or phone number.",
-      "Create a strong and secure password.",
+      "Create a strong password.",
       "Enter the verification code sent to your email or phone.",
-      "Your account is now created.",
+      "Your KuCoin account is now created.",
     ],
   },
   {
@@ -33,33 +37,30 @@ const SECTIONS = [
     items: [
       "Sign in to your KuCoin account.",
       "Click your profile icon (top-right corner).",
-      "Navigate to Security → KYC / Identity Verification.",
+      "Navigate to Security → KYC Verification.",
       "Select “Individual Verification”.",
       <>
         Provide the required information:
         <ul className="mt-1 list-disc list-inside text-[11px] text-slate-400 space-y-0.5">
           <li>Full name, address, date of birth</li>
-          <li>Identity document (ID card, passport, etc.)</li>
-          <li>Facial verification if requested</li>
+          <li>ID document (passport, ID card…)</li>
+          <li>Face verification if requested</li>
         </ul>
       </>,
       "Wait for KYC approval.",
     ],
-    note:
-      "KYC is required to increase your limits and access all KuCoin services.",
   },
   {
     id: 3,
     title: "Enable Two-Factor Authentication (2FA)",
     items: [
       "Go to Account → Security → Google Authenticator / 2FA.",
-      "Install Google Authenticator or Authy on your phone.",
+      "Install Google Authenticator or Authy.",
       "Scan the QR code displayed by KuCoin.",
-      "Enter the 6-digit code to confirm activation.",
-      "Store your recovery key safely—this is essential.",
+      "Enter the 6-digit code to confirm.",
+      "Save your recovery key somewhere safe.",
     ],
-    warning:
-      "2FA is mandatory to protect your account and secure your funds.",
+    warning: "2FA is mandatory to protect your funds.",
   },
   {
     id: 4,
@@ -69,15 +70,14 @@ const SECTIONS = [
       "Select “Bank Card”.",
       <>
         Choose:
-        <ul className="mt-1 list-disc list-inside text-[11px] text-slate-400 space-y-0.5">
+        <ul className="mt-1 list-disc list-inside text-[11px] text-slate-400">
           <li>Currency: EUR</li>
-          <li>Crypto: USDT (recommended for Futures)</li>
+          <li>Crypto: USDT (recommended)</li>
         </ul>
       </>,
-      "Enter the amount you want to deposit.",
-      "Enter your card information.",
-      "Confirm the payment via your bank's 3D Secure system.",
-      "Your USDT will arrive in your Main or Funding account.",
+      "Enter the amount.",
+      "Confirm with 3D Secure.",
+      "Your USDT arrives in your Main or Funding account.",
     ],
   },
   {
@@ -89,14 +89,13 @@ const SECTIONS = [
       "Click “Transfer”.",
       <>
         Select:
-        <ul className="mt-1 list-disc list-inside text-[11px] text-slate-400 space-y-0.5">
-          <li>From: Funding or Main</li>
-          <li>To: Futures Account</li>
+        <ul className="mt-1 list-disc list-inside text-[11px] text-slate-400">
+          <li>From: Main or Funding</li>
+          <li>To: Futures</li>
         </ul>
       </>,
       "Choose USDT.",
       "Confirm the transfer.",
-      "Your funds are now ready to be used for Futures trading.",
     ],
   },
   {
@@ -104,184 +103,154 @@ const SECTIONS = [
     title: "Create an API Key for Automated Trading",
     items: [
       "Sign in to your KuCoin account.",
-      "Click your profile icon → “API Management”.",
+      "Go to your profile → “API Management”.",
       "Click “Create API”.",
-      'Choose a name for your API key (e.g., “Montelion”).',
-      "Create an API Passphrase and keep it safe.",
+      "Choose a name (e.g., “Montelion”).",
+      "Create an API Passphrase and save it.",
       <>
-        Enable only these permissions:
-        <ul className="mt-1 list-disc list-inside text-[11px] text-slate-400 space-y-0.5">
+        Enable ONLY these permissions:
+        <ul className="mt-1 list-disc list-inside text-[11px] text-slate-400">
           <li>General (Read)</li>
           <li>Trade</li>
           <li>Futures</li>
         </ul>
       </>,
-      "Confirm using your password, email code, and 2FA code.",
-      "KuCoin will then display: API Key, Secret Key (shown only once), and API Passphrase.",
+      "Confirm with password, email code, and 2FA code.",
+      "KuCoin will show your API Key, Secret Key (only once), and Passphrase.",
     ],
-    warning:
-      "Never enable the Withdraw permission. Keep your API access restricted.",
+    warning: "Never enable Withdraw permission.",
   },
   {
     id: 7,
     title: "Save Your API Keys and Respect Trading Rules",
     items: [
-      "Carefully store your API Key, Secret Key, and API Passphrase in a secure place (for example, a password manager or encrypted document).",
-      "When you click “I’ve created my API keys”, you will need to provide these credentials so that Montelion can trade on your KuCoin Futures account on your behalf.",
-      "Make sure you can always retrieve this information if requested by Montelion support.",
+      "Store your API Key, Secret Key, and API Passphrase in a secure place.",
+      "You will provide these credentials to Montelion on the next page.",
+      "Keep them available if support needs to verify them.",
     ],
     warning:
-      "Once your API key is activated and connected to Montelion, it is strictly forbidden for you to use this KuCoin account for your own personal trades. If you perform personal trades on this connected account, your account may be closed permanently and your access to Montelion services may be terminated without notice.",
+      "Once connected to Montelion, personal trading on this account is forbidden. Violations may lead to permanent account closure.",
   },
 ];
+
+/* -------------------------------------------------------
+   PAGE PRINCIPALE
+-------------------------------------------------------- */
 
 export default function ExchangeSetupPage() {
   const router = useRouter();
   const [userId, setUserId] = useState(null);
-  const [loadingSession, setLoadingSession] = useState(true);
+  const [loading, setLoading] = useState(true);
 
-  // Même logique que /get-started/advanced : on récupère l'user via supabase.auth.getSession()
+  /* ----------------------------------------------
+     Charger la session utilisateur
+  ---------------------------------------------- */
   useEffect(() => {
     (async () => {
-      setLoadingSession(true);
-      const { data: sessionData, error: sessionErr } =
-        await supabase.auth.getSession();
+      const { data } = await supabase.auth.getSession();
+      const session = data?.session;
 
-      if (sessionErr) {
-        console.error("Error getting session:", sessionErr);
-        setLoadingSession(false);
-        return;
-      }
-
-      const session = sessionData?.session;
       if (!session?.user) {
         router.replace("/login");
         return;
       }
 
       setUserId(session.user.id);
-      setLoadingSession(false);
+      setLoading(false);
     })();
   }, [router]);
 
+  /* ----------------------------------------------
+     Quand l’utilisateur clique “I've created my API keys”
+     → passer en STEP 12
+     → rediriger vers /exchange/mt5
+  ---------------------------------------------- */
   async function handleCreatedApiKeys() {
+    if (!userId) {
+      router.push("/login");
+      return;
+    }
+
     try {
-      if (!userId) {
-        // Sécurité : si pas d'user, on renvoie vers login
-        router.push("/login");
-        return;
-      }
-
-      const targetStep = 12;
-
-      // Même style que handleContinue() dans get-started/advanced
       const { error } = await supabase.from("onboarding_state").upsert(
         {
           user_id: userId,
-          current_step: targetStep,
+          current_step: 12, // 🔥 STEP 12 COMME DEMANDÉ
           completed: false,
         },
         { onConflict: "user_id" }
       );
 
-      if (error) {
-        console.error("Error updating onboarding_state to step 12:", error);
-      }
-    } catch (err) {
-      console.error("Unexpected error updating step 12:", err);
-    } finally {
-      router.push("/exchange/mt5-access");
+      if (error) console.error("Error updating onboarding_state:", error);
+    } catch (e) {
+      console.error("Unexpected error:", e);
     }
+
+    router.push("/exchange/mt5"); // 🔥 REDIRECTION CORRECTE
   }
 
-  if (loadingSession) {
+  /* ----------------------------------------------
+     Si la session charge encore
+  ---------------------------------------------- */
+  if (loading) {
     return (
       <div className="mc-card">
-        <div className="mc-section text-left">
+        <div className="mc-section">
           <h1 className="mc-title mb-2">Connect Your Account</h1>
-          <p className="text-slate-400 text-sm">
-            Loading your session…
-          </p>
+          <p className="text-slate-400">Loading…</p>
         </div>
       </div>
     );
   }
 
+  /* ----------------------------------------------
+     RENDER DE LA PAGE
+  ---------------------------------------------- */
   return (
     <div className="mc-card">
       <div className="mc-section max-w-3xl mx-auto text-left">
-        {/* HEADER */}
+
         <h1 className="mc-title mb-3">Connect Your Account</h1>
-        <p className="text-slate-400 text-sm mb-6">
-          Follow these steps carefully to create your KuCoin account, secure
-          your access, deposit funds, and generate a safe API key. For the best
-          experience, we recommend completing this setup on a computer.
+        <p className="text-slate-400 mb-6">
+          Follow these steps to prepare your KuCoin account and create a secure trading API key.
         </p>
 
-        {/* SECURITY NOTICE */}
+        {/* WARNING BANNER */}
         <div className="mb-8 rounded-2xl border border-amber-500/60 bg-amber-500/10 px-4 py-3 text-xs text-amber-100 flex gap-3">
           <span className="mt-[2px] text-amber-300">
             <svg viewBox="0 0 24 24" className="h-4 w-4">
-              <path
-                d="M12 3L2.5 19h19L12 3z"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.6"
-              />
-              <path
-                d="M12 9v5"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-              />
+              <path d="M12 3L2.5 19h19L12 3z" fill="none" stroke="currentColor" strokeWidth="1.6" />
+              <path d="M12 9v5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
               <circle cx="12" cy="16" r="0.9" fill="currentColor" />
             </svg>
           </span>
           <div>
-            <p className="font-medium mb-1.5">
-              Always keep your API keys private.
-            </p>
+            <p className="font-medium mb-1.5">Always keep your API keys private.</p>
             <p className="text-amber-100/90">
-              Never share your API keys in plain text. Montelion will never ask
-              for your password.
+              Never share your API keys in plain text. Montelion will never ask for your password.
             </p>
           </div>
         </div>
 
         {/* STEPS */}
         <div className="space-y-5 mb-10">
-          {SECTIONS.map((section) => (
-            <div
-              key={section.id}
-              className="rounded-2xl border border-slate-800 bg-slate-900/50 px-5 py-4 space-y-2"
-            >
-              <div className="space-y-1 mb-1.5">
-                <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
-                  Step {section.id}
-                </p>
-                <h2 className="text-sm font-semibold text-slate-50">
-                  {section.title}
-                </h2>
-              </div>
+          {SECTIONS.map((s) => (
+            <div key={s.id} className="rounded-2xl border border-slate-800 bg-slate-900/50 px-5 py-4 space-y-2">
+              <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Step {s.id}</p>
+              <h2 className="text-sm font-semibold text-slate-50">{s.title}</h2>
 
               <ul className="mt-1 space-y-1.5 text-xs text-slate-200">
-                {section.items.map((item, i) => (
+                {s.items.map((item, i) => (
                   <li key={i} className="flex gap-2">
                     <span className="mt-[6px] h-[4px] w-[4px] rounded-full bg-slate-500/70 shrink-0" />
-                    <div className="flex-1">{item}</div>
+                    <div>{item}</div>
                   </li>
                 ))}
               </ul>
 
-              {section.note && (
-                <div className="mt-2 rounded-xl border border-slate-700/70 bg-slate-950/80 px-3 py-2 text-[11px] text-slate-300">
-                  {section.note}
-                </div>
-              )}
-
-              {section.warning && (
+              {s.warning && (
                 <div className="mt-2 rounded-xl border border-rose-600/70 bg-rose-500/10 px-3 py-2 text-[11px] text-rose-100">
-                  {section.warning}
+                  {s.warning}
                 </div>
               )}
             </div>
@@ -291,20 +260,12 @@ export default function ExchangeSetupPage() {
         {/* FOOTER */}
         <div className="space-y-4">
           <p className="text-xs text-slate-500 max-w-md">
-            Once you have completed all steps and retrieved your API Key,
-            Secret Key, and Passphrase, you will be able to securely connect
-            your KuCoin Futures account to your Montelion dashboard.
+            Once your API keys are created, click below to connect your account securely.
           </p>
 
-          <div className="flex gap-3 flex-wrap">
-            <button
-              type="button"
-              className="mc-btn mc-btn-primary"
-              onClick={handleCreatedApiKeys}
-            >
-              I&apos;ve created my API keys
-            </button>
-          </div>
+          <button onClick={handleCreatedApiKeys} className="mc-btn mc-btn-primary">
+            I&apos;ve created my API keys
+          </button>
         </div>
       </div>
     </div>
