@@ -58,7 +58,7 @@ const STEPS = [
   },
 ];
 
-const CURRENT_STEP_ID = 3; // we are on “Contract ready”
+const CURRENT_STEP_ID = 3;
 
 export default function ContractReadyPage() {
   const router = useRouter();
@@ -66,7 +66,6 @@ export default function ContractReadyPage() {
   const [currentStep, setCurrentStep] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Load session + onboarding
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -121,7 +120,6 @@ export default function ContractReadyPage() {
       return;
     }
 
-    // move user to step 8: contract signing page
     await supabase.from("onboarding_state").upsert(
       {
         user_id: userId,
@@ -136,108 +134,108 @@ export default function ContractReadyPage() {
 
   if (loading) {
     return (
-      <div className="mc-card">
-        <div className="mc-section text-left">
-          <h1 className="mc-title mb-2">Your contract is almost ready</h1>
-          <p className="text-slate-400">Loading your progress…</p>
+      <div className="w-full flex justify-center px-4 md:px-0 py-10 md:py-16">
+        <div className="mc-card max-w-3xl w-full">
+          <div className="mc-section text-left">
+            <h1 className="mc-title mb-2">Your contract is almost ready</h1>
+            <p className="text-slate-400">Loading your progress…</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="mc-card">
-      <div className="mc-section text-left max-w-2xl mx-auto">
-        <h1 className="mc-title mb-3">Your contract is almost ready</h1>
-        <p className="text-slate-400 mb-10">
-          Review the timeline below before continuing.
-        </p>
+    <div className="w-full flex justify-center px-4 md:px-0 py-10 md:py-16">
+      <div className="mc-card max-w-3xl w-full">
+        <div className="mc-section text-left max-w-2xl mx-auto">
+          <h1 className="mc-title mb-3">Your contract is almost ready</h1>
+          <p className="text-slate-400 mb-10">
+            Review the timeline below before continuing.
+          </p>
 
-        {/* Timeline */}
-        <div className="space-y-5 mb-10">
-          {STEPS.map((step, index) => {
-            const isCurrent = step.id === CURRENT_STEP_ID;
-            const isCompleted = step.id < CURRENT_STEP_ID;
-            const isLast = index === STEPS.length - 1;
+          <div className="space-y-5 mb-10">
+            {STEPS.map((step, index) => {
+              const isCurrent = step.id === CURRENT_STEP_ID;
+              const isCompleted = step.id < CURRENT_STEP_ID;
+              const isLast = index === STEPS.length - 1;
 
-            return (
-              <div
-                key={step.id}
-                className="grid grid-cols-[32px,1fr] gap-4 items-stretch"
-              >
-                {/* Left column */}
-                <div className="flex flex-col items-center">
-                  <div
-                    className={[
-                      "flex items-center justify-center h-7 w-7 rounded-full text-xs font-semibold shadow-[0_0_0_1px_rgba(15,23,42,0.9)]",
-                      isCurrent
-                        ? "bg-[#2564ec] text-white border border-[#2564ec]"
-                        : isCompleted
-                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/70"
-                        : "bg-slate-900 text-slate-300 border border-slate-700",
-                    ].join(" ")}
-                  >
-                    {isCompleted ? "✓" : step.id}
-                  </div>
-
-                  {!isLast && (
-                    <div className="flex-1 w-px bg-gradient-to-b from-slate-700/80 via-slate-800/80 to-slate-900 mt-1" />
-                  )}
-                </div>
-
-                {/* Right card */}
+              return (
                 <div
-                  className={[
-                    "rounded-2xl border px-5 py-4 sm:py-5 bg-slate-900/40",
-                    isCurrent
-                      ? "border-[#2564ec]/80 shadow-[0_0_40px_rgba(37,100,236,0.2)]"
-                      : isCompleted
-                      ? "border-emerald-600/70"
-                      : "border-slate-800/80",
-                  ].join(" ")}
+                  key={step.id}
+                  className="grid grid-cols-[32px,1fr] gap-4 items-stretch"
                 >
-                  <div className="flex items-center justify-between gap-3 mb-1.5">
-                    <div className="text-sm font-semibold text-slate-50">
-                      {step.title}
+                  <div className="flex flex-col items-center">
+                    <div
+                      className={[
+                        "flex items-center justify-center h-7 w-7 rounded-full text-xs font-semibold shadow-[0_0_0_1px_rgba(15,23,42,0.9)]",
+                        isCurrent
+                          ? "bg-[#2564ec] text-white border border-[#2564ec]"
+                          : isCompleted
+                          ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/70"
+                          : "bg-slate-900 text-slate-300 border border-slate-700",
+                      ].join(" ")}
+                    >
+                      {isCompleted ? "✓" : step.id}
                     </div>
 
-                    {isCurrent && (
-                      <span className="inline-flex items-center rounded-full bg-[#2564ec]/10 border border-[#2564ec]/60 px-2.5 py-[3px] text-[10px] font-medium text-[#7ea3ff]">
-                        You're here
-                      </span>
-                    )}
-
-                    {isCompleted && (
-                      <span className="inline-flex items-center rounded-full bg-emerald-500/10 border border-emerald-500/60 px-2.5 py-[3px] text-[10px] font-medium text-emerald-300">
-                        Completed
-                      </span>
+                    {!isLast && (
+                      <div className="flex-1 w-px bg-gradient-to-b from-slate-700/80 via-slate-800/80 to-slate-900 mt-1" />
                     )}
                   </div>
 
-                  <div className="text-sm text-slate-300 mb-3">
-                    {step.subtitle}
-                  </div>
+                  <div
+                    className={[
+                      "rounded-2xl border px-5 py-4 sm:py-5 bg-slate-900/40",
+                      isCurrent
+                        ? "border-[#2564ec]/80 shadow-[0_0_40px_rgba(37,100,236,0.2)]"
+                        : isCompleted
+                        ? "border-emerald-600/70"
+                        : "border-slate-800/80",
+                    ].join(" ")}
+                  >
+                    <div className="flex items-center justify-between gap-3 mb-1.5">
+                      <div className="text-sm font-semibold text-slate-50">
+                        {step.title}
+                      </div>
 
-                  <ul className="text-[11px] text-slate-500 space-y-1.5">
-                    {step.bullets.map((b) => (
-                      <li key={b}>• {b}</li>
-                    ))}
-                  </ul>
+                      {isCurrent && (
+                        <span className="inline-flex items-center rounded-full bg-[#2564ec]/10 border border-[#2564ec]/60 px-2.5 py-[3px] text-[10px] font-medium text-[#7ea3ff]">
+                          You&apos;re here
+                        </span>
+                      )}
+
+                      {isCompleted && (
+                        <span className="inline-flex items-center rounded-full bg-emerald-500/10 border border-emerald-500/60 px-2.5 py-[3px] text-[10px] font-medium text-emerald-300">
+                          Completed
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="text-sm text-slate-300 mb-3">
+                      {step.subtitle}
+                    </div>
+
+                    <ul className="text-[11px] text-slate-500 space-y-1.5">
+                      {step.bullets.map((b) => (
+                        <li key={b}>• {b}</li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
 
-        {/* Bottom button ONLY */}
-        <div className="space-y-4">
-          <button
-            type="button"
-            onClick={handleContinue}
-            className="mc-btn mc-btn-primary inline-flex items-center justify-center"
-          >
-            Continue
-          </button>
+          <div className="space-y-4">
+            <button
+              type="button"
+              onClick={handleContinue}
+              className="mc-btn mc-btn-primary inline-flex items-center justify-center"
+            >
+              Continue
+            </button>
+          </div>
         </div>
       </div>
     </div>
