@@ -5,33 +5,14 @@ import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabaseClient";
 
 /**
- * Exact mapping of current_step (from your spreadsheet) to frontend routes:
- *
- * 0  -> get started                          -> /get-started
- * 1  -> nom prénom                           -> /onboarding
- * 2  -> adresse postale                      -> /onboarding
- * 3  -> numéro de téléphone                  -> /onboarding
- * 4  -> validation téléphone                 -> /onboarding
- * 5  -> kyc identité                         -> /onboarding
- * 6  -> kyc adresse                          -> /onboarding
- * 7  -> get started avancé                   -> /get-started/advanced
- * 8  -> signature du contrat                 -> /contract
- * 9  -> validation du contrat + téléchargement -> /contract/signed
- * 10 -> get started avancé                   -> /get-started/advanced
- * 11 -> start exchange create                -> /account/setup
- * 12 -> donner les codes de connexion MT5    -> /account/mt5
- * 13 -> get started review (pending)         -> /get-started/review
- * 14 -> ACTIF = DASHBOARD                    -> /dashboard
- * 15 -> DISABLED (compte désactivé)          -> /disabled
- * 16 -> SUSPENDED (compte suspendu)          -> /suspended
+ * Mapping EXACT de ton tableau Google Sheets
+ * (aucune modification, strictement ce que tu as donné)
  */
 function getRedirectForStep(step) {
   switch (step) {
-    // 0 = first “get started” page
     case 0:
       return "/get-started";
 
-    // 1–6 : full onboarding (name, address, phone, KYC, etc.)
     case 1:
     case 2:
     case 3:
@@ -40,44 +21,36 @@ function getRedirectForStep(step) {
     case 6:
       return "/onboarding";
 
-    // 7 & 10 : advanced get started timeline
     case 7:
-    case 10:
-      return "/get-started/advanced";
+      return "/contract/ready";
 
-    // 8 = contract signature
     case 8:
       return "/contract";
 
-    // 9 = contract validated & download
     case 9:
-      return "/contract/signed";
+      return "/contract/signed?file=....";
 
-    // 11 = exchange account setup
+    case 10:
+      return "/get-started/advanced";
+
     case 11:
       return "/account/setup";
 
-    // 12 = provide MT5 access
     case 12:
       return "/account/mt5";
 
-    // 13 = Montelion review (pending)
     case 13:
       return "/get-started/review";
 
-    // 14 = active account -> dashboard
     case 14:
       return "/dashboard";
 
-    // 15 = disabled account
     case 15:
       return "/disabled";
 
-    // 16 = suspended account
     case 16:
       return "/suspended";
 
-    // fallback
     default:
       return "/get-started";
   }
@@ -98,7 +71,7 @@ export default function LoginForm() {
     setOk("");
     setLoading(true);
 
-    // 1) Supabase sign-in
+    // Connexion Supabase
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password: pwd,
@@ -125,37 +98,26 @@ export default function LoginForm() {
     const userId = user.id;
 
     try {
-      // 2) Fetch onboarding_state
+      // Récupération de onboarding_state
       const { data: onboarding, error: onboardingErr } = await supabase
         .from("onboarding_state")
         .select("current_step, completed")
         .eq("user_id", userId)
         .maybeSingle();
 
-      if (onboardingErr && onboardingErr.code !== "PGRST116") {
-        console.error("onboarding_state error:", onboardingErr);
-      }
-
-      // 3) If no row -> init at step 1 and redirect to /onboarding
+      // Si pas d'entrée -> init à step 1
       if (!onboarding) {
-        const { error: insertErr } = await supabase
-          .from("onboarding_state")
-          .insert({
-            user_id: userId,
-            current_step: 1,
-            completed: false,
-          });
-
-        if (insertErr) {
-          console.error("onboarding_state insert error:", insertErr);
-          router.push("/get-started");
-          return;
-        }
+        await supabase.from("onboarding_state").insert({
+          user_id: userId,
+          current_step: 1,
+          completed: false,
+        });
 
         router.push("/onboarding");
         return;
       }
 
+      // STEP EXACT → URL EXACTE
       const step = onboarding.current_step ?? 0;
       const redirectTo = getRedirectForStep(step);
 
@@ -170,18 +132,13 @@ export default function LoginForm() {
 
   return (
     <>
-      {/* Title */}
       <div className="mb-8 text-left">
         <h1 className="mc-title">Sign in</h1>
       </div>
 
-      {/* Messages */}
       {err ? <div className="mb-4 text-sm text-red-400">{err}</div> : null}
-      {ok ? (
-        <div className="mb-4 text-sm text-emerald-400">{ok}</div>
-      ) : null}
+      {ok ? <div className="mb-4 text-sm text-emerald-400">{ok}</div> : null}
 
-      {/* Form */}
       <form className="space-y-4" onSubmit={onSubmit}>
         <label className="block text-sm text-slate-300">
           Email
@@ -208,7 +165,6 @@ export default function LoginForm() {
             </a>
           </div>
 
-          {/* Password field + eye toggle */}
           <div className="relative mt-2">
             <input
               type={show ? "text" : "password"}
@@ -220,6 +176,7 @@ export default function LoginForm() {
               required
               minLength={6}
             />
+
             <button
               type="button"
               onClick={() => setShow((s) => !s)}
@@ -227,39 +184,22 @@ export default function LoginForm() {
               aria-label={show ? "Hide password" : "Show password"}
             >
               {show ? (
-                // eye-off
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M3 3l18 18" stroke="currentColor" strokeWidth="2" />
                   <path
-                    d="M3 3l18 18"
+                    d="M10.58 10.58A3 3 0 0012 15a3 3 0 002.42-4.42"
                     stroke="currentColor"
                     strokeWidth="2"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M10.58 10.58A3 3 0 0012 15a3 3 0 002.42-4.42M9.88 5.09A10.94 10.94 0 0112 5c5.52 0 9 4.5 9 7-.23.83-1.07 2.19-2.54 3.53M6.53 6.53C4.51 7.74 3.23 9.3 3 12c0 2.5 3.48 7 9 7 1.21 0 2.34-.21 3.36-.6"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
                   />
                 </svg>
               ) : (
-                // eye
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                   <path
                     d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"
                     stroke="currentColor"
                     strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
                   />
-                  <circle
-                    cx="12"
-                    cy="12"
-                    r="3"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  />
+                  <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
                 </svg>
               )}
             </button>
@@ -268,8 +208,8 @@ export default function LoginForm() {
 
         <button
           type="submit"
-          className="mc-btn mc-btn-primary w-full mt-3 disabled:opacity-60"
           disabled={loading}
+          className="mc-btn mc-btn-primary w-full mt-3 disabled:opacity-60"
         >
           {loading ? "Signing in…" : "Sign in"}
         </button>
