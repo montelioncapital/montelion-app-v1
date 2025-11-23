@@ -186,7 +186,7 @@ export default function ExchangeSetupPage() {
       console.error("Unexpected error:", e);
     }
 
-    router.push("/exchange/mt5"); // 🔥 REDIRECTION CORRECTE
+    router.push("/account/mt5"); // 🔥 REDIRECTION CORRECTE
   }
 
   /* ----------------------------------------------
