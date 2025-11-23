@@ -64,7 +64,6 @@ export default function GetStartedPage() {
   const [currentStep, setCurrentStep] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Charge la session + l'état d'onboarding
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -89,7 +88,6 @@ export default function GetStartedPage() {
       const step = onboard?.current_step ?? 0;
       setCurrentStep(step);
 
-      // Si l'utilisateur est déjà sur le flow avancé
       if (step >= 10) {
         router.replace("/get-started/advanced");
         return;
@@ -105,13 +103,11 @@ export default function GetStartedPage() {
       return;
     }
 
-    // Si un step existe déjà, on envoie vers /onboarding directement
     if (currentStep != null && currentStep > 0) {
       router.push("/onboarding");
       return;
     }
 
-    // Sinon, on initialise l'onboarding
     await supabase.from("onboarding_state").upsert(
       {
         user_id: userId,
@@ -123,8 +119,6 @@ export default function GetStartedPage() {
 
     router.push("/onboarding");
   }
-
-  /* ---------------- LOADING STATE ---------------- */
 
   if (loading) {
     return (
@@ -139,8 +133,6 @@ export default function GetStartedPage() {
     );
   }
 
-  /* ---------------- MAIN UI ---------------- */
-
   return (
     <div className="w-full flex justify-center px-4 md:px-0 py-10 md:py-16">
       <div className="mc-card max-w-3xl w-full">
@@ -151,11 +143,10 @@ export default function GetStartedPage() {
             your exchange account while you keep full control of your funds.
           </p>
 
-          {/* Timeline verticale */}
           <div className="space-y-5 mb-8">
             {STEPS.map((step, index) => {
-              const isCompleted = step.id === 1; // Start = déjà fait
-              const isNext = step.id === 2; // Onboarding = prochaine étape
+              const isCompleted = step.id === 1;
+              const isNext = step.id === 2;
               const isLast = index === STEPS.length - 1;
 
               return (
@@ -163,7 +154,6 @@ export default function GetStartedPage() {
                   key={step.id}
                   className="grid grid-cols-[32px,1fr] gap-4 items-stretch"
                 >
-                  {/* Colonne pastille + ligne */}
                   <div className="flex flex-col items-center">
                     <div
                       className={[
@@ -183,7 +173,6 @@ export default function GetStartedPage() {
                     )}
                   </div>
 
-                  {/* Carte étape */}
                   <div
                     className={[
                       "rounded-2xl border px-5 py-4 sm:py-5 bg-slate-900/40",
@@ -227,7 +216,6 @@ export default function GetStartedPage() {
             })}
           </div>
 
-          {/* Bas de page : temps moyen + bouton */}
           <div className="space-y-4">
             <div className="text-xs text-slate-500 flex items-center gap-2">
               <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/60 text-[10px] text-emerald-400">
