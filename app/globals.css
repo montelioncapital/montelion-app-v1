@@ -11,17 +11,10 @@
   --card-border: rgba(255, 255, 255, 0.08);
 }
 
-/* Hauteur full screen */
+/* Hauteur minimale du document */
 html,
 body {
-  height: 100%;
-}
-
-/* Fond global + typo */
-@layer base {
-  body {
-    @apply min-h-screen bg-page text-slate-100 antialiased;
-  }
+  min-height: 100%;
 }
 
 /* Fond global (noir bleuté Montelion) */
@@ -29,7 +22,19 @@ body {
   background-color: #050814;
 }
 
-/* Scrollbars invisibles */
+/* Viewport réel (corrige le 100vh sur mobile) */
+.app-viewport {
+  min-height: 100svh;
+  min-height: 100dvh;
+}
+
+@supports not (min-height: 100dvh) {
+  .app-viewport {
+    min-height: 100vh;
+  }
+}
+
+/* Scrollbars invisibles (optionnel) */
 body::-webkit-scrollbar {
   width: 0;
   height: 0;
@@ -38,13 +43,24 @@ body {
   scrollbar-width: none;
 }
 
+/* --- BASE TYPO --- */
+@layer base {
+  body {
+    @apply bg-page text-slate-100 antialiased;
+  }
+
+  a {
+    text-decoration: none;
+    transition: color 0.25s ease;
+  }
+}
+
 /* ---- COMPONENTS ---- */
 @layer components {
 
   /* --- Rectangle commun (login / onboarding / steps / etc.) --- */
   .mc-card {
-    @apply w-full max-w-[560px] rounded-2xl border
-           my-10 md:my-16 /* ESPACEMENT AUTOMATIQUE ICI */;
+    @apply w-full max-w-[560px] rounded-2xl border mx-auto;
     background: linear-gradient(
       180deg,
       rgba(255, 255, 255, 0.035),
@@ -114,11 +130,7 @@ body {
     border-color: rgba(255, 255, 255, 0.3);
   }
 
-  /* --- Liens --- */
-  a {
-    text-decoration: none !important;
-    transition: color 0.25s ease;
-  }
+  /* --- Liens “muted” --- */
   .mc-link-muted {
     color: inherit !important;
   }
@@ -128,11 +140,11 @@ body {
 
   /* --- Dashboard (full screen) --- */
   .dashboard-root {
-    @apply flex min-h-screen w-full bg-page;
+    @apply flex w-full app-viewport bg-page;
   }
 
   .dashboard-main {
-    @apply flex-1 min-h-screen;
+    @apply flex-1 app-viewport;
     scrollbar-width: none;
   }
   .dashboard-main::-webkit-scrollbar {
