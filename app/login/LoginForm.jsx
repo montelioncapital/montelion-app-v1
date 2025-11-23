@@ -5,26 +5,33 @@ import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabaseClient";
 
 /**
- * Routing EXACT selon ton tableau current_step
+ * Mapping EXACT de ton tableau current_step :
  *
- * 0   -> get started
- * 1-6 -> onboarding
- * 7   -> get started avancé
- * 8   -> bridge "ready to sign"
- * 9   -> page de signature
- * 10  -> get started avancé
- * 11  -> start exchange create
- * 12  -> donner les codes MT5
- * 13  -> get started avancé
- * 14  -> dashboard actif
- * 15  -> compte désactivé
- * 16  -> compte suspendu
+ * 0  -> get started
+ * 1  -> nom prénom
+ * 2  -> adresse postale
+ * 3  -> numéro de téléphone
+ * 4  -> validation téléphone
+ * 5  -> kyc identité
+ * 6  -> kyc adresse
+ * 7  -> get started avancé
+ * 8  -> signature du contrat
+ * 9  -> validation du contrat + téléchargement
+ * 10 -> get started avancé
+ * 11 -> start exchange create
+ * 12 -> donner les codes de connexion MT5
+ * 13 -> get started review (account pending for Montelion verification)
+ * 14 -> ACTIF = DASHBOARD
+ * 15 -> DISABLE = page compte désactivé
+ * 16 -> SUSPENDU = page compte suspendu
  */
 function getRedirectForStep(step) {
   switch (step) {
+    // 0 = première page de démarrage
     case 0:
       return "/get-started";
 
+    // 1–6 : tout l’onboarding (nom, adresse, téléphone, KYC, etc.)
     case 1:
     case 2:
     case 3:
@@ -33,32 +40,44 @@ function getRedirectForStep(step) {
     case 6:
       return "/onboarding";
 
+    // 7 & 10 : pages "get started avancé" (timeline avancée)
     case 7:
     case 10:
-    case 13:
       return "/get-started/advanced";
 
+    // 8 = signature du contrat
     case 8:
-      return "/contract/ready";
-
-    case 9:
       return "/contract";
 
+    // 9 = validation du contrat & téléchargement
+    case 9:
+      return "/contract/signed";
+
+    // 11 = création du compte sur l’exchange
     case 11:
       return "/exchange/start";
 
+    // 12 = donner les codes / connexion MT5
     case 12:
       return "/exchange/mt5";
 
+    // 13 = revue Montelion (compte en attente de validation)
+    case 13:
+      return "/get-started/review";
+
+    // 14 = compte actif -> dashboard
     case 14:
       return "/dashboard";
 
+    // 15 = compte désactivé
     case 15:
       return "/account-disabled";
 
+    // 16 = compte suspendu
     case 16:
       return "/account-suspended";
 
+    // fallback
     default:
       return "/get-started";
   }
