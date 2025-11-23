@@ -64,6 +64,7 @@ export default function GetStartedAdvancedPage() {
   const [currentStep, setCurrentStep] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Charge la session + l'état d'onboarding
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -85,7 +86,9 @@ export default function GetStartedAdvancedPage() {
         .eq("user_id", uid)
         .maybeSingle();
 
-      setCurrentStep(onboard?.current_step ?? 0);
+      const step = onboard?.current_step ?? 0;
+      setCurrentStep(step);
+
       setLoading(false);
     })();
   }, [router]);
@@ -110,10 +113,12 @@ export default function GetStartedAdvancedPage() {
     router.push("/account/setup");
   }
 
+  /* ---------------- LOADING STATE ---------------- */
+
   if (loading) {
     return (
       <div className="w-full flex justify-center px-4 md:px-0 py-10 md:py-16">
-        <div className="mc-card max-w-3xl w-full">
+        <div className="mc-card">
           <div className="mc-section text-left">
             <h1 className="mc-title mb-2">Let&apos;s continue your setup</h1>
             <p className="text-slate-400">Loading your journey…</p>
@@ -123,10 +128,12 @@ export default function GetStartedAdvancedPage() {
     );
   }
 
+  /* ---------------- MAIN UI ---------------- */
+
   return (
     <div className="w-full flex justify-center px-4 md:px-0 py-10 md:py-16">
-      <div className="mc-card max-w-3xl w-full">
-        <div className="mc-section text-left max-w-2xl mx-auto">
+      <div className="mc-card">
+        <div className="mc-section text-left">
           <h1 className="mc-title mb-3">Let&apos;s continue your setup</h1>
           <p className="text-slate-400 mb-10">
             Your contract is now signed. Next, you&apos;ll connect your exchange
@@ -134,10 +141,11 @@ export default function GetStartedAdvancedPage() {
             funds.
           </p>
 
+          {/* Timeline */}
           <div className="space-y-5 mb-8">
             {STEPS.map((step, index) => {
-              const isCompleted = step.id <= 3;
-              const isNext = step.id === 4;
+              const isCompleted = step.id <= 3; // Start / Onboarding / Contract = faits
+              const isNext = step.id === 4; // Exchange setup = prochaine étape
               const isLast = index === STEPS.length - 1;
 
               return (
@@ -145,6 +153,7 @@ export default function GetStartedAdvancedPage() {
                   key={step.id}
                   className="grid grid-cols-[32px,1fr] gap-4 items-stretch"
                 >
+                  {/* Colonne gauche */}
                   <div className="flex flex-col items-center">
                     <div
                       className={[
@@ -164,6 +173,7 @@ export default function GetStartedAdvancedPage() {
                     )}
                   </div>
 
+                  {/* Carte étape */}
                   <div
                     className={[
                       "rounded-2xl border px-5 py-4 sm:py-5 bg-slate-900/40",
@@ -197,8 +207,8 @@ export default function GetStartedAdvancedPage() {
                     </div>
 
                     <ul className="text-[11px] text-slate-500 space-y-1.5">
-                      {step.bullets.map((b) => (
-                        <li key={b}>• {b}</li>
+                      {step.bullets.map((b, i) => (
+                        <li key={i}>• {b}</li>
                       ))}
                     </ul>
                   </div>
@@ -207,6 +217,7 @@ export default function GetStartedAdvancedPage() {
             })}
           </div>
 
+          {/* Bouton seul */}
           <button
             type="button"
             onClick={handleContinue}
