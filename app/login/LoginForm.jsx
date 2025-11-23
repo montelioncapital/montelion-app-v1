@@ -216,7 +216,10 @@ export default function LoginForm() {
       </form>
 
       <p className="mt-8 text-left text-sm text-slate-500">
-        Need help? Contact <a href="#">Montelion Capital Support</a>.
+        Need help? Contact{" "}
+        <a href="/support" className="text-slate-400 hover:text-slate-300">
+          Montelion Capital Support
+        </a>.
       </p>
     </>
   );
