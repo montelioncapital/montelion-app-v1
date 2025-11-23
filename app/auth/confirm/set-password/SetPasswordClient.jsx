@@ -113,7 +113,9 @@ export default function SetPasswordPage() {
             <button
               className="mc-btn mc-btn-primary w-full"
               onClick={async () => {
-                try { await supabase.auth.signOut(); } catch {}
+                try {
+                  await supabase.auth.signOut();
+                } catch {}
                 window.location.href = "/login";
               }}
             >
@@ -152,9 +154,45 @@ export default function SetPasswordPage() {
                 <button
                   type="button"
                   onClick={() => setShow1(!show1)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300"
+                  aria-label={show1 ? "Hide password" : "Show password"}
                 >
-                  {show1 ? "🙈" : "👁️"}
+                  {show1 ? (
+                    // eye-off
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M3 3l18 18"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M10.58 10.58A3 3 0 0012 15a3 3 0 002.42-4.42M9.88 5.09A10.94 10.94 0 0112 5c5.52 0 9 4.5 9 7-.23.83-1.07 2.19-2.54 3.53M6.53 6.53C4.51 7.74 3.23 9.3 3 12c0 2.5 3.48 7 9 7 1.21 0 2.34-.21 3.36-.6"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  ) : (
+                    // eye
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="3"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      />
+                    </svg>
+                  )}
                 </button>
               </div>
             </div>
@@ -175,9 +213,45 @@ export default function SetPasswordPage() {
                 <button
                   type="button"
                   onClick={() => setShow2(!show2)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300"
+                  aria-label={show2 ? "Hide password" : "Show password"}
                 >
-                  {show2 ? "🙈" : "👁️"}
+                  {show2 ? (
+                    // eye-off
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M3 3l18 18"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M10.58 10.58A3 3 0 0012 15a3 3 0 002.42-4.42M9.88 5.09A10.94 10.94 0 0112 5c5.52 0 9 4.5 9 7-.23.83-1.07 2.19-2.54 3.53M6.53 6.53C4.51 7.74 3.23 9.3 3 12c0 2.5 3.48 7 9 7 1.21 0 2.34-.21 3.36-.6"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  ) : (
+                    // eye
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="3"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      />
+                    </svg>
+                  )}
                 </button>
               </div>
             </div>
@@ -186,20 +260,30 @@ export default function SetPasswordPage() {
             <div className="rounded-xl border border-white/5 bg-white/[0.02] p-4">
               <p className="text-slate-300 mb-3">Your password must contain:</p>
               <ul className="space-y-2 text-sm">
-                <li><Check ok={rules.len}/> At least 8 characters</li>
-                <li><Check ok={rules.spec}/> At least one special character</li>
-                <li><Check ok={rules.num}/> At least one number</li>
-                <li><Check ok={rules.cap}/> At least one capital letter</li>
-                <li><Check ok={rules.match}/> Passwords match</li>
+                <li>
+                  <Check ok={rules.len} /> At least 8 characters
+                </li>
+                <li>
+                  <Check ok={rules.spec} /> At least one special character
+                </li>
+                <li>
+                  <Check ok={rules.num} /> At least one number
+                </li>
+                <li>
+                  <Check ok={rules.cap} /> At least one capital letter
+                </li>
+                <li>
+                  <Check ok={rules.match} /> Passwords match
+                </li>
               </ul>
             </div>
 
             {!hasSession && (
-              <p className="text-sm text-rose-400">Auth session missing! Open the invite link again.</p>
+              <p className="text-sm text-rose-400">
+                Auth session missing! Open the invite link again.
+              </p>
             )}
-            {error && (
-              <p className="text-sm text-rose-400">{error}</p>
-            )}
+            {error && <p className="text-sm text-rose-400">{error}</p>}
 
             <button
               type="submit"
