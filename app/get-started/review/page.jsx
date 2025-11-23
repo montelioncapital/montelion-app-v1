@@ -38,12 +38,12 @@ const STEPS = [
   },
   {
     id: 4,
-    title: "Exchange setup",
-    subtitle: "Connect your trading account",
+    title: "Broker account",
+    subtitle: "Create, fund and connect your MT5 account",
     bullets: [
-      "Tutorial for the chosen exchange",
-      "Deposit funds on your own account",
-      "Create a read-only API key (no withdrawals)",
+      "Open your trading account with the selected broker",
+      "Deposit funds on your own MT5 account",
+      "Share your MT5 login details so Montelion can trade for you",
     ],
   },
   {
@@ -78,6 +78,7 @@ export default function ReviewPage() {
 
       const uid = session.user.id;
 
+      // 1) Profile status
       const { data: profile, error: profErr } = await supabase
         .from("profiles")
         .select("status")
@@ -93,6 +94,7 @@ export default function ReviewPage() {
         return;
       }
 
+      // 2) Onboarding state
       const { data: onboard, error: onboardErr } = await supabase
         .from("onboarding_state")
         .select("current_step, completed")
@@ -121,10 +123,12 @@ export default function ReviewPage() {
     })();
   }, [router]);
 
+  /* ---------------- LOADING ---------------- */
+
   if (loading) {
     return (
-      <div className="w-full flex justify-center px-4 md:px-0 py-10 md:py-16">
-        <div className="mc-card max-w-3xl w-full">
+      <div className="w-full flex justify-center px-4 py-10">
+        <div className="mc-card">
           <div className="mc-section text-left">
             <h1 className="mc-title mb-2">Montelion review</h1>
             <p className="text-slate-400">Loading your journey…</p>
@@ -134,10 +138,12 @@ export default function ReviewPage() {
     );
   }
 
+  /* ---------------- PAGE ---------------- */
+
   return (
-    <div className="w-full flex justify-center px-4 md:px-0 py-10 md:py-16">
-      <div className="mc-card max-w-3xl w-full">
-        <div className="mc-section text-left max-w-2xl mx-auto">
+    <div className="w-full flex justify-center px-4 py-10">
+      <div className="mc-card">
+        <div className="mc-section text-left">
           <h1 className="mc-title mb-3">Your account is under review</h1>
           <p className="text-slate-400 mb-10">
             You&apos;ve completed all onboarding steps. Montelion is now
@@ -145,17 +151,16 @@ export default function ReviewPage() {
             notified as soon as your account is activated.
           </p>
 
-          <div className="space-y-5 mb-10">
+          {/* TIMELINE */}
+          <div className="space-y-5 mb-8">
             {STEPS.map((step, index) => {
               const isCurrent = step.id === CURRENT_STEP_ID;
               const isCompleted = step.id < CURRENT_STEP_ID;
               const isLast = index === STEPS.length - 1;
 
               return (
-                <div
-                  key={step.id}
-                  className="grid grid-cols-[32px,1fr] gap-4 items-stretch"
-                >
+                <div key={step.id} className="grid grid-cols-[32px,1fr] gap-4">
+                  {/* Left column */}
                   <div className="flex flex-col items-center">
                     <div
                       className={[
@@ -170,10 +175,11 @@ export default function ReviewPage() {
                       {isCompleted ? "✓" : step.id}
                     </div>
                     {!isLast && (
-                      <div className="flex-1 w-px bg-gradient-to-b from-slate-700/80 via-slate-800/80 to-slate-900 mt-1" />
+                      <div className="flex-1 w-px bg-gradient-to-b from-slate-700 via-slate-800 to-slate-900 mt-1" />
                     )}
                   </div>
 
+                  {/* Step card */}
                   <div
                     className={[
                       "rounded-2xl border px-5 py-4 sm:py-5 bg-slate-900/40",
@@ -224,6 +230,7 @@ export default function ReviewPage() {
             })}
           </div>
 
+          {/* TEXT BOTTOM */}
           <div className="space-y-2 text-xs text-slate-400">
             <p>
               You don&apos;t have anything else to do for now. Montelion&apos;s
