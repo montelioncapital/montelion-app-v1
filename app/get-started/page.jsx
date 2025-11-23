@@ -60,8 +60,8 @@ const STEPS = [
 
 export default function GetStartedPage() {
   const router = useRouter();
-  const [userId, setUserId] = useState<string | null>(null);
-  const [currentStep, setCurrentStep] = useState<number | null>(null);
+  const [userId, setUserId] = useState(null);
+  const [currentStep, setCurrentStep] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Charge la session + l'état d'onboarding
@@ -89,7 +89,7 @@ export default function GetStartedPage() {
       const step = onboard?.current_step ?? 0;
       setCurrentStep(step);
 
-      // Si l'utilisateur a déjà basculé sur le flow avancé
+      // Si l'utilisateur est déjà sur le flow avancé
       if (step >= 10) {
         router.replace("/get-started/advanced");
         return;
