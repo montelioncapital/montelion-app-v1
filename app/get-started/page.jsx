@@ -38,12 +38,12 @@ const STEPS = [
   },
   {
     id: 4,
-    title: "Exchange setup",
-    subtitle: "Connect your trading account",
+    title: "Broker account",
+    subtitle: "Create, fund and connect your MT5 account",
     bullets: [
-      "Tutorial for the chosen exchange",
-      "Deposit funds on your own account",
-      "Create a read-only API key (no withdrawals)",
+      "Open your trading account with the selected broker",
+      "Deposit funds on your own MT5 account",
+      "Share your MT5 login details so Montelion can trade for you",
     ],
   },
   {
@@ -52,7 +52,7 @@ const STEPS = [
     subtitle: "Final checks & activation",
     bullets: [
       "Compliance review of your file",
-      "Verification of your API connection",
+      "Verification of your trading connection",
       "Your account goes live once validated",
     ],
   },
@@ -64,6 +64,7 @@ export default function GetStartedPage() {
   const [currentStep, setCurrentStep] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Load session + onboarding state
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -103,11 +104,13 @@ export default function GetStartedPage() {
       return;
     }
 
+    // Already started onboarding
     if (currentStep != null && currentStep > 0) {
       router.push("/onboarding");
       return;
     }
 
+    // Initialize onboarding
     await supabase.from("onboarding_state").upsert(
       {
         user_id: userId,
@@ -120,9 +123,10 @@ export default function GetStartedPage() {
     router.push("/onboarding");
   }
 
+  /* ---------------- LOADING ---------------- */
   if (loading) {
     return (
-      <div className="w-full flex justify-center px-4 md:px-0 py-10 md:py-16">
+      <div className="w-full flex justify-center px-4 py-10">
         <div className="mc-card">
           <div className="mc-section text-left">
             <h1 className="mc-title mb-2">Let&apos;s get you fully set up</h1>
@@ -133,29 +137,28 @@ export default function GetStartedPage() {
     );
   }
 
+  /* ---------------- PAGE ---------------- */
   return (
-    <div className="w-full flex justify-center px-4 md:px-0 py-10 md:py-16">
+    <div className="w-full flex justify-center px-4 py-10">
       <div className="mc-card">
         <div className="mc-section text-left">
           <h1 className="mc-title mb-3">Let&apos;s get you fully set up</h1>
           <p className="text-slate-400 mb-10">
-            In a few minutes, you&apos;ll be ready to let Montelion trade on
-            your exchange account while you keep full control of your funds.
+            In a few minutes, you&apos;ll complete your onboarding so Montelion
+            can manage your trading account while you stay in full control of
+            your funds.
           </p>
 
-          {/* Timeline */}
-          <div className="space-y-5 mb-8">
+          {/* TIMELINE */}
+          <div className="space-y-5 mb-6">
             {STEPS.map((step, index) => {
               const isCompleted = step.id === 1;
               const isNext = step.id === 2;
               const isLast = index === STEPS.length - 1;
 
               return (
-                <div
-                  key={step.id}
-                  className="grid grid-cols-[32px,1fr] gap-4 items-stretch"
-                >
-                  {/* Colonne gauche */}
+                <div key={step.id} className="grid grid-cols-[32px,1fr] gap-4">
+                  {/* Left column */}
                   <div className="flex flex-col items-center">
                     <div
                       className={[
@@ -171,11 +174,11 @@ export default function GetStartedPage() {
                     </div>
 
                     {!isLast && (
-                      <div className="flex-1 w-px bg-gradient-to-b from-slate-700/80 via-slate-800/80 to-slate-900 mt-1" />
+                      <div className="flex-1 w-px bg-gradient-to-b from-slate-700 via-slate-800 to-slate-900 mt-1" />
                     )}
                   </div>
 
-                  {/* Carte */}
+                  {/* Step card */}
                   <div
                     className={[
                       "rounded-2xl border px-5 py-4 sm:py-5 bg-slate-900/40",
@@ -187,9 +190,9 @@ export default function GetStartedPage() {
                     ].join(" ")}
                   >
                     <div className="flex items-center justify-between mb-1.5">
-                      <div className="text-sm font-semibold text-slate-50">
+                      <p className="text-sm font-semibold text-slate-50">
                         {step.title}
-                      </div>
+                      </p>
 
                       {isNext && (
                         <span className="inline-flex items-center rounded-full bg-[#2564ec]/10 border border-[#2564ec]/60 px-2.5 py-[3px] text-[10px] font-medium text-[#7ea3ff]">
@@ -204,9 +207,9 @@ export default function GetStartedPage() {
                       )}
                     </div>
 
-                    <div className="text-sm text-slate-300 mb-3">
+                    <p className="text-sm text-slate-300 mb-3">
                       {step.subtitle}
-                    </div>
+                    </p>
 
                     <ul className="text-[11px] text-slate-500 space-y-1.5">
                       {step.bullets.map((b, i) => (
@@ -219,7 +222,7 @@ export default function GetStartedPage() {
             })}
           </div>
 
-          {/* BOUTON SEUL */}
+          {/* BUTTON */}
           <button
             type="button"
             onClick={handleGetStarted}
