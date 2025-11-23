@@ -108,8 +108,8 @@ export default function GetStartedAdvancedPage() {
       { onConflict: "user_id" }
     );
 
-    // 🚀 REDIRECTION VERS TA NOUVELLE PAGE
-    router.push("/exchange/setup"); 
+    // 🚀 REDIRECTION VERS LA NOUVELLE PAGE ACCOUNT SETUP
+    router.push("/account/setup");
   }
 
   if (loading) {
@@ -129,7 +129,8 @@ export default function GetStartedAdvancedPage() {
         <h1 className="mc-title mb-3">Let&apos;s continue your setup</h1>
         <p className="text-slate-400 mb-10">
           Your contract is now signed. Next, you&apos;ll connect your exchange
-          account so Montelion can trade while you keep full control of your funds.
+          account so Montelion can trade while you keep full control of your
+          funds.
         </p>
 
         {/* Timeline */}
