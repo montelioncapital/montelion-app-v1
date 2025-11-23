@@ -1,4 +1,4 @@
-// app/account/mt5/page.jsx
+// app/exchange/mt5-access/page.jsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -11,217 +11,256 @@ export default function Mt5AccessPage() {
   const [userId, setUserId] = useState(null);
   const [loadingSession, setLoadingSession] = useState(true);
 
+  const [login, setLogin] = useState("");        // 🔹 Identifiant MT5
   const [brokerName, setBrokerName] = useState("");
   const [server, setServer] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
 
-  // Load authenticated user and existing MT5 access data
+  // 1) Vérifier que l'utilisateur est connecté + pré-remplir si déjà enregistré
   useEffect(() => {
-    const loadSessionAndData = async () => {
+    (async () => {
       setLoadingSession(true);
-      setError("");
-      setSuccess("");
+      const { data: sessionData, error } = await supabase.auth.getSession();
 
-      const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession();
-
-      if (sessionError || !session?.user) {
-        setError("You must be logged in to access this page.");
+      if (error) {
+        console.error("Error getting session:", error);
         setLoadingSession(false);
         return;
       }
 
-      const uid = session.user.id;
-      setUserId(uid);
-
-      const { data, error: fetchError } = await supabase
-        .from("mt5_access")
-        .select("*")
-        .eq("user_id", uid)
-        .maybeSingle();
-
-      if (fetchError) {
-        console.error(fetchError);
-        setError("Unable to load your MT5 access information.");
-      } else if (data) {
-        setBrokerName(data.broker_name || "");
-        setServer(data.server || "");
-        setPassword(data.password || "");
+      const session = sessionData?.session;
+      if (!session?.user) {
+        router.replace("/login");
+        return;
       }
 
+      setUserId(session.user.id);
       setLoadingSession(false);
-    };
 
-    loadSessionAndData();
-  }, []);
+      // Pré-remplissage éventuel
+      const { data: existing, error: mt5Err } = await supabase
+        .from("mt5_accounts")
+        .select("login, broker_name, server, password")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
 
-  const handleSave = async (e) => {
+      if (!mt5Err && existing) {
+        setLogin(existing.login || "");
+        setBrokerName(existing.broker_name || "");
+        setServer(existing.server || "");
+        setPassword(existing.password || "");
+      } else if (mt5Err) {
+        console.error("Error loading existing mt5_accounts:", mt5Err);
+      }
+    })();
+  }, [router]);
+
+  async function handleSubmit(e) {
     e.preventDefault();
     if (!userId) return;
 
     setSaving(true);
-    setError("");
-    setSuccess("");
+    setErrorMsg("");
+    setSuccessMsg("");
 
     try {
-      const payload = {
-        user_id: userId,
-        broker_name: brokerName,
-        server,
-        password,
-      };
+      // 2) Sauvegarder / mettre à jour l'accès MT5
+      const { error: mt5Error } = await supabase.from("mt5_accounts").upsert(
+        {
+          user_id: userId,
+          login: login.trim(),            // 🔹 identifiant MT5
+          broker_name: brokerName.trim(),
+          server: server.trim(),
+          password: password,            // on ne trim pas un mot de passe
+        },
+        { onConflict: "user_id" }
+      );
 
-      const { error: upsertError } = await supabase
-        .from("mt5_access")
-        .upsert(payload, { onConflict: "user_id" });
-
-      if (upsertError) {
-        console.error(upsertError);
-        setError("An error occurred while saving your MT5 access.");
-      } else {
-        setSuccess("Your MT5 access has been saved successfully.");
-        router.push("/account/setup");
+      if (mt5Error) {
+        console.error("Error saving mt5_accounts:", mt5Error);
+        setErrorMsg("Unable to save your MT5 access. Please try again.");
+        setSaving(false);
+        return;
       }
+
+      // 3) Mettre à jour la step d'onboarding → 13 (review)
+      const { error: onboardingError } = await supabase
+        .from("onboarding_state")
+        .upsert(
+          {
+            user_id: userId,
+            current_step: 13,
+            completed: false,
+          },
+          { onConflict: "user_id" }
+        );
+
+      if (onboardingError) {
+        console.error("Error updating onboarding_state:", onboardingError);
+        // On affiche l'erreur mais on peut quand même rediriger
+      }
+
+      setSuccessMsg("Your MT5 access has been saved.");
+      router.push("/get-started/review");
     } catch (err) {
-      console.error(err);
-      setError("Unexpected error while saving your MT5 access.");
-    } finally {
+      console.error("Unexpected error saving MT5 access:", err);
+      setErrorMsg("Unexpected error. Please try again.");
       setSaving(false);
     }
-  };
+  }
 
   if (loadingSession) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#020817] text-white">
-        <p className="text-sm text-slate-300">Loading your account...</p>
-      </div>
-    );
-  }
-
-  if (error && !userId) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#020817] text-white">
-        <div className="max-w-md w-full bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
-          <p className="text-sm text-red-400 mb-4">{error}</p>
-          <button
-            type="button"
-            onClick={() => router.push("/auth")}
-            className="w-full rounded-xl px-4 py-2.5 text-sm font-medium bg-white text-slate-900 hover:bg-slate-100 transition"
-          >
-            Sign in
-          </button>
+      <div className="mc-card">
+        <div className="mc-section text-left">
+          <h1 className="mc-title mb-2">MT5 access</h1>
+          <p className="text-slate-400 text-sm">Loading your session…</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#020817] text-white">
-      <div className="max-w-3xl mx-auto px-4 py-10">
-        <button
-          type="button"
-          onClick={() => router.push("/account/setup")}
-          className="mb-6 text-xs font-medium text-slate-400 hover:text-slate-200 transition"
-        >
-          ← Back to account setup
-        </button>
+    <div className="mc-card">
+      <div className="mc-section max-w-xl mx-auto text-left space-y-6">
+        <div>
+          <h1 className="mc-title mb-3">Connect your MT5 account</h1>
+          <p className="text-slate-400 text-sm">
+            Please provide the access details of the MT5 account that will be
+            traded by Montelion. Make sure the information is correct before
+            validating.
+          </p>
+        </div>
 
-        <h1 className="text-2xl md:text-3xl font-semibold mb-2">
-          Connect Your MT5 Account
-        </h1>
-        <p className="text-sm text-slate-300 mb-8 max-w-xl">
-          Provide the login details of the MT5 account you want Montelion to
-          trade on. Your credentials are encrypted and stored securely.
-        </p>
+        {/* Messages */}
+        {errorMsg && (
+          <div className="rounded-md border border-rose-500/70 bg-rose-500/10 px-3 py-2 text-sm text-rose-100">
+            {errorMsg}
+          </div>
+        )}
+        {successMsg && (
+          <div className="rounded-md border border-emerald-500/70 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-100">
+            {successMsg}
+          </div>
+        )}
 
-        <form
-          onSubmit={handleSave}
-          className="bg-slate-900/70 border border-slate-800 rounded-2xl p-6 space-y-5"
-        >
-          <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1.5">
-              Broker name
-            </label>
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          {/* Identifiant MT5 */}
+          <label className="block text-sm text-slate-300">
+            MT5 login / account ID
             <input
               type="text"
+              className="mc-input mt-2"
+              placeholder="Ex: 12345678"
+              value={login}
+              onChange={(e) => setLogin(e.target.value)}
+              required
+            />
+          </label>
+
+          {/* Broker name */}
+          <label className="block text-sm text-slate-300">
+            Broker name
+            <input
+              type="text"
+              className="mc-input mt-2"
+              placeholder="Ex: IC Markets, Pepperstone…"
               value={brokerName}
               onChange={(e) => setBrokerName(e.target.value)}
-              placeholder="Ex: IC Markets, RoboForex..."
-              className="w-full rounded-xl bg-slate-950/60 border border-slate-800 px-3 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               required
             />
-          </div>
+          </label>
 
-          <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1.5">
-              MT5 server
-            </label>
+          {/* Server */}
+          <label className="block text-sm text-slate-300">
+            MT5 server
             <input
               type="text"
+              className="mc-input mt-2"
+              placeholder="Ex: ICMarketsSC-Demo, Broker-MT5-Live"
               value={server}
               onChange={(e) => setServer(e.target.value)}
-              placeholder="Ex: ICMarkets-MT5-1"
-              className="w-full rounded-xl bg-slate-950/60 border border-slate-800 px-3 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               required
             />
-          </div>
+          </label>
 
+          {/* Password + œil */}
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1.5">
+            <label className="block text-sm text-slate-300">
               MT5 password
             </label>
-            <div className="relative">
+            <div className="relative mt-2">
               <input
                 type={showPassword ? "text" : "password"}
+                className="mc-input pr-11"
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-xl bg-slate-950/60 border border-slate-800 px-3 py-2.5 pr-16 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute inset-y-0 right-2 px-2 text-xs font-medium text-slate-400 hover:text-slate-100"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                aria-label={showPassword ? "Hide password" : "Show password"}
               >
-                {showPassword ? "Hide" : "Show"}
+                {showPassword ? (
+                  // eye-off
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M3 3l18 18"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M10.58 10.58A3 3 0 0012 15a3 3 0 002.42-4.42M9.88 5.09A10.94 10.94 0 0112 5c5.52 0 9 4.5 9 7-.23.83-1.07 2.19-2.54 3.53M6.53 6.53C4.51 7.74 3.23 9.3 3 12c0 2.5 3.48 7 9 7 1.21 0 2.34-.21 3.36-.6"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                ) : (
+                  // eye
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="3"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    />
+                  </svg>
+                )}
               </button>
             </div>
           </div>
 
-          <p className="text-xs text-amber-300 bg-amber-500/10 border border-amber-500/40 rounded-xl px-3 py-2">
-            Never share your MT5 credentials in plain text outside Montelion.
-            Our team will never ask for your password via email, chat or social
-            networks.
+          <p className="text-xs text-slate-500">
+            These credentials are stored securely and used only to connect your
+            MT5 account to Montelion&apos;s trading infrastructure.
           </p>
 
-          {error && (
-            <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/40 rounded-xl px-3 py-2">
-              {error}
-            </p>
-          )}
-
-          {success && (
-            <p className="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/40 rounded-xl px-3 py-2">
-              {success}
-            </p>
-          )}
-
-          <div className="flex justify-end pt-2">
-            <button
-              type="submit"
-              disabled={saving}
-              className="inline-flex items-center justify-center rounded-xl bg-white text-slate-900 text-sm font-medium px-4 py-2.5 hover:bg-slate-100 disabled:opacity-60 disabled:cursor-not-allowed transition"
-            >
-              {saving ? "Saving..." : "Save and continue"}
-            </button>
-          </div>
+          <button
+            type="submit"
+            disabled={saving}
+            className="mc-btn mc-btn-primary w-full mt-2 disabled:opacity-60"
+          >
+            {saving ? "Saving…" : "Save and continue"}
+          </button>
         </form>
       </div>
     </div>
