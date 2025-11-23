@@ -38,12 +38,12 @@ const STEPS = [
   },
   {
     id: 4,
-    title: "Exchange setup",
-    subtitle: "Connect your trading account",
+    title: "Broker account",
+    subtitle: "Create, fund and connect your MT5 account",
     bullets: [
-      "Tutorial for the chosen exchange",
-      "Deposit funds on your own account",
-      "Create a read-only API key (no withdrawals)",
+      "Open your trading account with the selected broker",
+      "Deposit funds on your own MT5 account",
+      "Share your MT5 login details so Montelion can trade for you",
     ],
   },
   {
@@ -52,7 +52,7 @@ const STEPS = [
     subtitle: "Final checks & activation",
     bullets: [
       "Compliance review of your file",
-      "Verification of your API connection",
+      "Verification of your trading connection",
       "Your account goes live once validated",
     ],
   },
@@ -130,8 +130,9 @@ export default function GetStartedAdvancedPage() {
         <div className="mc-section text-left">
           <h1 className="mc-title mb-3">Let&apos;s continue your setup</h1>
           <p className="text-slate-400 mb-10">
-            Your contract is now signed. Next, you&apos;ll connect your exchange account 
-            so Montelion can trade while you keep full control of your funds.
+            Your contract is now signed. Next, you&apos;ll create and connect
+            your broker account so Montelion can trade while you keep full
+            control of your funds.
           </p>
 
           {/* TIMELINE */}
@@ -192,7 +193,9 @@ export default function GetStartedAdvancedPage() {
                       )}
                     </div>
 
-                    <p className="text-sm text-slate-300 mb-3">{step.subtitle}</p>
+                    <p className="text-sm text-slate-300 mb-3">
+                      {step.subtitle}
+                    </p>
 
                     <ul className="text-[11px] text-slate-500 space-y-1.5">
                       {step.bullets.map((b, i) => (
