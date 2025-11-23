@@ -5,11 +5,10 @@ import { usePathname } from "next/navigation";
 
 export default function AppShell({ children }) {
   const pathname = usePathname();
-
   const isDashboard = pathname.startsWith("/dashboard");
 
+  // DASHBOARD : full screen, pas de centrage
   if (isDashboard) {
-    // DASHBOARD : full screen, pas de centrage
     return (
       <div className="relative min-h-screen w-full">
         {children}
@@ -17,9 +16,10 @@ export default function AppShell({ children }) {
     );
   }
 
-  // AUTRES PAGES (login, onboarding, etc.) : centrées
+  // AUTRES PAGES (landing, login, etc.) : plus de flex-center, on laisse la page
+  // gérer son header et sa mise en page normalement
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center px-4 md:px-10">
+    <div className="relative min-h-screen w-full">
       {children}
     </div>
   );
