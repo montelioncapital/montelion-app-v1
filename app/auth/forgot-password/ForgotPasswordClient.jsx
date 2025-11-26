@@ -24,12 +24,11 @@ export default function ForgotPasswordPage() {
       await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth/confirm/set-password`,
       });
-      // On redirige toujours vers la page de confirmation
+
       router.push(
         `/auth/forgot-password/check-email?email=${encodeURIComponent(email)}`
       );
     } catch (e) {
-      // Même UX: on affiche la page de confirmation
       router.push(
         `/auth/forgot-password/check-email?email=${encodeURIComponent(email)}`
       );
@@ -67,7 +66,7 @@ export default function ForgotPasswordPage() {
             type="submit"
             disabled={!email || loading}
             className={`mc-btn mc-btn-primary w-full ${
-              !email || loading ? "opacity-50 cursor-not-allowed" : ""
+              (!email || loading) ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >
             {loading ? "Sending…" : "Send reset link"}
@@ -76,7 +75,10 @@ export default function ForgotPasswordPage() {
 
         <p className="mt-6 text-sm text-slate-500">
           Remembered it?{" "}
-          <a href="/login" className="underline">
+          <a
+            href="/login"
+            className="text-slate-300 hover:text-slate-200 no-underline"
+          >
             Go back to sign in.
           </a>
         </p>
