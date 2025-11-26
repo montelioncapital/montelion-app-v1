@@ -95,7 +95,15 @@ export async function POST(req) {
       profile.last_name || ""
     }`.trim();
     const lastName = (profile.last_name || "").toUpperCase();
-    const fullAddress = `${address.address_line}, ${address.postal_code} ${address.city}, ${address.country}`;
+
+    const addressLine = `${address.address_line}, ${address.postal_code} ${address.city}, ${address.country}`;
+
+    // Date du jour
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const dd = String(now.getDate()).padStart(2, "0");
+    const dateStr = `${yyyy}-${mm}-${dd}`;
 
     // 5) Charger le template PDF depuis /public/legal
     const templatePath = path.join(
@@ -107,62 +115,68 @@ export async function POST(req) {
     const templateBytes = await fs.readFile(templatePath);
     const pdfDoc = await PDFDocument.load(templateBytes);
 
-    // On travaille sur la page 11 (index 10)
-    const page = pdfDoc.getPages()[10];
+    // On écrit sur la DERNIÈRE page
+    const pages = pdfDoc.getPages();
+    const page = pages[pages.length - 1];
+
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-    const now = new Date();
-    const yyyy = now.getFullYear();
-    const mm = String(now.getMonth() + 1).padStart(2, "0");
-    const dd = String(now.getDate()).padStart(2, "0");
-    const dateStr = `${yyyy}-${mm}-${dd}`;
+    // 6) Bloc "For the Client" sous la signature existante
+    //
+    // On part d'un x fixe (assez à gauche) et on empile les lignes vers le bas.
+    const startX = 90; // marge gauche
+    let cursorY = 360; // position verticale de départ (sous la signature)
+    const lineGap = 14;
+    const fontSize = 11;
 
-    // --- Positionnement (coordonnées ajustées pour la page 11) ---
-
-    // Date après "Date :"
-    page.drawText(dateStr, {
-      x: 210, // aligné après le label "Date :"
-      y: 700, // sur la même ligne que "Date :"
-      size: 11,
+    page.drawText("For the Client", {
+      x: startX,
+      y: cursorY,
+      size: fontSize,
       font,
       color: rgb(0, 0, 0),
     });
 
-    // Bloc "For the Client"
-    const clientX = 210; // après "Name :", "Address:", "Signature:"
-    const clientNameY = 560;
-    const clientAddressY = 545;
-    const clientSignatureY = 530;
-
-    page.drawText(fullName, {
-      x: clientX,
-      y: clientNameY,
-      size: 11,
+    cursorY -= lineGap;
+    page.drawText(`Name : ${fullName}`, {
+      x: startX,
+      y: cursorY,
+      size: fontSize,
       font,
       color: rgb(0, 0, 0),
     });
 
-    page.drawText(fullAddress, {
-      x: clientX,
-      y: clientAddressY,
-      size: 11,
+    cursorY -= lineGap;
+    page.drawText(`Address: ${addressLine}`, {
+      x: startX,
+      y: cursorY,
+      size: fontSize,
       font,
       color: rgb(0, 0, 0),
     });
 
-    // Signature du client = nom de famille en majuscules
-    page.drawText(lastName, {
-      x: clientX,
-      y: clientSignatureY,
-      size: 11,
+    cursorY -= lineGap;
+    page.drawText(`Signature: ${lastName}`, {
+      x: startX,
+      y: cursorY,
+      size: fontSize,
       font,
       color: rgb(0, 0, 0),
     });
 
-    // Pas d'autres textes ajoutés plus bas : on ne touche plus au reste de la page
+    cursorY -= lineGap;
+    page.drawText(`Date: ${dateStr}`, {
+      x: startX,
+      y: cursorY,
+      size: fontSize,
+      font,
+      color: rgb(0, 0, 0),
+    });
+
+    // 7) Sauvegarder le PDF modifié
     const pdfBytes = await pdfDoc.save();
 
-    // 6) Upload dans le bucket Storage "contracts"
+    // 8) Upload dans le bucket Storage "contracts"
     const fileName = `contract-${userId}-${Date.now()}.pdf`;
     const storagePath = `${userId}/${fileName}`;
 
@@ -187,7 +201,7 @@ export async function POST(req) {
 
     const publicUrl = publicUrlData?.publicUrl || null;
 
-    // 7) Enregistrer dans la table contracts
+    // 9) Enregistrer dans la table contracts
     const { error: insertError } = await supabase.from("contracts").insert({
       user_id: userId,
       status: "signed",
@@ -199,7 +213,7 @@ export async function POST(req) {
       console.error("contracts insert error:", insertError);
     }
 
-    // 8) Mettre l’onboarding à l’étape 9 (best effort)
+    // 10) Mettre l’onboarding à l’étape 9
     const targetStep = 9;
 
     const { error: onboardingError } = await supabase
@@ -226,7 +240,7 @@ export async function POST(req) {
       console.error("profiles current_step update error:", profileStepError);
     }
 
-    // 9) Réponse OK
+    // 11) Réponse OK
     return NextResponse.json({ ok: true, pdfUrl: publicUrl });
   } catch (err) {
     console.error("/api/contracts/sign error:", err);
