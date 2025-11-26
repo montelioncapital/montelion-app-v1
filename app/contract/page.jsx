@@ -1,4 +1,3 @@
-// app/contract/page.jsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -25,19 +24,10 @@ export default function ContractPage() {
     (async () => {
       setLoading(true);
       setError("");
-      setOk("");
 
-      const { data: sessionData, error: sessionErr } =
-        await supabase.auth.getSession();
-
-      if (sessionErr) {
-        console.error("session error", sessionErr);
-        setError("We couldn't verify your session. Please sign in again.");
-        setLoading(false);
-        return;
-      }
-
+      const { data: sessionData } = await supabase.auth.getSession();
       const session = sessionData?.session;
+
       if (!session?.user) {
         router.replace("/login");
         return;
@@ -46,59 +36,19 @@ export default function ContractPage() {
       const userId = session.user.id;
 
       const [
-        { data: profileData, error: profileErr },
-        { data: addrData, error: addrErr },
-        { data: kycData, error: kycErr },
-        { data: poaData, error: poaErr },
+        { data: profileData },
+        { data: addrData },
+        { data: kycData },
+        { data: poaData }
       ] = await Promise.all([
-        supabase
-          .from("profiles")
-          .select("first_name, last_name, date_of_birth, phone_e164")
-          .eq("id", userId)
-          .maybeSingle(),
-        supabase
-          .from("addresses")
-          .select("address_line, city, postal_code, country")
-          .eq("user_id", userId)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle(),
-        supabase
-          .from("kyc_identities")
-          .select("doc_type")
-          .eq("user_id", userId)
-          .maybeSingle(),
-        supabase
-          .from("proof_of_address")
-          .select("doc_type")
-          .eq("user_id", userId)
-          .maybeSingle(),
+        supabase.from("profiles").select("first_name, last_name, date_of_birth").eq("id", userId).maybeSingle(),
+        supabase.from("addresses").select("address_line, city, postal_code, country").eq("user_id", userId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+        supabase.from("kyc_identities").select("doc_type").eq("user_id", userId).maybeSingle(),
+        supabase.from("proof_of_address").select("doc_type").eq("user_id", userId).maybeSingle()
       ]);
 
-      if (profileErr || addrErr || kycErr || poaErr) {
-        console.error("contract data errors", {
-          profileErr,
-          addrErr,
-          kycErr,
-          poaErr,
-        });
-        setError(
-          "We couldn't load the data required to generate your contract."
-        );
-        setLoading(false);
-        return;
-      }
-
       if (!profileData || !addrData || !kycData || !poaData) {
-        console.warn("missing data", {
-          profileData,
-          addrData,
-          kycData,
-          poaData,
-        });
-        setError(
-          "We couldn't load the data required to generate your contract."
-        );
+        setError("We couldn't load the required data to generate your contract.");
         setLoading(false);
         return;
       }
@@ -118,31 +68,23 @@ export default function ContractPage() {
     setSigning(true);
 
     try {
-      const { data: sessionData, error: sessionErr } =
-        await supabase.auth.getSession();
-
-      if (sessionErr || !sessionData?.session) {
-        console.error("session error in handleSign", sessionErr);
-        throw new Error("Not authenticated.");
-      }
-
-      const accessToken = sessionData.session.access_token;
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
 
       const res = await fetch("/api/contracts/sign", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken}`
         },
         body: JSON.stringify({
-          acceptedTerms: hasAccepted,
-        }),
+          acceptedTerms: hasAccepted
+        })
       });
 
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        console.error("sign error", data);
         throw new Error(data.error || "Unable to sign your contract.");
       }
 
@@ -152,17 +94,16 @@ export default function ContractPage() {
         router.push("/contract/signed");
       }
     } catch (err) {
-      setError(err.message || "Something went wrong while signing.");
+      setError(err.message);
     } finally {
       setSigning(false);
     }
   }
 
-  // ----------------- RENDER -----------------
   if (loading) {
     return (
-      <div className="w-full flex justify-center px-4 md:px-0 py-16 md:py-24">
-        <div className="mc-card max-w-2xl w-full">
+      <div className="w-full flex justify-center items-center py-32">
+        <div className="mc-card max-w-xl mx-auto">
           <div className="mc-section text-left">
             <h1 className="mc-title mb-2">Contract</h1>
             <p className="text-slate-400">Loading your information…</p>
@@ -172,33 +113,31 @@ export default function ContractPage() {
     );
   }
 
-  if (error && !profile) {
+  if (!profile) {
     return (
-      <div className="w-full flex justify-center px-4 md:px-0 py-16 md:py-24">
-        <div className="mc-card max-w-2xl w-full">
+      <div className="w-full flex justify-center items-center py-32">
+        <div className="mc-card max-w-xl mx-auto">
           <div className="mc-section text-left">
             <h1 className="mc-title mb-2">Contract</h1>
-            <p className="text-rose-400 text-sm">{error}</p>
+            <p className="text-rose-400">{error}</p>
           </div>
         </div>
       </div>
     );
   }
 
-  const fullName = `${profile.first_name || ""} ${
-    profile.last_name || ""
-  }`.trim();
-
+  const fullName = `${profile.first_name} ${profile.last_name}`.trim();
   const signDisabled = signing || !hasAccepted;
 
   return (
-    <div className="w-full flex justify-center px-4 md:px-0 py-16 md:py-24">
-      <div className="mc-card max-w-2xl w-full">
-        <div className="mc-section text-left max-w-2xl mx-auto">
+    <div className="w-full flex justify-center px-4 py-16 md:py-24">
+      {/*  --------- RECTANGLE CENTRÉ --------- */}
+      <div className="mc-card max-w-2xl w-full mx-auto">
+
+        <div className="mc-section text-left">
           <h1 className="mc-title mb-3">Contract</h1>
           <p className="text-slate-400 mb-6">
-            Please review the summary of your information below, then sign the
-            discretionary management agreement.
+            Please review the summary of your information below, then sign the discretionary management agreement.
           </p>
 
           {ok && (
@@ -207,42 +146,33 @@ export default function ContractPage() {
             </div>
           )}
 
-          {error && profile && error !== "Not authenticated." && (
+          {error && error !== "Not authenticated." && (
             <div className="mb-4 text-sm text-rose-400 bg-rose-950/40 border border-rose-900/40 px-3 py-2 rounded-lg">
               {error}
             </div>
           )}
 
-          {/* Client summary */}
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 px-5 py-4 mb-6 space-y-2 text-sm text-slate-200">
-            <div className="font-semibold text-slate-50">Client details</div>
-            <div>
-              <span className="text-slate-500 mr-2">Name:</span>
-              {fullName}
-            </div>
-            <div>
-              <span className="text-slate-500 mr-2">Date of birth:</span>
-              {profile.date_of_birth}
-            </div>
+          {/* CLIENT DETAILS */}
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 px-5 py-4 mb-6 text-sm text-slate-200">
+            <div className="font-semibold text-slate-50 mb-2">Client details</div>
+
+            <div><span className="text-slate-500 mr-2">Name:</span>{fullName}</div>
+            <div><span className="text-slate-500 mr-2">Date of birth:</span>{profile.date_of_birth}</div>
             <div>
               <span className="text-slate-500 mr-2">Address:</span>
-              {address.address_line}, {address.postal_code} {address.city},{" "}
-              {address.country}
+              {address.address_line}, {address.postal_code} {address.city}, {address.country}
             </div>
           </div>
 
-          {/* Agreement text */}
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 px-5 py-4 mb-6 text-sm text-slate-300 space-y-3">
+          {/* AGREEMENT TEXT */}
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 px-5 py-4 mb-6 text-sm space-y-3">
+
             <p className="font-semibold text-slate-100">
               Discretionary Management Agreement
             </p>
 
             <p className="text-slate-400 text-xs leading-relaxed">
-              By signing this agreement, you authorize Montelion Capital to
-              manage your foreign exchange account on a discretionary basis, in
-              accordance with the investment mandate defined in the contract.
-              You retain full control of your assets at all times and may revoke
-              API access whenever you wish.
+              By signing this agreement, you authorize Montelion Capital to manage your foreign exchange account on a discretionary basis, in accordance with the investment mandate defined in the contract. You retain full control of your assets at all times and may revoke API access whenever you wish.
             </p>
 
             <p className="text-slate-500 text-xs">
@@ -259,38 +189,23 @@ export default function ContractPage() {
             </p>
 
             <p className="text-slate-500 text-xs">
-              The full legal text will be generated as a PDF and stored
-              securely once you sign. You will be able to download a copy for
-              your records.
+              The full legal text will be generated as a PDF and stored securely once you sign. You will be able to download a copy for your records.
             </p>
           </div>
 
-          {/* ORANGE RISK / RULES BLOCK */}
-          <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 px-5 py-4 mb-6 text-xs text-amber-100 space-y-2">
-            <p className="font-semibold text-amber-200">
-              Important risk and conduct notices
-            </p>
+          {/* ORANGE WARNING BOX */}
+          <div className="rounded-2xl border border-amber-600 bg-amber-900/20 px-5 py-4 mb-6 text-xs text-amber-200">
+            <p className="font-semibold text-amber-300 mb-2">Important risk and conduct notices</p>
+
             <ul className="list-disc list-inside space-y-1">
-              <li>
-                Montelion Capital can never withdraw funds from your exchange
-                account under any circumstances.
-              </li>
-              <li>
-                You must not use your connected exchange account for personal or
-                manual trading while it is under discretionary management.
-              </li>
-              <li>
-                Trading involves risk, including the possibility of partial or
-                total loss of capital.
-              </li>
-              <li>
-                Any breach of the agreement may result in the termination of
-                your Montelion account and may lead to potential legal action.
-              </li>
+              <li>Montelion Capital can never withdraw funds from your exchange account under any circumstances.</li>
+              <li>You must not use your connected exchange account for personal or manual trading while it is under discretionary management.</li>
+              <li>Trading involves risk, including the possibility of partial or total loss of capital.</li>
+              <li>Any breach of the contract may result in the immediate closure of your Montelion account and potential legal action.</li>
             </ul>
           </div>
 
-          {/* Acceptance checkbox */}
+          {/* ACCEPT CHECKBOX */}
           <label className="flex items-start gap-3 mb-2 text-xs text-slate-300 cursor-pointer select-none">
             <input
               type="checkbox"
@@ -299,25 +214,20 @@ export default function ContractPage() {
               onChange={(e) => setHasAccepted(e.target.checked)}
             />
             <span>
-              I confirm that I have read and accept the terms of the
-              discretionary management agreement and the related risk
-              disclosures.
+              I confirm that I have read and accept the terms of the discretionary management agreement and the related risk disclosures.
             </span>
           </label>
 
           <p className="mb-6 text-[11px] text-slate-500">
             By clicking <span className="font-semibold">“Sign contract”</span>,
-            you electronically sign the agreement. Your name will appear as the
-            signature in the generated PDF.
+            you electronically sign the agreement. Your name will appear as the signature in the generated PDF.
           </p>
 
           <button
             type="button"
             onClick={handleSign}
             disabled={signDisabled}
-            className={`mc-btn mc-btn-primary ${
-              signDisabled ? "opacity-60 cursor-not-allowed" : ""
-            }`}
+            className={`mc-btn mc-btn-primary ${signDisabled ? "opacity-60 cursor-not-allowed" : ""}`}
           >
             {signing ? "Signing…" : "Sign contract"}
           </button>
