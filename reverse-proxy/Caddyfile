@@ -1,4 +1,4 @@
-montelion-capital.com, www.montelion-capital.com {
+app.montelion-capital.com {
   encode zstd gzip
   reverse_proxy app:3000
 }
