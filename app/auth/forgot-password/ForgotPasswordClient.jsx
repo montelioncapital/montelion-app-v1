@@ -77,7 +77,11 @@ export default function ForgotPasswordPage() {
           Remembered it?{" "}
           <a
             href="/login"
-            className="text-slate-300 hover:text-slate-200 no-underline"
+            className="text-slate-500 no-underline cursor-pointer hover:none active:none focus:none"
+            style={{
+              textDecoration: "none",
+              color: "inherit",
+            }}
           >
             Go back to sign in.
           </a>
