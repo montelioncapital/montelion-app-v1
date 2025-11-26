@@ -8,9 +8,8 @@ export default function PublicSupportPage() {
           <h1 className="mc-title mb-3">Support Montelion</h1>
 
           <p className="text-slate-400 mb-6">
-            Our team is available to assist you with{" "}
-            <span className="text-slate-200">any request</span> — account access,
-            invitations, technical issues or general information.
+            Our team is available to assist you with
+            any request account access, invitations, technical issues or general information.
           </p>
 
           {/* Email */}
