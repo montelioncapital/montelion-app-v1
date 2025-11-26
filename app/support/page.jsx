@@ -8,8 +8,9 @@ export default function PublicSupportPage() {
           <h1 className="mc-title mb-3">Support Montelion</h1>
 
           <p className="text-slate-400 mb-6">
-            Our team is available to assist you with <span className="text-slate-200">any request</span> —
-            account access, invitations, technical issues or general information.
+            Our team is available to assist you with{" "}
+            <span className="text-slate-200">any request</span> — account access,
+            invitations, technical issues or general information.
           </p>
 
           {/* Email */}
@@ -18,12 +19,22 @@ export default function PublicSupportPage() {
             <p className="text-slate-400 mb-3">
               Contact us for any question or assistance. Response within 24h.
             </p>
-            <a
-              href="mailto:support@montelion-capital.com"
-              className="mc-btn mc-btn-primary w-full text-center"
+
+            {/* Bouton gris non cliquable */}
+            <div
+              className="
+                mc-btn 
+                w-full 
+                text-center 
+                bg-slate-800/60 
+                border border-slate-700 
+                text-slate-400 
+                cursor-not-allowed 
+                pointer-events-none
+              "
             >
               support@montelion-capital.com
-            </a>
+            </div>
           </div>
 
           {/* WhatsApp */}
@@ -32,14 +43,22 @@ export default function PublicSupportPage() {
             <p className="text-slate-400 mb-3">
               Reach us instantly for urgent matters or quick questions.
             </p>
-            <a
-              href="https://wa.me/33610454578"
-              target="_blank"
-              rel="noreferrer"
-              className="mc-btn w-full text-center border border-slate-600 bg-slate-800/60 hover:bg-slate-800"
+
+            {/* Bouton gris non cliquable */}
+            <div
+              className="
+                mc-btn 
+                w-full 
+                text-center 
+                bg-slate-800/60 
+                border border-slate-700 
+                text-slate-400 
+                cursor-not-allowed 
+                pointer-events-none
+              "
             >
               +33 6 10 45 45 78
-            </a>
+            </div>
           </div>
 
           <p className="text-xs text-slate-500 mt-6">
