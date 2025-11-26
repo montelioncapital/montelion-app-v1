@@ -26,7 +26,7 @@ export async function POST(req) {
       );
     }
 
-    // 2) Récupérer le token envoyé par le client
+    // 2) Get auth token from header
     const authHeader = req.headers.get("authorization") || "";
     const token = authHeader.startsWith("Bearer ")
       ? authHeader.slice(7)
@@ -39,7 +39,7 @@ export async function POST(req) {
       );
     }
 
-    // 3) Client Supabase avec le token (RLS OK)
+    // 3) Supabase client with user token
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         persistSession: false,
@@ -67,7 +67,7 @@ export async function POST(req) {
 
     const userId = user.id;
 
-    // 4) Charger les infos pour le PDF
+    // 4) Load info for PDF
     const [{ data: profile }, { data: address }] = await Promise.all([
       supabase
         .from("profiles")
@@ -96,13 +96,15 @@ export async function POST(req) {
     }`.trim();
     const lastName = profile.last_name || "";
 
-    // 5) Charger le template PDF depuis /public/legal
+    // 5) Load PDF template from /public/legal
+    // 👉 use the new file name
     const templatePath = path.join(
       process.cwd(),
       "public",
       "legal",
-      "montelion-discretionary-mandate.pdf"
+      "INVESTMENT-MANAGEMENT-AGREEMENT-SIGNED.pdf"
     );
+
     const templateBytes = await fs.readFile(templatePath);
     const pdfDoc = await PDFDocument.load(templateBytes);
 
@@ -115,7 +117,7 @@ export async function POST(req) {
     const dd = String(now.getDate()).padStart(2, "0");
     const dateStr = `${yyyy}-${mm}-${dd}`;
 
-    // Infos dans le PDF
+    // Fill in PDF
     page.drawText(`Client: ${fullName}`, {
       x: 72,
       y: 700,
@@ -143,7 +145,7 @@ export async function POST(req) {
       color: rgb(0, 0, 0),
     });
 
-    // “Signature” = nom de famille
+    // “Signature” = last name
     page.drawText(lastName.toUpperCase(), {
       x: 300,
       y: 120,
@@ -154,7 +156,7 @@ export async function POST(req) {
 
     const pdfBytes = await pdfDoc.save();
 
-    // 6) Upload dans le bucket Storage "contracts"
+    // 6) Upload to Storage bucket "contracts"
     const fileName = `contract-${userId}-${Date.now()}.pdf`;
     const storagePath = `${userId}/${fileName}`;
 
@@ -179,7 +181,7 @@ export async function POST(req) {
 
     const publicUrl = publicUrlData?.publicUrl || null;
 
-    // 7) Enregistrer dans la table contracts
+    // 7) Insert in contracts table
     const { error: insertError } = await supabase.from("contracts").insert({
       user_id: userId,
       status: "signed",
@@ -191,7 +193,7 @@ export async function POST(req) {
       console.error("contracts insert error:", insertError);
     }
 
-    // 8) Mettre l’onboarding à l’étape 9 (best effort)
+    // 8) Move onboarding step to 9 (best effort)
     const targetStep = 9;
 
     const { error: onboardingError } = await supabase
@@ -218,7 +220,7 @@ export async function POST(req) {
       console.error("profiles current_step update error:", profileStepError);
     }
 
-    // 9) Réponse OK
+    // 9) OK response
     return NextResponse.json({ ok: true, pdfUrl: publicUrl });
   } catch (err) {
     console.error("/api/contracts/sign error:", err);
