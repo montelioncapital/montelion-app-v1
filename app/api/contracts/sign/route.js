@@ -26,7 +26,7 @@ export async function POST(req) {
       );
     }
 
-    // 2) Get auth token from header
+    // 2) Get auth token from headers
     const authHeader = req.headers.get("authorization") || "";
     const token = authHeader.startsWith("Bearer ")
       ? authHeader.slice(7)
@@ -39,7 +39,7 @@ export async function POST(req) {
       );
     }
 
-    // 3) Supabase client with user token
+    // 3) Supabase client with user JWT (RLS aware)
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         persistSession: false,
@@ -67,7 +67,7 @@ export async function POST(req) {
 
     const userId = user.id;
 
-    // 4) Load info for PDF
+    // 4) Load data for PDF
     const [{ data: profile }, { data: address }] = await Promise.all([
       supabase
         .from("profiles")
@@ -94,21 +94,22 @@ export async function POST(req) {
     const fullName = `${profile.first_name || ""} ${
       profile.last_name || ""
     }`.trim();
-    const lastName = profile.last_name || "";
+    const lastName = (profile.last_name || "").toUpperCase();
+    const fullAddress = `${address.address_line}, ${address.postal_code} ${address.city}, ${address.country}`;
 
-    // 5) Load PDF template from /public/legal
-    // 👉 use the new file name
+    // 5) Load SIGNED template PDF (page 11 to be filled)
     const templatePath = path.join(
       process.cwd(),
       "public",
       "legal",
       "INVESTMENT-MANAGEMENT-AGREEMENT-SIGNED.pdf"
     );
-
     const templateBytes = await fs.readFile(templatePath);
     const pdfDoc = await PDFDocument.load(templateBytes);
 
-    const page = pdfDoc.getPages()[0];
+    const pages = pdfDoc.getPages();
+    // Page 11 = index 10
+    const page = pages[10];
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
     const now = new Date();
@@ -117,38 +118,40 @@ export async function POST(req) {
     const dd = String(now.getDate()).padStart(2, "0");
     const dateStr = `${yyyy}-${mm}-${dd}`;
 
-    // Fill in PDF
-    page.drawText(`Client: ${fullName}`, {
-      x: 72,
-      y: 700,
+    // 6) Draw data on specific positions on page 11
+    // (coords ajustables si besoin après test visuel)
+
+    // "Date :" line
+    page.drawText(dateStr, {
+      x: 120,
+      y: 640,
+      size: 11,
+      font,
+      color: rgb(0, 0, 0),
+    });
+
+    // "Name :" (For the Client)
+    page.drawText(fullName, {
+      x: 120,
+      y: 560,
+      size: 11,
+      font,
+      color: rgb(0, 0, 0),
+    });
+
+    // "Address :" (For the Client)
+    page.drawText(fullAddress, {
+      x: 120,
+      y: 540,
       size: 10,
       font,
       color: rgb(0, 0, 0),
     });
 
-    page.drawText(
-      `Address: ${address.address_line}, ${address.postal_code} ${address.city}, ${address.country}`,
-      {
-        x: 72,
-        y: 685,
-        size: 9,
-        font,
-        color: rgb(0, 0, 0),
-      }
-    );
-
-    page.drawText(`Signed electronically on: ${dateStr}`, {
-      x: 72,
-      y: 140,
-      size: 9,
-      font,
-      color: rgb(0, 0, 0),
-    });
-
-    // “Signature” = last name
-    page.drawText(lastName.toUpperCase(), {
-      x: 300,
-      y: 120,
+    // "Signature :" (For the Client) → last name in caps
+    page.drawText(lastName, {
+      x: 120,
+      y: 500,
       size: 14,
       font,
       color: rgb(0, 0, 0),
@@ -156,7 +159,7 @@ export async function POST(req) {
 
     const pdfBytes = await pdfDoc.save();
 
-    // 6) Upload to Storage bucket "contracts"
+    // 7) Upload to Supabase Storage ("contracts" bucket)
     const fileName = `contract-${userId}-${Date.now()}.pdf`;
     const storagePath = `${userId}/${fileName}`;
 
@@ -181,7 +184,7 @@ export async function POST(req) {
 
     const publicUrl = publicUrlData?.publicUrl || null;
 
-    // 7) Insert in contracts table
+    // 8) Insert in contracts table (best effort)
     const { error: insertError } = await supabase.from("contracts").insert({
       user_id: userId,
       status: "signed",
@@ -193,7 +196,7 @@ export async function POST(req) {
       console.error("contracts insert error:", insertError);
     }
 
-    // 8) Move onboarding step to 9 (best effort)
+    // 9) Update onboarding step to 9 (download / signed step)
     const targetStep = 9;
 
     const { error: onboardingError } = await supabase
@@ -220,7 +223,7 @@ export async function POST(req) {
       console.error("profiles current_step update error:", profileStepError);
     }
 
-    // 9) OK response
+    // 10) OK
     return NextResponse.json({ ok: true, pdfUrl: publicUrl });
   } catch (err) {
     console.error("/api/contracts/sign error:", err);
