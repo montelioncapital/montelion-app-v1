@@ -26,7 +26,7 @@ export async function POST(req) {
       );
     }
 
-    // 2) Récupération du token d'auth dans les headers
+    // 2) Récupérer le token envoyé par le client
     const authHeader = req.headers.get("authorization") || "";
     const token = authHeader.startsWith("Bearer ")
       ? authHeader.slice(7)
@@ -39,7 +39,7 @@ export async function POST(req) {
       );
     }
 
-    // 3) Client Supabase avec le JWT de l'utilisateur (RLS OK)
+    // 3) Client Supabase avec le token
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         persistSession: false,
@@ -67,7 +67,7 @@ export async function POST(req) {
 
     const userId = user.id;
 
-    // 4) Charger les infos nécessaires pour pré-remplir le PDF
+    // 4) Charger les infos pour le PDF
     const [{ data: profile }, { data: address }] = await Promise.all([
       supabase
         .from("profiles")
@@ -97,7 +97,7 @@ export async function POST(req) {
     const lastName = (profile.last_name || "").toUpperCase();
     const fullAddress = `${address.address_line}, ${address.postal_code} ${address.city}, ${address.country}`;
 
-    // 5) Charger le template signé et remplir UNIQUEMENT la page 11
+    // 5) Charger le template PDF depuis /public/legal
     const templatePath = path.join(
       process.cwd(),
       "public",
@@ -107,55 +107,59 @@ export async function POST(req) {
     const templateBytes = await fs.readFile(templatePath);
     const pdfDoc = await PDFDocument.load(templateBytes);
 
-    const pages = pdfDoc.getPages();
-    // Page 11 -> index 10
-    const page = pages[10];
+    // On travaille sur la page 11 (index 10)
+    const page = pdfDoc.getPages()[10];
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-    // Date du jour (à côté de "Date :")
     const now = new Date();
     const yyyy = now.getFullYear();
     const mm = String(now.getMonth() + 1).padStart(2, "0");
     const dd = String(now.getDate()).padStart(2, "0");
     const dateStr = `${yyyy}-${mm}-${dd}`;
 
-    // Coords approximatives à droite de "Date :" (en haut de la page)
+    // --- Positionnement (coordonnées ajustées pour la page 11) ---
+
+    // Date après "Date :"
     page.drawText(dateStr, {
-      x: 120,     // légèrement à droite de "Date :"
-      y: 720,     // aligné sur la ligne "Date :"
+      x: 210, // aligné après le label "Date :"
+      y: 700, // sur la même ligne que "Date :"
       size: 11,
       font,
       color: rgb(0, 0, 0),
     });
 
-    // --- Bloc "For the Client" (en bas de page) ---
-    // Name :
+    // Bloc "For the Client"
+    const clientX = 210; // après "Name :", "Address:", "Signature:"
+    const clientNameY = 560;
+    const clientAddressY = 545;
+    const clientSignatureY = 530;
+
     page.drawText(fullName, {
-      x: 150,     // à droite de "Name :"
-      y: 210,
+      x: clientX,
+      y: clientNameY,
       size: 11,
       font,
       color: rgb(0, 0, 0),
     });
 
-    // Address :
     page.drawText(fullAddress, {
-      x: 150,     // à droite de "Address :"
-      y: 195,
+      x: clientX,
+      y: clientAddressY,
       size: 11,
       font,
       color: rgb(0, 0, 0),
     });
 
-    // Signature : nom de famille en majuscule
+    // Signature du client = nom de famille en majuscules
     page.drawText(lastName, {
-      x: 150,     // à droite de "Signature :"
-      y: 180,
+      x: clientX,
+      y: clientSignatureY,
       size: 11,
       font,
       color: rgb(0, 0, 0),
     });
 
+    // Pas d'autres textes ajoutés plus bas : on ne touche plus au reste de la page
     const pdfBytes = await pdfDoc.save();
 
     // 6) Upload dans le bucket Storage "contracts"
@@ -183,7 +187,7 @@ export async function POST(req) {
 
     const publicUrl = publicUrlData?.publicUrl || null;
 
-    // 7) Enregistrer dans la table contracts (best effort)
+    // 7) Enregistrer dans la table contracts
     const { error: insertError } = await supabase.from("contracts").insert({
       user_id: userId,
       status: "signed",
