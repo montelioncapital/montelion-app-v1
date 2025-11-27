@@ -1,246 +1,221 @@
-// app/account/setup/page.jsx  (ou app/exchange/setup/page.jsx selon ton arbo)
+// app/get-started/advanced/page.jsx
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabaseClient";
 
-/* -------------------------------------------------------
-   LISTE DES SECTIONS – IG MARKETS + MT5
--------------------------------------------------------- */
-
-const SECTIONS = [
+const STEPS = [
   {
     id: 1,
-    title: "Create Your IG Markets Account",
-    items: [
-      <>
-        Go to{" "}
-        <a
-          href="https://www.ig.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-[#8fa8ff] hover:text-[#b6c6ff] underline underline-offset-2"
-        >
-          https://www.ig.com
-        </a>{" "}
-        and click <span className="italic">“Create live account”</span>.
-      </>,
-      "Choose to open a trading account in your own name (individual account).",
-      "Fill in your personal details (name, email, phone, country of residence).",
-      "Create a strong password and confirm your registration.",
-      "Confirm your email if IG asks you to validate it.",
+    title: "Start",
+    subtitle: "You’ve just unlocked your Montelion access",
+    bullets: [
+      "Private invitation validated",
+      "Secure login with email & password",
+      "First access to your Montelion journey",
     ],
   },
   {
     id: 2,
-    title: "Complete Identity Verification (KYC)",
-    items: [
-      "Sign in to your IG account.",
-      "Go to your account area and follow the steps for identity verification (KYC).",
-      "Upload your identity document (passport, ID card or driver’s license).",
-      "Upload a recent proof of address (utility bill, bank statement, tax notice…).",
-      "Fill in any additional information requested by IG (employment, income, experience).",
-      "Wait for IG to validate your documents and activate your live account.",
+    title: "Onboarding",
+    subtitle: "Personal & regulatory information",
+    bullets: [
+      "Profile & date of birth",
+      "Phone verification (SMS)",
+      "Address & KYC documents",
     ],
   },
   {
     id: 3,
-    title: "Deposit Funds to Your IG Account",
-    items: [
-      "Once your account is approved, sign in to the IG client area.",
-      "Go to the section for deposits or “Add funds”.",
-      "Choose your preferred payment method (bank card or bank transfer).",
-      "Select the account you want to fund (your main trading account).",
-      "Deposit the amount required for your Montelion mandate.",
-      "Wait for the funds to appear and be available for trading.",
+    title: "Contract",
+    subtitle: "Sign your management mandate",
+    bullets: [
+      "Clear terms & risk disclosure",
+      "Digital signature in a few clicks",
+      "You can download the mandate at any time",
     ],
   },
   {
     id: 4,
-    title: "Download and Install MetaTrader 5 (MT5)",
-    items: [
-      "From the IG platform area, go to the section for trading platforms or MetaTrader 5.",
-      "Download the MT5 platform for your device (Windows / macOS).",
-      "Run the installer and follow the steps to complete the installation.",
-      "Open MT5 once the installation is finished.",
+    title: "Broker account",
+    subtitle: "Create, fund and connect your MT5 account",
+    bullets: [
+      "Open your trading account with the selected broker",
+      "Deposit funds on your own MT5 account",
+      "Share your MT5 login details so Montelion can trade for you",
     ],
   },
   {
     id: 5,
-    title: "Find Your MT5 Login Details",
-    items: [
-      "Log in to your IG client area in your browser.",
-      "Go to the section where your MT5 account is displayed (MetaTrader / MT5 accounts).",
-      "Locate your MT5 account number and note it down.",
-      "Check the MT5 server name indicated by IG (for example “IG-Live MT5” or similar).",
-      "If IG provides an investor/read-only password, keep it accessible. Otherwise, you will use your main MT5 trading password.",
+    title: "Montelion review",
+    subtitle: "Final checks & activation",
+    bullets: [
+      "Compliance review of your file",
+      "Verification of your trading connection",
+      "Your account goes live once validated",
     ],
-  },
-  {
-    id: 6,
-    title: "Prepare the Details for Montelion",
-    items: [
-      "Make sure your IG live account is funded and fully verified.",
-      "Have these details ready for the next step:",
-      <>
-        <ul className="mt-1 list-disc list-inside text-[11px] text-slate-400 space-y-0.5">
-          <li>MT5 login (account number)</li>
-          <li>MT5 password (trading or investor, as requested by Montelion)</li>
-          <li>MT5 server name</li>
-        </ul>
-      </>,
-      "On the next page, you will enter these credentials securely so Montelion can connect and manage your trading.",
-    ],
-    warning:
-      "Once your account is connected to Montelion, personal trading from your side on this MT5 account is not allowed. Any violation may lead to permanent disconnection of the account.",
   },
 ];
 
-/* -------------------------------------------------------
-   PAGE PRINCIPALE
--------------------------------------------------------- */
-
-export default function ExchangeSetupPage() {
+export default function GetStartedAdvancedPage() {
   const router = useRouter();
   const [userId, setUserId] = useState(null);
+  const [currentStep, setCurrentStep] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Charger la session utilisateur
+  // Load session + onboarding state
   useEffect(() => {
     (async () => {
-      const { data } = await supabase.auth.getSession();
-      const session = data?.session;
+      setLoading(true);
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      const session = sessionData?.session;
 
       if (!session?.user) {
         router.replace("/login");
         return;
       }
 
-      setUserId(session.user.id);
+      const uid = session.user.id;
+      setUserId(uid);
+
+      const { data: onboard } = await supabase
+        .from("onboarding_state")
+        .select("current_step")
+        .eq("user_id", uid)
+        .maybeSingle();
+
+      setCurrentStep(onboard?.current_step ?? 0);
       setLoading(false);
     })();
   }, [router]);
 
-  // Quand l’utilisateur a terminé la préparation IG / MT5
-  async function handlePreparedAccount() {
+  async function handleContinue() {
     if (!userId) {
       router.push("/login");
       return;
     }
 
-    try {
-      const { error } = await supabase.from("onboarding_state").upsert(
-        {
-          user_id: userId,
-          current_step: 12,
-          completed: false,
-        },
-        { onConflict: "user_id" }
-      );
+    await supabase.from("onboarding_state").upsert(
+      {
+        user_id: userId,
+        current_step: 11,
+        completed: false,
+      },
+      { onConflict: "user_id" }
+    );
 
-      if (error) console.error("Error updating onboarding_state:", error);
-    } catch (e) {
-      console.error("Unexpected error:", e);
-    }
-
-    router.push("/account/mt5");
+    router.push("/account/setup");
   }
 
-  // Loading
+  /* --------- LOADING --------- */
   if (loading) {
     return (
-      <div className="min-h-screen w-full flex justify-center items-center px-4">
-        <div className="mc-card max-w-3xl w-full">
-          <div className="mc-section">
-            <h1 className="mc-title mb-2">Connect Your Account</h1>
-            <p className="text-slate-400">Loading…</p>
+      <div className="w-full flex justify-center px-4 py-10">
+        <div className="mc-card">
+          <div className="mc-section text-left">
+            <h1 className="mc-title mb-2">Let&apos;s continue your setup</h1>
+            <p className="text-slate-400">Loading your journey…</p>
           </div>
         </div>
       </div>
     );
   }
 
-  // Render principal
+  /* --------- PAGE --------- */
   return (
-    <div className="min-h-screen w-full flex justify-center px-4 md:px-0 py-10 md:py-16">
-      <div className="mc-card max-w-3xl w-full">
-        <div className="mc-section max-w-3xl mx-auto text-left">
-          <h1 className="mc-title mb-3">Connect Your Account</h1>
-          <p className="text-slate-400 mb-6">
-            Follow these steps to set up your IG Markets account, fund it, and prepare your MT5
-            login details so Montelion can connect and manage your trading.
+    <div className="w-full flex justify-center px-4 py-10">
+      <div className="mc-card">
+        <div className="mc-section text-left">
+          <h1 className="mc-title mb-3">Let&apos;s continue your setup</h1>
+          <p className="text-slate-400 mb-10">
+            Your contract is now signed. Next, you&apos;ll create and connect
+            your broker account so Montelion can trade while you keep full
+            control of your funds.
           </p>
 
-          {/* WARNING BANNER */}
-          <div className="mb-8 rounded-2xl border border-amber-500/60 bg-amber-500/10 px-4 py-3 text-xs text-amber-100 flex gap-3">
-            <span className="mt-[2px] text-amber-300">
-              <svg viewBox="0 0 24 24" className="h-4 w-4">
-                <path
-                  d="M12 3L2.5 19h19L12 3z"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                />
-                <path
-                  d="M12 9v5"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                />
-                <circle cx="12" cy="16" r="0.9" fill="currentColor" />
-              </svg>
-            </span>
-            <div>
-              <p className="font-medium mb-1.5">Keep your IG and MT5 credentials private.</p>
-              <p className="text-amber-100/90">
-                You will only enter your MT5 details inside the secure Montelion platform. Never
-                share your passwords by email, chat or screenshots.
-              </p>
-            </div>
-          </div>
+          {/* TIMELINE */}
+          <div className="space-y-5 mb-8">
+            {STEPS.map((step, index) => {
+              const isCompleted = step.id <= 3;
+              const isNext = step.id === 4;
+              const isLast = index === STEPS.length - 1;
 
-          {/* STEPS */}
-          <div className="space-y-5 mb-10">
-            {SECTIONS.map((s) => (
-              <div
-                key={s.id}
-                className="rounded-2xl border border-slate-800 bg-slate-900/50 px-5 py-4 space-y-2"
-              >
-                <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
-                  Step {s.id}
-                </p>
-                <h2 className="text-sm font-semibold text-slate-50">{s.title}</h2>
+              return (
+                <div key={step.id} className="grid grid-cols-[32px,1fr] gap-4">
+                  {/* Left column */}
+                  <div className="flex flex-col items-center">
+                    <div
+                      className={[
+                        "flex items-center justify-center h-7 w-7 rounded-full text-xs font-semibold shadow-[0_0_0_1px_rgba(15,23,42,0.9)]",
+                        isNext
+                          ? "bg-[#2564ec] text-white border border-[#2564ec]"
+                          : isCompleted
+                          ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/70"
+                          : "bg-slate-900 text-slate-300 border border-slate-700",
+                      ].join(" ")}
+                    >
+                      {isCompleted ? "✓" : step.id}
+                    </div>
 
-                <ul className="mt-1 space-y-1.5 text-xs text-slate-200">
-                  {s.items.map((item, i) => (
-                    <li key={i} className="flex gap-2">
-                      <span className="mt-[6px] h-[4px] w-[4px] rounded-full bg-slate-500/70 shrink-0" />
-                      <div>{item}</div>
-                    </li>
-                  ))}
-                </ul>
-
-                {s.warning && (
-                  <div className="mt-2 rounded-xl border border-rose-600/70 bg-rose-500/10 px-3 py-2 text-[11px] text-rose-100">
-                    {s.warning}
+                    {!isLast && (
+                      <div className="flex-1 w-px bg-gradient-to-b from-slate-700 via-slate-800 to-slate-900 mt-1" />
+                    )}
                   </div>
-                )}
-              </div>
-            ))}
+
+                  {/* Step card */}
+                  <div
+                    className={[
+                      "rounded-2xl border px-5 py-4 sm:py-5 bg-slate-900/40",
+                      isNext
+                        ? "border-[#2564ec]/80 shadow-[0_0_40px_rgba(37,100,236,0.2)]"
+                        : isCompleted
+                        ? "border-emerald-600/70"
+                        : "border-slate-800/80",
+                    ].join(" ")}
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <p className="text-sm font-semibold text-slate-50">
+                        {step.title}
+                      </p>
+
+                      {isNext && (
+                        <span className="inline-flex items-center rounded-full bg-[#2564ec]/10 border border-[#2564ec]/60 px-2 py-[3px] text-[10px] font-medium text-[#7ea3ff]">
+                          Next step
+                        </span>
+                      )}
+
+                      {isCompleted && (
+                        <span className="inline-flex items-center rounded-full bg-emerald-500/10 border border-emerald-500/60 px-2 py-[3px] text-[10px] font-medium text-emerald-300">
+                          Completed
+                        </span>
+                      )}
+                    </div>
+
+                    <p className="text-sm text-slate-300 mb-3">
+                      {step.subtitle}
+                    </p>
+
+                    <ul className="text-[11px] text-slate-500 space-y-1.5">
+                      {step.bullets.map((b, i) => (
+                        <li key={i}>• {b}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
-          {/* FOOTER */}
-          <div className="space-y-4">
-            <p className="text-xs text-slate-500 max-w-md">
-              Once your IG account is verified, funded and your MT5 login details are ready, click
-              below to move on to the secure connection step.
-            </p>
-
-            <button onClick={handlePreparedAccount} className="mc-btn mc-btn-primary">
-              I&apos;ve prepared my IG / MT5 account
-            </button>
-          </div>
+          {/* BUTTON */}
+          <button
+            type="button"
+            onClick={handleContinue}
+            className="mc-btn mc-btn-primary inline-flex items-center justify-center"
+          >
+            Continue
+          </button>
         </div>
       </div>
     </div>
