@@ -5,7 +5,7 @@ export default function DisabledPage() {
     <div className="min-h-screen w-full flex items-center justify-center px-4">
       <div className="mc-card max-w-md w-full">
         <div className="mc-section text-left">
-          
+
           <h1 className="mc-title mb-3">Your account is disabled</h1>
 
           <p className="text-slate-400 mb-6">
@@ -20,7 +20,7 @@ export default function DisabledPage() {
 
           <div className="flex flex-col sm:flex-row items-center gap-3">
             <a
-              href="mailto:support@montelion-capital.com"
+              href="/support"
               className="mc-btn mc-btn-primary w-full text-center"
             >
               Contact support
