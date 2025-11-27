@@ -1,4 +1,4 @@
-// app/exchange/setup/page.jsx
+// app/account/setup/page.jsx  (ou app/exchange/setup/page.jsx selon ton arbo)
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -6,130 +6,94 @@ import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 
 /* -------------------------------------------------------
-   LISTE DES SECTIONS (texte uniquement)
+   LISTE DES SECTIONS – IG MARKETS + MT5
 -------------------------------------------------------- */
 
 const SECTIONS = [
   {
     id: 1,
-    title: "Create Your KuCoin Account",
+    title: "Create Your IG Markets Account",
     items: [
       <>
-        Click your referral link:&nbsp;
+        Go to{" "}
         <a
-          href="https://www.kucoin.com/r/rf/QBAA2LND"
+          href="https://www.ig.com"
           target="_blank"
           rel="noopener noreferrer"
           className="text-[#8fa8ff] hover:text-[#b6c6ff] underline underline-offset-2"
         >
-          https://www.kucoin.com/r/rf/QBAA2LND
-        </a>
+          https://www.ig.com
+        </a>{" "}
+        and click <span className="italic">“Create live account”</span>.
       </>,
-      "Choose to register using your email or phone number.",
-      "Create a strong password.",
-      "Enter the verification code sent to your email or phone.",
-      "Your KuCoin account is now created.",
+      "Choose to open a trading account in your own name (individual account).",
+      "Fill in your personal details (name, email, phone, country of residence).",
+      "Create a strong password and confirm your registration.",
+      "Confirm your email if IG asks you to validate it.",
     ],
   },
   {
     id: 2,
-    title: "Verify Your Identity (KYC)",
+    title: "Complete Identity Verification (KYC)",
     items: [
-      "Sign in to your KuCoin account.",
-      "Click your profile icon (top-right corner).",
-      "Navigate to Security → KYC Verification.",
-      "Select “Individual Verification”.",
-      <>
-        Provide the required information:
-        <ul className="mt-1 list-disc list-inside text-[11px] text-slate-400 space-y-0.5">
-          <li>Full name, address, date of birth</li>
-          <li>ID document (passport, ID card…)</li>
-          <li>Face verification if requested</li>
-        </ul>
-      </>,
-      "Wait for KYC approval.",
+      "Sign in to your IG account.",
+      "Go to your account area and follow the steps for identity verification (KYC).",
+      "Upload your identity document (passport, ID card or driver’s license).",
+      "Upload a recent proof of address (utility bill, bank statement, tax notice…).",
+      "Fill in any additional information requested by IG (employment, income, experience).",
+      "Wait for IG to validate your documents and activate your live account.",
     ],
   },
   {
     id: 3,
-    title: "Enable Two-Factor Authentication (2FA)",
+    title: "Deposit Funds to Your IG Account",
     items: [
-      "Go to Account → Security → Google Authenticator / 2FA.",
-      "Install Google Authenticator or Authy.",
-      "Scan the QR code displayed by KuCoin.",
-      "Enter the 6-digit code to confirm.",
-      "Save your recovery key somewhere safe.",
+      "Once your account is approved, sign in to the IG client area.",
+      "Go to the section for deposits or “Add funds”.",
+      "Choose your preferred payment method (bank card or bank transfer).",
+      "Select the account you want to fund (your main trading account).",
+      "Deposit the amount required for your Montelion mandate.",
+      "Wait for the funds to appear and be available for trading.",
     ],
-    warning: "2FA is mandatory to protect your funds.",
   },
   {
     id: 4,
-    title: "Deposit Funds Using Your Bank Card",
+    title: "Download and Install MetaTrader 5 (MT5)",
     items: [
-      "In the main menu, click “Buy Crypto”.",
-      "Select “Bank Card”.",
-      <>
-        Choose:
-        <ul className="mt-1 list-disc list-inside text-[11px] text-slate-400">
-          <li>Currency: EUR</li>
-          <li>Crypto: USDT (recommended)</li>
-        </ul>
-      </>,
-      "Enter the amount.",
-      "Confirm with 3D Secure.",
-      "Your USDT arrives in your Main or Funding account.",
+      "From the IG platform area, go to the section for trading platforms or MetaTrader 5.",
+      "Download the MT5 platform for your device (Windows / macOS).",
+      "Run the installer and follow the steps to complete the installation.",
+      "Open MT5 once the installation is finished.",
     ],
   },
   {
     id: 5,
-    title: "Transfer Funds to the Futures Account",
+    title: "Find Your MT5 Login Details",
     items: [
-      "Go to Assets.",
-      "Open your “Futures Account”.",
-      "Click “Transfer”.",
-      <>
-        Select:
-        <ul className="mt-1 list-disc list-inside text-[11px] text-slate-400">
-          <li>From: Main or Funding</li>
-          <li>To: Futures</li>
-        </ul>
-      </>,
-      "Choose USDT.",
-      "Confirm the transfer.",
+      "Log in to your IG client area in your browser.",
+      "Go to the section where your MT5 account is displayed (MetaTrader / MT5 accounts).",
+      "Locate your MT5 account number and note it down.",
+      "Check the MT5 server name indicated by IG (for example “IG-Live MT5” or similar).",
+      "If IG provides an investor/read-only password, keep it accessible. Otherwise, you will use your main MT5 trading password.",
     ],
   },
   {
     id: 6,
-    title: "Create an API Key for Automated Trading",
+    title: "Prepare the Details for Montelion",
     items: [
-      "Sign in to your KuCoin account.",
-      "Go to your profile → “API Management”.",
-      "Click “Create API”.",
-      "Choose a name (e.g., “Montelion”).",
-      "Create an API Passphrase and save it.",
+      "Make sure your IG live account is funded and fully verified.",
+      "Have these details ready for the next step:",
       <>
-        Enable ONLY these permissions:
-        <ul className="mt-1 list-disc list-inside text-[11px] text-slate-400">
-          <li>General (Read)</li>
-          <li>Trade</li>
-          <li>Futures</li>
+        <ul className="mt-1 list-disc list-inside text-[11px] text-slate-400 space-y-0.5">
+          <li>MT5 login (account number)</li>
+          <li>MT5 password (trading or investor, as requested by Montelion)</li>
+          <li>MT5 server name</li>
         </ul>
       </>,
-      "Confirm with password, email code, and 2FA code.",
-      "KuCoin will show your API Key, Secret Key (only once), and Passphrase.",
-    ],
-    warning: "Never enable Withdraw permission.",
-  },
-  {
-    id: 7,
-    title: "Save Your API Keys and Respect Trading Rules",
-    items: [
-      "Store your API Key, Secret Key, and API Passphrase in a secure place.",
-      "You will provide these credentials to Montelion on the next page.",
-      "Keep them available if support needs to verify them.",
+      "On the next page, you will enter these credentials securely so Montelion can connect and manage your trading.",
     ],
     warning:
-      "Once connected to Montelion, personal trading on this account is forbidden. Violations may lead to permanent account closure.",
+      "Once your account is connected to Montelion, personal trading from your side on this MT5 account is not allowed. Any violation may lead to permanent disconnection of the account.",
   },
 ];
 
@@ -142,9 +106,7 @@ export default function ExchangeSetupPage() {
   const [userId, setUserId] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  /* ----------------------------------------------
-     Charger la session utilisateur
-  ---------------------------------------------- */
+  // Charger la session utilisateur
   useEffect(() => {
     (async () => {
       const { data } = await supabase.auth.getSession();
@@ -160,12 +122,8 @@ export default function ExchangeSetupPage() {
     })();
   }, [router]);
 
-  /* ----------------------------------------------
-     Quand l’utilisateur clique “I've created my API keys”
-     → passer en STEP 12
-     → rediriger vers /exchange/mt5
-  ---------------------------------------------- */
-  async function handleCreatedApiKeys() {
+  // Quand l’utilisateur a terminé la préparation IG / MT5
+  async function handlePreparedAccount() {
     if (!userId) {
       router.push("/login");
       return;
@@ -175,7 +133,7 @@ export default function ExchangeSetupPage() {
       const { error } = await supabase.from("onboarding_state").upsert(
         {
           user_id: userId,
-          current_step: 12, // 🔥 STEP 12 COMME DEMANDÉ
+          current_step: 12,
           completed: false,
         },
         { onConflict: "user_id" }
@@ -186,86 +144,103 @@ export default function ExchangeSetupPage() {
       console.error("Unexpected error:", e);
     }
 
-    router.push("/account/mt5"); // 🔥 REDIRECTION CORRECTE
+    router.push("/account/mt5");
   }
 
-  /* ----------------------------------------------
-     Si la session charge encore
-  ---------------------------------------------- */
+  // Loading
   if (loading) {
     return (
-      <div className="mc-card">
-        <div className="mc-section">
-          <h1 className="mc-title mb-2">Connect Your Account</h1>
-          <p className="text-slate-400">Loading…</p>
+      <div className="min-h-screen w-full flex justify-center items-center px-4">
+        <div className="mc-card max-w-3xl w-full">
+          <div className="mc-section">
+            <h1 className="mc-title mb-2">Connect Your Account</h1>
+            <p className="text-slate-400">Loading…</p>
+          </div>
         </div>
       </div>
     );
   }
 
-  /* ----------------------------------------------
-     RENDER DE LA PAGE
-  ---------------------------------------------- */
+  // Render principal
   return (
-    <div className="mc-card">
-      <div className="mc-section max-w-3xl mx-auto text-left">
-
-        <h1 className="mc-title mb-3">Connect Your Account</h1>
-        <p className="text-slate-400 mb-6">
-          Follow these steps to prepare your KuCoin account and create a secure trading API key.
-        </p>
-
-        {/* WARNING BANNER */}
-        <div className="mb-8 rounded-2xl border border-amber-500/60 bg-amber-500/10 px-4 py-3 text-xs text-amber-100 flex gap-3">
-          <span className="mt-[2px] text-amber-300">
-            <svg viewBox="0 0 24 24" className="h-4 w-4">
-              <path d="M12 3L2.5 19h19L12 3z" fill="none" stroke="currentColor" strokeWidth="1.6" />
-              <path d="M12 9v5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-              <circle cx="12" cy="16" r="0.9" fill="currentColor" />
-            </svg>
-          </span>
-          <div>
-            <p className="font-medium mb-1.5">Always keep your API keys private.</p>
-            <p className="text-amber-100/90">
-              Never share your API keys in plain text. Montelion will never ask for your password.
-            </p>
-          </div>
-        </div>
-
-        {/* STEPS */}
-        <div className="space-y-5 mb-10">
-          {SECTIONS.map((s) => (
-            <div key={s.id} className="rounded-2xl border border-slate-800 bg-slate-900/50 px-5 py-4 space-y-2">
-              <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Step {s.id}</p>
-              <h2 className="text-sm font-semibold text-slate-50">{s.title}</h2>
-
-              <ul className="mt-1 space-y-1.5 text-xs text-slate-200">
-                {s.items.map((item, i) => (
-                  <li key={i} className="flex gap-2">
-                    <span className="mt-[6px] h-[4px] w-[4px] rounded-full bg-slate-500/70 shrink-0" />
-                    <div>{item}</div>
-                  </li>
-                ))}
-              </ul>
-
-              {s.warning && (
-                <div className="mt-2 rounded-xl border border-rose-600/70 bg-rose-500/10 px-3 py-2 text-[11px] text-rose-100">
-                  {s.warning}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* FOOTER */}
-        <div className="space-y-4">
-          <p className="text-xs text-slate-500 max-w-md">
-            Once your API keys are created, click below to connect your account securely.
+    <div className="min-h-screen w-full flex justify-center px-4 md:px-0 py-10 md:py-16">
+      <div className="mc-card max-w-3xl w-full">
+        <div className="mc-section max-w-3xl mx-auto text-left">
+          <h1 className="mc-title mb-3">Connect Your Account</h1>
+          <p className="text-slate-400 mb-6">
+            Follow these steps to set up your IG Markets account, fund it, and prepare your MT5
+            login details so Montelion can connect and manage your trading.
           </p>
 
-          <button onClick={handleCreatedApiKeys} className="mc-btn mc-btn-primary">
-            I&apos;ve created my API keys
-          </button>
+          {/* WARNING BANNER */}
+          <div className="mb-8 rounded-2xl border border-amber-500/60 bg-amber-500/10 px-4 py-3 text-xs text-amber-100 flex gap-3">
+            <span className="mt-[2px] text-amber-300">
+              <svg viewBox="0 0 24 24" className="h-4 w-4">
+                <path
+                  d="M12 3L2.5 19h19L12 3z"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                />
+                <path
+                  d="M12 9v5"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                />
+                <circle cx="12" cy="16" r="0.9" fill="currentColor" />
+              </svg>
+            </span>
+            <div>
+              <p className="font-medium mb-1.5">Keep your IG and MT5 credentials private.</p>
+              <p className="text-amber-100/90">
+                You will only enter your MT5 details inside the secure Montelion platform. Never
+                share your passwords by email, chat or screenshots.
+              </p>
+            </div>
+          </div>
+
+          {/* STEPS */}
+          <div className="space-y-5 mb-10">
+            {SECTIONS.map((s) => (
+              <div
+                key={s.id}
+                className="rounded-2xl border border-slate-800 bg-slate-900/50 px-5 py-4 space-y-2"
+              >
+                <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
+                  Step {s.id}
+                </p>
+                <h2 className="text-sm font-semibold text-slate-50">{s.title}</h2>
+
+                <ul className="mt-1 space-y-1.5 text-xs text-slate-200">
+                  {s.items.map((item, i) => (
+                    <li key={i} className="flex gap-2">
+                      <span className="mt-[6px] h-[4px] w-[4px] rounded-full bg-slate-500/70 shrink-0" />
+                      <div>{item}</div>
+                    </li>
+                  ))}
+                </ul>
+
+                {s.warning && (
+                  <div className="mt-2 rounded-xl border border-rose-600/70 bg-rose-500/10 px-3 py-2 text-[11px] text-rose-100">
+                    {s.warning}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* FOOTER */}
+          <div className="space-y-4">
+            <p className="text-xs text-slate-500 max-w-md">
+              Once your IG account is verified, funded and your MT5 login details are ready, click
+              below to move on to the secure connection step.
+            </p>
+
+            <button onClick={handlePreparedAccount} className="mc-btn mc-btn-primary">
+              I&apos;ve prepared my IG / MT5 account
+            </button>
+          </div>
         </div>
       </div>
     </div>
