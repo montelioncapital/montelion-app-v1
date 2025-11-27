@@ -21,7 +21,7 @@ export default function SuspendedPage() {
 
           <div className="flex flex-col sm:flex-row items-center gap-3">
             <a
-              href="mailto:support@montelion-capital.com"
+              href="/support"
               className="mc-btn mc-btn-primary w-full text-center"
             >
               Contact support
