@@ -5,10 +5,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 
-/* -------------------------------------------------------
-   IG MARKETS + MT5 — LISTE DES SECTIONS
--------------------------------------------------------- */
-
 const SECTIONS = [
   {
     id: 1,
@@ -29,79 +25,73 @@ const SECTIONS = [
       "Open an individual personal trading account.",
       "Fill in your personal details.",
       "Create a strong password.",
-      "Confirm your email if required.",
+      "Confirm your email.",
     ],
   },
   {
     id: 2,
     title: "Complete Identity Verification (KYC)",
     items: [
-      "Sign in to your IG account.",
-      "Upload your ID document (passport, ID card…).",
-      "Upload a valid proof of address.",
-      "Provide financial & personal information.",
-      "Wait for IG approval.",
+      "Log in to your IG account.",
+      "Upload your identity document.",
+      "Upload a proof of address.",
+      "Complete the financial questionnaire.",
+      "Wait for approval.",
     ],
   },
   {
     id: 3,
-    title: "Deposit Funds into Your IG Account",
+    title: "Deposit Funds",
     items: [
-      "Go to the deposit section in your IG dashboard.",
+      "Open the Deposit section.",
       "Choose bank card or bank transfer.",
-      "Deposit the required minimum amount.",
-      "Wait for your funds to become available.",
+      "Deposit the required funds.",
+      "Wait for your balance to be available.",
     ],
   },
   {
     id: 4,
-    title: "Download and Install MetaTrader 5 (MT5)",
+    title: "Install MetaTrader 5 (MT5)",
     items: [
-      "In your IG dashboard, locate the MT5 platform section.",
+      "Go to the MT5 section inside your IG dashboard.",
       "Download MT5 for Windows or macOS.",
-      "Install and open MT5.",
+      "Install and open MetaTrader 5.",
     ],
   },
   {
     id: 5,
-    title: "Find Your MT5 Login Details",
+    title: "Locate Your MT5 Credentials",
     items: [
-      "Go to IG’s MT5 accounts section.",
-      "Copy your MT5 login (account number).",
+      "Locate your MT5 login (account number).",
       "Copy the MT5 server name (e.g., IG-Live MT5).",
       "Copy or create your MT5 password.",
     ],
   },
   {
     id: 6,
-    title: "Prepare These Details for Montelion",
+    title: "Prepare Your Details for Montelion",
     items: [
-      "Your IG account must be verified & funded.",
+      "Your IG Markets account must be verified.",
+      "Your IG Markets account must be funded.",
       <>
-        You will need the following:
+        You will need:
         <ul className="mt-1 list-disc list-inside text-[11px] text-slate-400 space-y-0.5">
-          <li>MT5 Login (account number)</li>
+          <li>MT5 Login</li>
           <li>MT5 Password</li>
           <li>MT5 Server</li>
         </ul>
       </>,
-      "These details will be entered securely on the next page.",
     ],
     warning:
-      "Personal trading on this MT5 account is forbidden once connected to Montelion. Violations may lead to permanent disconnection.",
+      "Once connected to Montelion, personal trading on this account is forbidden.",
   },
 ];
-
-/* -------------------------------------------------------
-   PAGE PRINCIPALE
--------------------------------------------------------- */
 
 export default function ExchangeSetupPage() {
   const router = useRouter();
   const [userId, setUserId] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Charger session
   useEffect(() => {
     (async () => {
       const { data } = await supabase.auth.getSession();
@@ -131,67 +121,64 @@ export default function ExchangeSetupPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen w-full flex justify-center items-center px-4">
-        <div className="mc-card max-w-2xl w-full">
-          <div className="mc-section">
-            <h1 className="mc-title mb-2">Connect Your Account</h1>
-            <p className="text-slate-400">Loading…</p>
-          </div>
+      <div className="min-h-screen flex justify-center items-center px-4">
+        <div className="mc-card max-w-xl w-full">
+          <div className="mc-section">Loading…</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen w-full flex justify-center px-4 py-12 md:py-16">
-      <div className="mc-card max-w-2xl w-full">
-        <div className="mc-section max-w-xl mx-auto text-left">
+    <div className="min-h-screen w-full flex justify-center px-4 py-10 md:py-12">
+      <div className="mc-card max-w-xl w-full">
+        <div className="mc-section px-6 py-6 text-left">
 
-          <h1 className="mc-title mb-3">Connect Your Account</h1>
-          <p className="text-slate-400 mb-6">
+          {/* HEADER */}
+          <h1 className="mc-title mb-2">Connect Your Account</h1>
+          <p className="text-slate-400 mb-5">
             Follow these steps to set up your IG Markets account and prepare your MT5 login details.
           </p>
 
-          {/* Warning */}
-          <div className="mb-8 rounded-2xl border border-amber-500/60 bg-amber-500/10 px-4 py-3 text-xs text-amber-100 flex gap-3">
+          {/* WARNING */}
+          <div className="mb-6 rounded-xl border border-amber-500/50 bg-amber-500/10 px-4 py-3 text-xs text-amber-100 flex gap-3">
             <span className="mt-[2px] text-amber-300">
               <svg viewBox="0 0 24 24" className="h-4 w-4">
-                <path d="M12 3L2.5 19h19L12 3z" fill="none" stroke="currentColor" strokeWidth="1.6"/>
-                <path d="M12 9v5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-                <circle cx="12" cy="16" r="0.9" fill="currentColor"/>
+                <path d="M12 3L2.5 19h19L12 3z" fill="none" stroke="currentColor" strokeWidth="1.6" />
+                <path d="M12 9v5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                <circle cx="12" cy="16" r="0.9" fill="currentColor" />
               </svg>
             </span>
             <div>
-              <p className="font-medium mb-1.5">Keep your MT5 credentials private.</p>
-              <p className="text-amber-100/90">
-                Only enter them inside the secure Montelion platform. Never share them by email or chat.
-              </p>
+              <p className="font-medium mb-1">Keep your MT5 credentials private.</p>
+              <p className="text-amber-100/90">Never share them outside the Montelion platform.</p>
             </div>
           </div>
 
-          {/* Steps */}
-          <div className="space-y-5 mb-10">
+          {/* SECTIONS */}
+          <div className="space-y-4 mb-6">
             {SECTIONS.map((s) => (
               <div
                 key={s.id}
-                className="rounded-2xl border border-slate-800 bg-slate-900/50 px-5 py-4 space-y-2"
+                className="rounded-xl border border-slate-800 bg-slate-900/40 px-4 py-3 space-y-1.5"
               >
-                <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
+                <p className="text-[10px] uppercase tracking-widest text-slate-500">
                   Step {s.id}
                 </p>
+
                 <h2 className="text-sm font-semibold text-slate-50">{s.title}</h2>
 
-                <ul className="mt-1 space-y-1.5 text-xs text-slate-200">
+                <ul className="mt-1 space-y-1 text-xs text-slate-200">
                   {s.items.map((item, i) => (
-                    <li key={i} className="flex gap-2">
-                      <span className="mt-[6px] h-[4px] w-[4px] rounded-full bg-slate-500/70 shrink-0" />
+                    <li key={i} className="flex gap-2 leading-relaxed">
+                      <span className="mt-[6px] h-[4px] w-[4px] rounded-full bg-slate-500/70" />
                       <div>{item}</div>
                     </li>
                   ))}
                 </ul>
 
                 {s.warning && (
-                  <div className="mt-2 rounded-xl border border-rose-600/70 bg-rose-500/10 px-3 py-2 text-[11px] text-rose-100">
+                  <div className="mt-2 rounded-lg border border-rose-600/60 bg-rose-500/10 px-3 py-2 text-[11px] text-rose-200">
                     {s.warning}
                   </div>
                 )}
@@ -199,9 +186,9 @@ export default function ExchangeSetupPage() {
             ))}
           </div>
 
-          {/* Footer */}
-          <p className="text-xs text-slate-500 max-w-md mb-3">
-            Once everything is completed, continue to the MT5 connection step.
+          {/* FOOTER */}
+          <p className="text-xs text-slate-500 mb-3">
+            Once your MT5 details are ready, continue to the next step.
           </p>
 
           <button onClick={handleContinue} className="mc-btn mc-btn-primary">
