@@ -22,7 +22,7 @@ const SECTIONS = [
         </a>{" "}
         and click <span className="italic">“Create live account”</span>.
       </>,
-      "Open an individual personal trading account.",
+      "Open an individual trading account.",
       "Fill in your personal details.",
       "Create a strong password.",
       "Confirm your email.",
@@ -33,7 +33,7 @@ const SECTIONS = [
     title: "Complete Identity Verification (KYC)",
     items: [
       "Log in to your IG account.",
-      "Upload your identity document.",
+      "Upload your ID document.",
       "Upload a proof of address.",
       "Complete the financial questionnaire.",
       "Wait for approval.",
@@ -46,15 +46,15 @@ const SECTIONS = [
       "Open the Deposit section.",
       "Choose bank card or bank transfer.",
       "Deposit the required funds.",
-      "Wait for your balance to be available.",
+      "Wait for the balance to become available.",
     ],
   },
   {
     id: 4,
     title: "Install MetaTrader 5 (MT5)",
     items: [
-      "Go to the MT5 section inside your IG dashboard.",
-      "Download MT5 for Windows or macOS.",
+      "Go to the MT5 section inside IG.",
+      "Download MT5 (Windows or macOS).",
       "Install and open MetaTrader 5.",
     ],
   },
@@ -62,8 +62,8 @@ const SECTIONS = [
     id: 5,
     title: "Locate Your MT5 Credentials",
     items: [
-      "Locate your MT5 login (account number).",
-      "Copy the MT5 server name (e.g., IG-Live MT5).",
+      "Get your MT5 login (account number).",
+      "Note the MT5 server name (ex: IG-Live MT5).",
       "Copy or create your MT5 password.",
     ],
   },
@@ -71,8 +71,8 @@ const SECTIONS = [
     id: 6,
     title: "Prepare Your Details for Montelion",
     items: [
-      "Your IG Markets account must be verified.",
-      "Your IG Markets account must be funded.",
+      "Your IG account must be fully verified.",
+      "Your IG account must be funded.",
       <>
         You will need:
         <ul className="mt-1 list-disc list-inside text-[11px] text-slate-400 space-y-0.5">
@@ -130,12 +130,12 @@ export default function ExchangeSetupPage() {
   }
 
   return (
-    <div className="min-h-screen w-full flex justify-center px-4 py-10 md:py-12">
+    <div className="min-h-screen w-full flex justify-center px-4 py-12">
       <div className="mc-card max-w-xl w-full">
-        <div className="mc-section px-6 py-6 text-left">
+        {/* ADJUSTED PADDING HERE */}
+        <div className="mc-section px-6 py-8 text-left">
 
-          {/* HEADER */}
-          <h1 className="mc-title mb-2">Connect Your Account</h1>
+          <h1 className="mc-title mb-3">Connect Your Account</h1>
           <p className="text-slate-400 mb-5">
             Follow these steps to set up your IG Markets account and prepare your MT5 login details.
           </p>
@@ -160,7 +160,7 @@ export default function ExchangeSetupPage() {
             {SECTIONS.map((s) => (
               <div
                 key={s.id}
-                className="rounded-xl border border-slate-800 bg-slate-900/40 px-4 py-3 space-y-1.5"
+                className="rounded-xl border border-slate-800 bg-slate-900/40 px-4 py-4 space-y-2"
               >
                 <p className="text-[10px] uppercase tracking-widest text-slate-500">
                   Step {s.id}
@@ -168,7 +168,7 @@ export default function ExchangeSetupPage() {
 
                 <h2 className="text-sm font-semibold text-slate-50">{s.title}</h2>
 
-                <ul className="mt-1 space-y-1 text-xs text-slate-200">
+                <ul className="mt-1 space-y-1.5 text-xs text-slate-200">
                   {s.items.map((item, i) => (
                     <li key={i} className="flex gap-2 leading-relaxed">
                       <span className="mt-[6px] h-[4px] w-[4px] rounded-full bg-slate-500/70" />
@@ -186,7 +186,6 @@ export default function ExchangeSetupPage() {
             ))}
           </div>
 
-          {/* FOOTER */}
           <p className="text-xs text-slate-500 mb-3">
             Once your MT5 details are ready, continue to the next step.
           </p>
