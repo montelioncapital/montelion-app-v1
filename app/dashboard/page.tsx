@@ -106,13 +106,11 @@ function getPerfColorBg(value: number): string {
 
 function PnlCard({
   title,
-  subtitle,
   value,
   percent,
   showPercent = true,
 }: {
   title: string;
-  subtitle: string;
   value: number;
   percent: number;
   showPercent?: boolean;
@@ -126,10 +124,7 @@ function PnlCard({
 
       {/* Titre + % aligné à droite */}
       <div className="flex items-start justify-between">
-        <div>
-          <div className="text-sm font-medium text-slate-300">{title}</div>
-          <div className="mt-1 text-xs text-slate-500">{subtitle}</div>
-        </div>
+        <div className="text-sm font-medium text-slate-300">{title}</div>
 
         {showPercent && (
           <div
@@ -251,26 +246,22 @@ export default function DashboardPage() {
       <section className="grid gap-4 md:grid-cols-4">
         <PnlCard
           title="BALANCE"
-          subtitle="Current total account balance"
           value={pnlSummary.balance}
           percent={0}
-          showPercent={false} // pas de % ni "profit" sous la balance
+          showPercent={false} // pas de % pour la balance
         />
         <PnlCard
           title="PNL Today"
-          subtitle="Performance of the current day"
           value={pnlSummary.day.value}
           percent={pnlSummary.day.percent}
         />
         <PnlCard
           title="PNL This Month"
-          subtitle="Performance in the current month"
           value={pnlSummary.month.value}
           percent={pnlSummary.month.percent}
         />
         <PnlCard
           title="PNL All Time"
-          subtitle="Performance since the beginning"
           value={pnlSummary.allTime.value}
           percent={pnlSummary.allTime.percent}
         />
