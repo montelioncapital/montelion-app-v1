@@ -220,7 +220,7 @@ export default function DashboardPage() {
           title="BALANCE"
           value={pnlSummary.balance}
           percent={0}
-          showPercent={false} // pas de % pour la balance
+          showPercent={false}
         />
         <PnlCard
           title="PNL Today"
@@ -239,7 +239,7 @@ export default function DashboardPage() {
         />
       </section>
 
-      {/* Graphique PNL mensuel - version Montelion */}
+      {/* Graphique PNL mensuel - Montelion */}
       <section className="relative overflow-hidden rounded-2xl border border-white/5 bg-[#05070b] p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -258,7 +258,6 @@ export default function DashboardPage() {
               data={monthlyPnl}
               margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
             >
-              {/* Dégradé Montelion + glow */}
               <defs>
                 <linearGradient id="montelionBlue" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#2563eb" stopOpacity={0.45} />
@@ -283,22 +282,18 @@ export default function DashboardPage() {
                 </filter>
               </defs>
 
-              {/* Axe X minimaliste */}
               <XAxis
                 dataKey="month"
                 tickLine={false}
                 axisLine={false}
                 tick={{ fontSize: 12, fill: "#64748b" }}
               />
-
-              {/* Axe Y minimaliste */}
               <YAxis
                 tickLine={false}
                 axisLine={false}
                 tick={{ fontSize: 12, fill: "#64748b" }}
               />
 
-              {/* Tooltip flottant */}
               <Tooltip
                 content={({ active, payload, label }) => {
                   if (!active || !payload || !payload.length) return null;
@@ -327,7 +322,6 @@ export default function DashboardPage() {
                 }}
               />
 
-              {/* Courbe + remplissage + glow */}
               <Area
                 type="monotone"
                 dataKey="value"
@@ -353,20 +347,16 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* Calendrier de performance quotidienne - version améliorée */}
+      {/* Calendrier de performance quotidienne (mobile optimisé) */}
       <section className="relative overflow-hidden rounded-2xl border border-white/5 bg-[#05070b] p-4 sm:p-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
           <div>
             <h2 className="text-sm font-semibold text-slate-100">
               Daily Performance Calendar
             </h2>
-            <p className="text-xs text-slate-400 mt-1">
-              Each day shows your daily PNL in % and $. Hover or tap on mobile
-              to focus a day.
-            </p>
           </div>
 
-          <div className="flex items-center gap-3 text-[11px] sm:text-xs text-slate-300">
+          <div className="flex items-center gap-2 sm:gap-3 text-[11px] sm:text-xs text-slate-300">
             <button
               type="button"
               onClick={goPrevMonth}
@@ -374,7 +364,7 @@ export default function DashboardPage() {
             >
               ‹
             </button>
-            <span className="min-w-[120px] text-center">
+            <span className="min-w-[110px] sm:min-w-[130px] text-center">
               {new Date(currentYear, currentMonthIndex).toLocaleString(
                 "en-US",
                 {
@@ -394,7 +384,7 @@ export default function DashboardPage() {
         </div>
 
         {/* En-tête jours */}
-        <div className="grid grid-cols-7 gap-1 mb-2 text-[10px] sm:text-[11px] text-slate-500">
+        <div className="grid grid-cols-7 gap-1 mb-2 text-[9px] sm:text-[11px] text-slate-500">
           {weekDayLabels.map((d) => (
             <div key={d} className="text-center uppercase tracking-wide">
               {d}
@@ -402,8 +392,8 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        {/* Grille des jours (mobile optimisé: h plus petite, textes réduits) */}
-        <div className="grid grid-cols-7 gap-1 text-[10px] sm:text-[11px]">
+        {/* Grille des jours */}
+        <div className="grid grid-cols-7 gap-1 text-[9px] sm:text-[11px]">
           {(() => {
             const firstDay = daysOfMonth[0].getDay(); // 0 = Sunday
             const leadingEmpty = (firstDay + 6) % 7; // Monday start
@@ -412,7 +402,7 @@ export default function DashboardPage() {
 
             for (let i = 0; i < leadingEmpty; i++) {
               cells.push(
-                <div key={`empty-${i}`} className="h-16 sm:h-20 rounded-2xl" />
+                <div key={`empty-${i}`} className="h-14 sm:h-20 rounded-2xl" />
               );
             }
 
@@ -425,8 +415,8 @@ export default function DashboardPage() {
               const hasPerf = perf !== undefined;
 
               const isTodayFlag = isToday(date);
-              const positive = value >= 0;
 
+              const positive = value >= 0;
               const amountText =
                 hasPerf &&
                 `${positive ? "+" : "-"}${Math.abs(value).toLocaleString(
@@ -439,7 +429,7 @@ export default function DashboardPage() {
                 )}`;
 
               const baseClasses =
-                "group flex h-16 sm:h-20 flex-col rounded-2xl border px-1.5 sm:px-2 py-1.5 bg-slate-900/70 transition-transform hover:-translate-y-0.5";
+                "group flex h-14 sm:h-20 flex-col rounded-2xl border px-1.5 sm:px-2 py-1 bg-slate-900/70 transition-transform hover:-translate-y-0.5";
               const perfBg = hasPerf ? getPerfColorBg(value) : "bg-slate-900/70 border-white/5";
 
               cells.push(
@@ -453,8 +443,9 @@ export default function DashboardPage() {
                       : "",
                   ].join(" ")}
                 >
-                  <div className="flex items-center justify-between mb-0.5">
-                    <span className="text-[10px] sm:text-[11px] text-slate-300">
+                  {/* Ligne jour + % */}
+                  <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between mb-0.5">
+                    <span className="text-[9px] sm:text-[11px] text-slate-300">
                       {day}
                     </span>
 
@@ -471,8 +462,9 @@ export default function DashboardPage() {
                     )}
                   </div>
 
+                  {/* Montant */}
                   {hasPerf && (
-                    <div className="mt-auto text-[10px] sm:text-[11px] font-medium text-slate-100">
+                    <div className="mt-auto text-[9px] sm:text-[11px] font-medium text-slate-100 text-center sm:text-left">
                       {amountText}
                     </div>
                   )}
