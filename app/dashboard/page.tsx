@@ -2,12 +2,11 @@
 
 import React, { useMemo, useState } from "react";
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   Tooltip,
-  CartesianGrid,
   ResponsiveContainer,
 } from "recharts";
 
@@ -152,33 +151,6 @@ function PnlCard({
   );
 }
 
-const CustomLineTooltip = ({ active, payload, label }: any) => {
-  if (!active || !payload || !payload.length) return null;
-  const data = payload[0].payload as MonthlyPoint;
-
-  return (
-    <div className="rounded-xl border border-white/10 bg-[#05070b] px-3 py-2 text-xs shadow-xl">
-      <div className="font-medium text-slate-100 mb-1">{label}</div>
-      <div className="text-slate-300">
-        PNL:{" "}
-        {data.value.toLocaleString("en-US", {
-          style: "currency",
-          currency: "USD",
-          maximumFractionDigits: 0,
-        })}
-      </div>
-      <div
-        className={
-          data.percent >= 0 ? "text-emerald-400 mt-0.5" : "text-rose-400 mt-0.5"
-        }
-      >
-        {data.percent >= 0 ? "+" : ""}
-        {data.percent.toFixed(2)}%
-      </div>
-    </div>
-  );
-};
-
 /* -------------------- MAIN PAGE -------------------- */
 
 export default function DashboardPage() {
@@ -267,7 +239,7 @@ export default function DashboardPage() {
         />
       </section>
 
-      {/* Graphique PNL mensuel */}
+      {/* Graphique PNL mensuel - version Montelion */}
       <section className="relative overflow-hidden rounded-2xl border border-white/5 bg-[#05070b] p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -282,36 +254,101 @@ export default function DashboardPage() {
 
         <div className="h-[360px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart
+            <AreaChart
               data={monthlyPnl}
-              margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+              margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
             >
-              <CartesianGrid
-                stroke="rgba(148, 163, 184, 0.15)"
-                vertical={false}
-                strokeDasharray="3 3"
-              />
+              {/* Dégradé Montelion + glow */}
+              <defs>
+                <linearGradient id="montelionBlue" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#2563eb" stopOpacity={0.45} />
+                  <stop offset="70%" stopColor="#2563eb" stopOpacity={0.15} />
+                  <stop offset="100%" stopColor="#2563eb" stopOpacity={0.05} />
+                </linearGradient>
+
+                <filter
+                  id="shadowGlow"
+                  x="-50%"
+                  y="-50%"
+                  width="200%"
+                  height="200%"
+                >
+                  <feDropShadow
+                    dx="0"
+                    dy="0"
+                    stdDeviation="6"
+                    floodColor="#3b82f6"
+                    floodOpacity="0.45"
+                  />
+                </filter>
+              </defs>
+
+              {/* Axe X minimaliste */}
               <XAxis
                 dataKey="month"
                 tickLine={false}
                 axisLine={false}
-                tick={{ fontSize: 12, fill: "#94a3b8" }}
+                tick={{ fontSize: 12, fill: "#64748b" }}
               />
+
+              {/* Axe Y minimaliste */}
               <YAxis
                 tickLine={false}
                 axisLine={false}
-                tick={{ fontSize: 12, fill: "#94a3b8" }}
+                tick={{ fontSize: 12, fill: "#64748b" }}
               />
-              <Tooltip content={<CustomLineTooltip />} />
-              <Line
+
+              {/* Tooltip flottant */}
+              <Tooltip
+                content={({ active, payload, label }) => {
+                  if (!active || !payload || !payload.length) return null;
+                  const d = payload[0].payload as MonthlyPoint;
+
+                  return (
+                    <div className="rounded-xl border border-white/10 bg-black/70 backdrop-blur-lg px-3 py-2 text-xs shadow-2xl">
+                      <div className="text-slate-200 font-medium">{label}</div>
+                      <div className="text-slate-300 mt-1">
+                        {d.value.toLocaleString("en-US", {
+                          style: "currency",
+                          currency: "USD",
+                          maximumFractionDigits: 0,
+                        })}
+                      </div>
+                      <div
+                        className={`mt-1 font-medium ${
+                          d.percent >= 0 ? "text-emerald-400" : "text-rose-400"
+                        }`}
+                      >
+                        {d.percent >= 0 ? "+" : ""}
+                        {d.percent.toFixed(2)}%
+                      </div>
+                    </div>
+                  );
+                }}
+              />
+
+              {/* Courbe + remplissage + glow */}
+              <Area
                 type="monotone"
                 dataKey="value"
                 stroke="#3b82f6"
-                strokeWidth={2}
-                dot={{ r: 3, strokeWidth: 1 }}
-                activeDot={{ r: 5 }}
+                strokeWidth={3}
+                fill="url(#montelionBlue)"
+                dot={{
+                  r: 4,
+                  stroke: "#ffffff",
+                  strokeWidth: 1,
+                  fill: "#2563eb",
+                }}
+                activeDot={{
+                  r: 6,
+                  strokeWidth: 2,
+                  stroke: "#ffffff",
+                  fill: "#2563eb",
+                  filter: "url(#shadowGlow)",
+                }}
               />
-            </LineChart>
+            </AreaChart>
           </ResponsiveContainer>
         </div>
       </section>
@@ -337,10 +374,13 @@ export default function DashboardPage() {
               ‹
             </button>
             <span className="min-w-[120px] text-center">
-              {new Date(currentYear, currentMonthIndex).toLocaleString("en-US", {
-                month: "long",
-                year: "numeric",
-              })}
+              {new Date(currentYear, currentMonthIndex).toLocaleString(
+                "en-US",
+                {
+                  month: "long",
+                  year: "numeric",
+                }
+              )}
             </span>
             <button
               type="button"
