@@ -89,16 +89,16 @@ function formatDateKey(date: Date): string {
 
 function getPerfColorBg(value: number): string {
   if (value > 0) {
-    if (value > 200) return "bg-emerald-500/20 border-emerald-500/40";
-    if (value > 100) return "bg-emerald-500/15 border-emerald-500/35";
-    return "bg-emerald-500/10 border-emerald-500/30";
+    if (value > 200) return "bg-emerald-500/15 border-emerald-500/40";
+    if (value > 100) return "bg-emerald-500/10 border-emerald-500/35";
+    return "bg-emerald-500/5 border-emerald-500/30";
   }
   if (value < 0) {
-    if (value < -2000) return "bg-rose-500/30 border-rose-500/50";
-    if (value < -500) return "bg-rose-500/20 border-rose-500/40";
-    return "bg-rose-500/15 border-rose-500/35";
+    if (value < -2000) return "bg-rose-500/15 border-rose-500/50";
+    if (value < -500) return "bg-rose-500/10 border-rose-500/40";
+    return "bg-rose-500/5 border-rose-500/35";
   }
-  return "bg-slate-800/40 border-white/5";
+  return "bg-slate-900/70 border-white/5";
 }
 
 /* -------------------- COMPONENTS -------------------- */
@@ -353,19 +353,20 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* Calendrier de performance quotidienne */}
-      <section className="relative overflow-hidden rounded-2xl border border-white/5 bg-[#05070b] p-6">
+      {/* Calendrier de performance quotidienne - version améliorée */}
+      <section className="relative overflow-hidden rounded-2xl border border-white/5 bg-[#05070b] p-4 sm:p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-sm font-semibold text-slate-100">
               Daily Performance Calendar
             </h2>
             <p className="text-xs text-slate-400 mt-1">
-              Each day shows your daily PNL. Hover to see exact numbers.
+              Each day shows your daily PNL in % and $. Hover or tap on mobile
+              to focus a day.
             </p>
           </div>
 
-          <div className="flex items-center gap-3 text-xs text-slate-300">
+          <div className="flex items-center gap-3 text-[11px] sm:text-xs text-slate-300">
             <button
               type="button"
               onClick={goPrevMonth}
@@ -393,7 +394,7 @@ export default function DashboardPage() {
         </div>
 
         {/* En-tête jours */}
-        <div className="grid grid-cols-7 gap-1 mb-2 text-[11px] text-slate-500">
+        <div className="grid grid-cols-7 gap-1 mb-2 text-[10px] sm:text-[11px] text-slate-500">
           {weekDayLabels.map((d) => (
             <div key={d} className="text-center uppercase tracking-wide">
               {d}
@@ -401,8 +402,8 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        {/* Grille des jours */}
-        <div className="grid grid-cols-7 gap-1 text-[11px]">
+        {/* Grille des jours (mobile optimisé: h plus petite, textes réduits) */}
+        <div className="grid grid-cols-7 gap-1 text-[10px] sm:text-[11px]">
           {(() => {
             const firstDay = daysOfMonth[0].getDay(); // 0 = Sunday
             const leadingEmpty = (firstDay + 6) % 7; // Monday start
@@ -411,7 +412,7 @@ export default function DashboardPage() {
 
             for (let i = 0; i < leadingEmpty; i++) {
               cells.push(
-                <div key={`empty-${i}`} className="h-24 rounded-xl" />
+                <div key={`empty-${i}`} className="h-16 sm:h-20 rounded-2xl" />
               );
             }
 
@@ -420,21 +421,26 @@ export default function DashboardPage() {
               const key = formatDateKey(date);
               const perf = perfByDate.get(key);
               const value = perf?.value ?? 0;
+              const percent = perf?.percent ?? 0;
               const hasPerf = perf !== undefined;
 
               const isTodayFlag = isToday(date);
+              const positive = value >= 0;
 
-              const pnlText =
+              const amountText =
                 hasPerf &&
-                `${value >= 0 ? "+" : ""}${value.toLocaleString("en-US", {
-                  style: "currency",
-                  currency: "USD",
-                  maximumFractionDigits: 0,
-                })}`;
+                `${positive ? "+" : "-"}${Math.abs(value).toLocaleString(
+                  "en-US",
+                  {
+                    style: "currency",
+                    currency: "USD",
+                    maximumFractionDigits: 0,
+                  }
+                )}`;
 
               const baseClasses =
-                "flex h-24 flex-col rounded-xl border px-2 py-1.5 bg-slate-900/40";
-              const perfBg = hasPerf ? getPerfColorBg(value) : "border-white/5";
+                "group flex h-16 sm:h-20 flex-col rounded-2xl border px-1.5 sm:px-2 py-1.5 bg-slate-900/70 transition-transform hover:-translate-y-0.5";
+              const perfBg = hasPerf ? getPerfColorBg(value) : "bg-slate-900/70 border-white/5";
 
               cells.push(
                 <div
@@ -443,17 +449,31 @@ export default function DashboardPage() {
                     baseClasses,
                     perfBg,
                     isTodayFlag
-                      ? "ring-2 ring-blue-500/70 ring-offset-2 ring-offset-[#05070b]"
+                      ? "ring-2 ring-blue-500/70 ring-offset-[1px] ring-offset-[#05070b]"
                       : "",
                   ].join(" ")}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] text-slate-300">{day}</span>
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="text-[10px] sm:text-[11px] text-slate-300">
+                      {day}
+                    </span>
+
+                    {hasPerf && (
+                      <span
+                        className={[
+                          "text-[9px] sm:text-[10px] font-semibold",
+                          percent >= 0 ? "text-emerald-400" : "text-rose-400",
+                        ].join(" ")}
+                      >
+                        {percent >= 0 ? "+" : ""}
+                        {percent.toFixed(2)}%
+                      </span>
+                    )}
                   </div>
 
                   {hasPerf && (
-                    <div className="mt-auto text-[11px] font-medium text-slate-100">
-                      {pnlText}
+                    <div className="mt-auto text-[10px] sm:text-[11px] font-medium text-slate-100">
+                      {amountText}
                     </div>
                   )}
                 </div>
