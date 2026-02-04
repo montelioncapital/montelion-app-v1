@@ -1,16 +1,15 @@
-// app/dashboard/page.jsx
+// app/(public)/dashboard/page.jsx
 "use client";
 
 import { useMemo } from "react";
-import Link from "next/link";
 
 export default function DashboardFinalizingPage() {
   const april2025 = useMemo(() => "April 2025", []);
 
   return (
-    <div className="relative z-10 flex min-h-[calc(100vh-40px)] items-center justify-center px-4 py-10">
-      <div className="w-full max-w-xl rounded-2xl border border-white/10 bg-[#05070b]/80 p-6 shadow-[0_0_0_1px_rgba(15,23,42,0.65)] backdrop-blur">
-        {/* Blue gradient line (same vibe as your cards) */}
+    <div className="relative z-10 flex min-h-screen items-center justify-center px-4 py-10">
+      <div className="relative w-full max-w-xl rounded-2xl border border-white/10 bg-[#05070b]/80 p-6 shadow-[0_0_0_1px_rgba(15,23,42,0.65)] backdrop-blur">
+        {/* Blue gradient line */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[2px] rounded-b-2xl bg-[linear-gradient(to_right,#020617_0%,#020617_20%,#2564ec_50%,#020617_80%,#020617_100%)]" />
 
         <div className="flex items-start gap-4">
@@ -41,7 +40,9 @@ export default function DashboardFinalizingPage() {
           </div>
 
           <div className="rounded-xl border border-white/10 bg-[#070a12] p-4">
-            <div className="text-xs font-medium text-slate-400">What you can do now</div>
+            <div className="text-xs font-medium text-slate-400">
+              What you can do now
+            </div>
             <ul className="mt-3 space-y-2 text-sm text-slate-200">
               <li className="flex gap-2">
                 <span className="text-slate-500">•</span>
@@ -53,15 +54,16 @@ export default function DashboardFinalizingPage() {
               </li>
               <li className="flex gap-2">
                 <span className="text-slate-500">•</span>
-                <span>Come back here soon for the full Montelion dashboard experience.</span>
+                <span>
+                  Come back here soon for the full Montelion dashboard experience.
+                </span>
               </li>
             </ul>
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          {/* MT5 doesn't have a universal web link; keep it as guidance */}
+        {/* Action */}
+        <div className="mt-6 flex items-center justify-start">
           <a
             href="https://www.metatrader5.com/"
             target="_blank"
@@ -70,13 +72,6 @@ export default function DashboardFinalizingPage() {
           >
             Open MetaTrader 5
           </a>
-
-          <Link
-            href="/account"
-            className="inline-flex h-10 items-center justify-center rounded-xl bg-[#2564ec] px-4 text-sm font-semibold text-white hover:opacity-95 transition"
-          >
-            Go to Account
-          </Link>
         </div>
 
         <div className="mt-6 text-center text-xs text-slate-500">
