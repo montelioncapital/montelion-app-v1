@@ -33,29 +33,9 @@ const POA_DOC_TYPE_DB_MAP = {
   "Tax notice": "tax_notice",
 };
 
-// Codes pays pour le téléphone
-const DIAL_CODES = [
-  "+1",
-  "+44",
-  "+33",
-  "+49",
-  "+39",
-  "+34",
-  "+31",
-  "+46",
-  "+41",
-  "+81",
-  "+82",
-  "+86",
-  "+91",
-  "+55",
-  "+52",
-  "+61",
-  "+7",
-  "+27",
-  "+65",
-  "+971",
-];
+function sanitizeFileName(name) {
+  return name.replace(/[^a-zA-Z0-9.\-_]/g, "_");
+}
 
 export default function OnboardingClient() {
   const router = useRouter();
@@ -63,12 +43,12 @@ export default function OnboardingClient() {
   /**
    * Étapes:
    * 1 = profil
-   * 2 = téléphone
-   * 3 = OTP
    * 4 = adresse
    * 5 = KYC identité
    * 6 = KYC proof of address
-   * (0 est maintenant géré par /get-started)
+   * (0 est géré par /get-started)
+   *
+   * ✅ Step 2/3 (téléphone/OTP) supprimés.
    */
   const [step, setStep] = useState(1);
 
@@ -83,17 +63,6 @@ export default function OnboardingClient() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [dob, setDob] = useState("");
-
-  // Step 2 — phone
-  const [dialCode, setDialCode] = useState("+33");
-  const [phoneLocal, setPhoneLocal] = useState("");
-  const [phoneE164, setPhoneE164] = useState("");
-  const [sendingCode, setSendingCode] = useState(false);
-
-  // Step 3 — OTP
-  const [otp, setOtp] = useState("");
-  const [verifying, setVerifying] = useState(false);
-  const [timer, setTimer] = useState(60);
 
   // Step 4 — address
   const [addressLine, setAddressLine] = useState("");
@@ -142,7 +111,7 @@ export default function OnboardingClient() {
       // 1) Charger profil
       const { data: profile, error: profErr } = await supabase
         .from("profiles")
-        .select("first_name, last_name, date_of_birth, phone_e164")
+        .select("first_name, last_name, date_of_birth")
         .eq("id", uid)
         .maybeSingle();
 
@@ -156,9 +125,6 @@ export default function OnboardingClient() {
         setFirstName(profile.first_name || "");
         setLastName(profile.last_name || "");
         setDob(profile.date_of_birth || "");
-        if (profile.phone_e164) {
-          setPhoneE164(profile.phone_e164);
-        }
       }
 
       // 2) Lire l'état d'onboarding
@@ -169,14 +135,23 @@ export default function OnboardingClient() {
         .maybeSingle();
 
       if (!onboardErr && onboard?.current_step != null) {
-        // 👉 Si current_step = 0 => on renvoie vers /get-started
+        // current_step = 0 => /get-started
         if (onboard.current_step === 0) {
           setLoading(false);
           router.replace("/get-started");
           return;
         }
 
-        setStep(onboard.current_step);
+        // ✅ Migration: si quelqu’un est bloqué sur 2/3, on le passe à 4 (Address)
+        if (onboard.current_step === 2 || onboard.current_step === 3) {
+          await supabase.from("onboarding_state").upsert(
+            { user_id: uid, current_step: 4, completed: false },
+            { onConflict: "user_id" }
+          );
+          setStep(4);
+        } else {
+          setStep(onboard.current_step);
+        }
       } else {
         setStep(1);
       }
@@ -184,17 +159,6 @@ export default function OnboardingClient() {
       setLoading(false);
     })();
   }, [router]);
-
-  // -------------------------
-  // OTP timer countdown
-  // -------------------------
-  useEffect(() => {
-    if (step !== 3) return;
-    if (timer <= 0) return;
-
-    const t = setTimeout(() => setTimer((tPrev) => tPrev - 1), 1000);
-    return () => clearTimeout(t);
-  }, [step, timer]);
 
   // Small helper
   async function updateOnboardingStep(nextStep, completed = false) {
@@ -241,112 +205,13 @@ export default function OnboardingClient() {
 
       if (upsertErr) throw upsertErr;
 
-      await updateOnboardingStep(2, false);
+      // ✅ Avant: step 2 (phone)
+      // ✅ Maintenant: step 4 (address)
+      await updateOnboardingStep(4, false);
     } catch (err) {
       setError(err.message || "Something went wrong.");
     } finally {
       setSaving(false);
-    }
-  }
-
-  // -------------------------
-  // Step 2 — Send code SMS
-  // -------------------------
-  async function handleSendCode(e) {
-    e.preventDefault();
-    if (sendingCode || !userId) return;
-
-    setError("");
-    setOk("");
-    setSendingCode(true);
-
-    try {
-      const local = phoneLocal.replace(/\D/g, "");
-      if (!local) throw new Error("Please enter your mobile number.");
-
-      const full = `${dialCode}${local}`;
-      setPhoneE164(full);
-
-      await supabase.from("phone_verifications").insert({
-        user_id: userId,
-        phone_e164: full,
-        status: "code_sent",
-      });
-
-            // Récupère la session actuelle pour avoir le JWT
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      const token = session?.access_token;
-
-      const res = await fetch("/api/phone/send-code", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({ phone: full }),
-      });
-
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "Failed to send code.");
-
-      setOk("A verification code has been sent by SMS.");
-
-      await updateOnboardingStep(3, false);
-      setTimer(60);
-    } catch (err) {
-      setError(err.message || "Something went wrong.");
-    } finally {
-      setSendingCode(false);
-    }
-  }
-
-  // -------------------------
-  // Step 3 — Verify OTP
-  // -------------------------
-  async function handleVerifyCode(e) {
-    e.preventDefault();
-    if (verifying || !userId) return;
-
-    setError("");
-    setOk("");
-    setVerifying(true);
-
-    try {
-      if (!/^\d{6}$/.test(otp)) throw new Error("Please enter a 6-digit code.");
-
-      const res = await fetch("/api/phone/verify-code", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: phoneE164, code: otp }),
-      });
-
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "Invalid or expired code.");
-
-      await supabase
-        .from("phone_verifications")
-        .update({ status: "verified" })
-        .eq("phone_e164", phoneE164);
-
-      await supabase
-        .from("profiles")
-        .update({
-          phone_e164: phoneE164,
-          phone_verified_at: new Date().toISOString(),
-        })
-        .eq("id", userId);
-
-      setOk("Your phone number has been verified.");
-      await updateOnboardingStep(4, false);
-    } catch (err) {
-      setError(
-        err.message || "Something went wrong while verifying the code."
-      );
-    } finally {
-      setVerifying(false);
     }
   }
 
@@ -419,59 +284,44 @@ export default function OnboardingClient() {
       const safeFrontName = sanitizeFileName(idFrontFile.name);
       const frontPath = `identity/${userId}/front-${Date.now()}-${safeFrontName}`;
 
-      const { error: frontUploadErr } = await supabase.storage
+      const { error: upFrontErr } = await supabase.storage
         .from(bucket)
-        .upload(frontPath, idFrontFile, {
-          cacheControl: "3600",
-          upsert: false,
-        });
+        .upload(frontPath, idFrontFile, { upsert: true });
 
-      if (frontUploadErr) throw frontUploadErr;
+      if (upFrontErr) throw upFrontErr;
 
-      // BACK (only if non-passport)
       let backPath = null;
-      if (!isPassport && idBackFile) {
+
+      if (!isPassport) {
         const safeBackName = sanitizeFileName(idBackFile.name);
         backPath = `identity/${userId}/back-${Date.now()}-${safeBackName}`;
 
-        const { error: backUploadErr } = await supabase.storage
+        const { error: upBackErr } = await supabase.storage
           .from(bucket)
-          .upload(backPath, idBackFile, {
-            cacheControl: "3600",
-            upsert: false,
-          });
+          .upload(backPath, idBackFile, { upsert: true });
 
-        if (backUploadErr) throw backUploadErr;
+        if (upBackErr) throw upBackErr;
       }
 
       const docTypeDb = KYC_DOC_ENUM[idDocType];
-      if (!docTypeDb) {
-        throw new Error("Unsupported document type.");
-      }
 
-      const payload = {
-        user_id: userId,
-        doc_type: docTypeDb,
-        front_url: frontPath,
-        status: "pending", // enum kyc_status
-      };
-
-      if (!isPassport && backPath) {
-        payload.back_url = backPath;
-      }
-
-      const { error: kycErr } = await supabase
-        .from("kyc_identities")
-        .upsert(payload, { onConflict: "user_id" });
+      const { error: kycErr } = await supabase.from("kyc_identity").upsert(
+        {
+          user_id: userId,
+          doc_type: docTypeDb,
+          front_url: frontPath,
+          back_url: backPath,
+          status: "pending",
+        },
+        { onConflict: "user_id" }
+      );
 
       if (kycErr) throw kycErr;
 
       await updateOnboardingStep(6, false);
+      setOk("Your identity document has been submitted.");
     } catch (err) {
-      setError(
-        err.message ||
-          "Something went wrong while uploading your identity document."
-      );
+      setError(err.message || "Something went wrong while uploading your ID.");
     } finally {
       setSaving(false);
     }
@@ -489,47 +339,36 @@ export default function OnboardingClient() {
     setSaving(true);
 
     try {
-      if (!poaFile) {
-        throw new Error("Please upload a proof of address document.");
-      }
+      if (!poaFile) throw new Error("Please upload your document.");
 
       const bucket = "kyc";
-      const safePoaName = sanitizeFileName(poaFile.name);
-      const poaPath = `proof-of-address/${userId}/${Date.now()}-${safePoaName}`;
+      const safeName = sanitizeFileName(poaFile.name);
+      const poaPath = `proof_of_address/${userId}/${Date.now()}-${safeName}`;
 
-      const { error: poaUploadErr } = await supabase.storage
+      const { error: upErr } = await supabase.storage
         .from(bucket)
-        .upload(poaPath, poaFile, {
-          cacheControl: "3600",
-          upsert: false,
-        });
+        .upload(poaPath, poaFile, { upsert: true });
 
-      if (poaUploadErr) throw poaUploadErr;
+      if (upErr) throw upErr;
 
       const docTypeDb = POA_DOC_TYPE_DB_MAP[poaDocType];
-      if (!docTypeDb) {
-        throw new Error("Unsupported proof of address type.");
-      }
 
-      const { error: poaErr } = await supabase
-        .from("proof_of_address")
-        .upsert(
-          {
-            user_id: userId,
-            doc_type: docTypeDb,
-            file_url: poaPath,
-            status: "pending", // même enum que kyc_status
-          },
-          { onConflict: "user_id" }
-        );
+      const { error: poaErr } = await supabase.from("proof_of_address").upsert(
+        {
+          user_id: userId,
+          doc_type: docTypeDb,
+          file_url: poaPath,
+          status: "pending",
+        },
+        { onConflict: "user_id" }
+      );
 
-        if (poaErr) throw poaErr;
+      if (poaErr) throw poaErr;
 
-      // On passe à l'étape "contrat" et on redirige vers /contract
+      // On passe à l'étape "contrat"
       await updateOnboardingStep(7, false);
       setOk("Your proof of address has been submitted.");
       router.push("/contract/ready");
-      
     } catch (err) {
       setError(
         err.message ||
@@ -648,148 +487,6 @@ export default function OnboardingClient() {
             >
               {saving ? "Saving…" : "Continue"}
             </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
-  // STEP 2 — PHONE NUMBER
-  if (step === 2) {
-    return (
-      <div className="mc-card">
-        <div className="mc-section text-left">
-          <h1 className="mc-title mb-2">Enter your mobile number</h1>
-          <p className="text-slate-400 mb-8">
-            We’ll send you a 6-digit verification code to confirm your account.
-          </p>
-
-          {error && (
-            <div className="mb-4 text-sm text-rose-400 bg-rose-950/40 border border-rose-900/40 px-3 py-2 rounded-lg">
-              {error}
-            </div>
-          )}
-          {ok && (
-            <div className="mb-4 text-sm text-emerald-400 bg-emerald-950/40 border border-emerald-900/40 px-3 py-2 rounded-lg">
-              {ok}
-            </div>
-          )}
-
-          <form onSubmit={handleSendCode} className="space-y-6">
-            <div>
-              <label className="block mb-2 text-sm">Mobile number</label>
-
-              <div className="flex gap-2">
-                <div className="relative w-24">
-                  <select
-                    value={dialCode}
-                    onChange={(e) => setDialCode(e.target.value)}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                  >
-                    {DIAL_CODES.map((code) => (
-                      <option key={code} value={code}>
-                        {code}
-                      </option>
-                    ))}
-                  </select>
-
-                  <div className="mc-input w-full h-full flex items-center justify-center gap-1">
-                    <span>{dialCode}</span>
-                    <span className="text-[9px] leading-none">▼</span>
-                  </div>
-                </div>
-
-                <input
-                  type="tel"
-                  className="mc-input flex-1"
-                  placeholder="Your mobile number"
-                  value={phoneLocal}
-                  onChange={(e) => setPhoneLocal(e.target.value)}
-                  required
-                />
-              </div>
-
-              <p className="mt-2 text-xs text-slate-500">
-                Enter your full mobile number without spaces.
-              </p>
-            </div>
-
-            <button
-              type="submit"
-              className="mc-btn mc-btn-primary mt-4"
-              disabled={sendingCode}
-            >
-              {sendingCode ? "Sending…" : "Send OTP"}
-            </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
-  // STEP 3 — OTP
-  if (step === 3) {
-    return (
-      <div className="mc-card">
-        <div className="mc-section text-left">
-          <h1 className="mc-title mb-2">Enter 6-digit verification code</h1>
-          <p className="text-slate-400 mb-8">
-            Please enter the 6-digit code we sent to{" "}
-            <span className="font-medium text-slate-100">
-              {phoneE164 || `${dialCode}${phoneLocal}`}
-            </span>
-            .
-          </p>
-
-          {error && (
-            <div className="mb-4 text-sm text-rose-400 bg-rose-950/40 border border-rose-900/40 px-3 py-2 rounded-lg">
-              {error}
-            </div>
-          )}
-          {ok && (
-            <div className="mb-4 text-sm text-emerald-400 bg-emerald-950/40 border border-emerald-900/40 px-3 py-2 rounded-lg">
-              {ok}
-            </div>
-          )}
-
-          <form onSubmit={handleVerifyCode} className="space-y-6">
-            <div>
-              <label className="block mb-2 text-sm">6-digit code</label>
-              <input
-                type="text"
-                className="mc-input tracking-[0.3em] text-center"
-                placeholder="••••••"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                maxLength={6}
-                required
-              />
-            </div>
-
-            <div className="mt-4 flex gap-3">
-              <button
-                type="submit"
-                className="mc-btn mc-btn-primary"
-                disabled={verifying}
-              >
-                {verifying ? "Verifying…" : "Verify"}
-              </button>
-
-              <button
-                type="button"
-                disabled={timer > 0}
-                onClick={() => {
-                  setStep(2);
-                }}
-                className={`mc-btn border text-sm ${
-                  timer > 0
-                    ? "border-slate-700 text-slate-600 cursor-not-allowed bg-transparent"
-                    : "border-slate-500 text-slate-300 hover:bg-slate-800"
-                }`}
-              >
-                {timer > 0 ? `Resend code in ${timer}s` : "Resend code"}
-              </button>
-            </div>
           </form>
         </div>
       </div>
@@ -984,18 +681,10 @@ export default function OnboardingClient() {
             className="mc-btn mc-btn-primary mt-4"
             disabled={saving}
           >
-            {saving ? "Submitting…" : "Continue"}
+            {saving ? "Saving…" : "Submit"}
           </button>
         </form>
       </div>
     </div>
   );
-}
-
-// ---------- filename sanitizer ----------
-function sanitizeFileName(name) {
-  return name
-    .normalize("NFD") // enlever les accents
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-zA-Z0-9.\-_]/g, "_"); // garder uniquement lettres / chiffres / . - _
 }
