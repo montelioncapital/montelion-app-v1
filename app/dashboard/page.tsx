@@ -4,7 +4,7 @@
 import { useMemo } from "react";
 
 export default function DashboardFinalizingPage() {
-  const april2025 = useMemo(() => "April 2025", []);
+  const spring2026 = useMemo(() => "Spring 2026", []);
 
   return (
     <div className="relative z-10 flex min-h-screen items-center justify-center px-4 py-10">
@@ -35,7 +35,9 @@ export default function DashboardFinalizingPage() {
             </p>
             <p className="mt-2 text-xs text-slate-400">
               Your Montelion dashboard will be finalized by{" "}
-              <span className="text-emerald-300 font-medium">{april2025}</span>.
+              <span className="font-medium text-emerald-300">
+                {spring2026}
+              </span>.
             </p>
           </div>
 
@@ -50,7 +52,9 @@ export default function DashboardFinalizingPage() {
               </li>
               <li className="flex gap-2">
                 <span className="text-slate-500">•</span>
-                <span>Track daily and monthly performance from your terminal.</span>
+                <span>
+                  Track daily and monthly performance from your terminal.
+                </span>
               </li>
               <li className="flex gap-2">
                 <span className="text-slate-500">•</span>
@@ -60,18 +64,6 @@ export default function DashboardFinalizingPage() {
               </li>
             </ul>
           </div>
-        </div>
-
-        {/* Action */}
-        <div className="mt-6 flex items-center justify-start">
-          <a
-            href="https://www.metatrader5.com/"
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex h-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 px-4 text-sm font-medium text-white hover:bg-white/10 transition"
-          >
-            Open MetaTrader 5
-          </a>
         </div>
 
         <div className="mt-6 text-center text-xs text-slate-500">
