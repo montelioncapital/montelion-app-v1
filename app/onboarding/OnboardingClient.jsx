@@ -37,6 +37,11 @@ function sanitizeFileName(name) {
   return name.replace(/[^a-zA-Z0-9.\-_]/g, "_");
 }
 
+function supaErrMessage(err) {
+  if (!err) return "";
+  return err.message || err.error_description || String(err);
+}
+
 export default function OnboardingClient() {
   const router = useRouter();
 
@@ -94,7 +99,7 @@ export default function OnboardingClient() {
         await supabase.auth.getSession();
 
       if (sessionErr) {
-        setError(sessionErr.message || "Unable to get session.");
+        setError(supaErrMessage(sessionErr) || "Unable to get session.");
         setLoading(false);
         return;
       }
@@ -116,7 +121,7 @@ export default function OnboardingClient() {
         .maybeSingle();
 
       if (profErr && profErr.code !== "PGRST116") {
-        setError(profErr.message || "Unable to load profile.");
+        setError(supaErrMessage(profErr) || "Unable to load profile.");
         setLoading(false);
         return;
       }
@@ -166,7 +171,7 @@ export default function OnboardingClient() {
       setStep(nextStep);
       return;
     }
-    await supabase.from("onboarding_state").upsert(
+    const { error: stErr } = await supabase.from("onboarding_state").upsert(
       {
         user_id: userId,
         current_step: nextStep,
@@ -174,6 +179,12 @@ export default function OnboardingClient() {
       },
       { onConflict: "user_id" }
     );
+
+    if (stErr) {
+      // pas bloquant, mais on log l'erreur
+      console.error("updateOnboardingStep error:", stErr);
+    }
+
     setStep(nextStep);
   }
 
@@ -209,7 +220,7 @@ export default function OnboardingClient() {
       // ✅ Maintenant: step 4 (address)
       await updateOnboardingStep(4, false);
     } catch (err) {
-      setError(err.message || "Something went wrong.");
+      setError(supaErrMessage(err) || "Something went wrong.");
     } finally {
       setSaving(false);
     }
@@ -249,7 +260,7 @@ export default function OnboardingClient() {
       await updateOnboardingStep(5, false);
     } catch (err) {
       setError(
-        err.message ||
+        supaErrMessage(err) ||
           "Something went wrong while saving your address (check RLS/policies in Supabase)."
       );
     } finally {
@@ -305,7 +316,8 @@ export default function OnboardingClient() {
 
       const docTypeDb = KYC_DOC_ENUM[idDocType];
 
-      const { error: kycErr } = await supabase.from("kyc_identity").upsert(
+      // ✅ IMPORTANT : bonne table = kyc_identities (pluriel)
+      const { error: kycErr } = await supabase.from("kyc_identities").upsert(
         {
           user_id: userId,
           doc_type: docTypeDb,
@@ -321,7 +333,7 @@ export default function OnboardingClient() {
       await updateOnboardingStep(6, false);
       setOk("Your identity document has been submitted.");
     } catch (err) {
-      setError(err.message || "Something went wrong while uploading your ID.");
+      setError(supaErrMessage(err) || "Something went wrong while uploading your ID.");
     } finally {
       setSaving(false);
     }
@@ -371,7 +383,7 @@ export default function OnboardingClient() {
       router.push("/contract/ready");
     } catch (err) {
       setError(
-        err.message ||
+        supaErrMessage(err) ||
           "Something went wrong while uploading your proof of address."
       );
     } finally {
@@ -405,9 +417,7 @@ export default function OnboardingClient() {
           ) : (
             <>
               <div>Drag &amp; drop image here</div>
-              <div className="text-xs text-slate-500 mt-1">
-                or click to browse
-              </div>
+              <div className="text-xs text-slate-500 mt-1">or click to browse</div>
             </>
           )}
         </label>
@@ -499,9 +509,7 @@ export default function OnboardingClient() {
       <div className="mc-card">
         <div className="mc-section text-left">
           <h1 className="mc-title mb-2">Address</h1>
-          <p className="text-slate-400 mb-8">
-            Tell us where you currently live.
-          </p>
+          <p className="text-slate-400 mb-8">Tell us where you currently live.</p>
 
           {error && (
             <div className="mb-4 text-sm text-rose-400 bg-rose-950/40 border border-rose-900/40 px-3 py-2 rounded-lg">
@@ -582,6 +590,11 @@ export default function OnboardingClient() {
           {error && (
             <div className="mb-4 text-sm text-rose-400 bg-rose-950/40 border border-rose-900/40 px-3 py-2 rounded-lg">
               {error}
+            </div>
+          )}
+          {ok && (
+            <div className="mb-4 text-sm text-emerald-400 bg-emerald-950/40 border border-emerald-900/40 px-3 py-2 rounded-lg">
+              {ok}
             </div>
           )}
 
